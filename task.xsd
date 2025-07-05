@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- Define a simple type for non-empty strings -->
+  <xs:simpleType name="nonEmptyString">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:whiteSpace value="collapse"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Define the structure for the <recurring> element -->
+  <xs:complexType name="recurringType">
+    <xs:sequence>
+      <xs:element name="completed" type="xs:date"/>
+      <xs:element name="duration" type="xs:positiveInteger"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Define the main <task> element -->
+  <xs:element name="task">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="nonEmptyString"/>
+        <!-- The task can have a 'due' date OR a 'recurring' block, but not both. -->
+        <xs:choice minOccurs="0">
+          <xs:element name="due" type="xs:date"/>
+          <xs:element name="recurring" type="recurringType"/>
+        </xs:choice>
+        <!-- The 'preview' element is optional and must be a non-negative integer. -->
+        <xs:element name="preview" type="xs:nonNegativeInteger" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
