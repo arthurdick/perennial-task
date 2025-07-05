@@ -6,7 +6,8 @@
 # --- Configuration ---
 APP_NAME="perennial-task"
 INSTALL_DIR="/usr/local/lib/$APP_NAME"
-BIN_FILE="/usr/local/bin/prn" # Updated executable name
+EXECUTABLE_NAME="prn"
+BIN_FILE="/usr/local/bin/$EXECUTABLE_NAME"
 
 # --- Pre-flight Checks ---
 if [[ $EUID -ne 0 ]]; then
@@ -28,6 +29,19 @@ rm -f "$BIN_FILE"
 
 echo "Removing application directory at $INSTALL_DIR..."
 rm -rf "$INSTALL_DIR"
+
+# --- Remove Bash Completions ---
+echo "Removing bash completions..."
+COMPLETIONS_FILE=""
+if [ -f "/usr/share/bash-completion/completions/$EXECUTABLE_NAME" ]; then
+    COMPLETIONS_FILE="/usr/share/bash-completion/completions/$EXECUTABLE_NAME"
+elif [ -f "/etc/bash_completion.d/$EXECUTABLE_NAME" ]; then
+    COMPLETIONS_FILE="/etc/bash_completion.d/$EXECUTABLE_NAME"
+fi
+
+if [ -n "$COMPLETIONS_FILE" ]; then
+    rm -f "$COMPLETIONS_FILE"
+fi
 
 echo "Application files have been removed."
 echo ""
@@ -56,3 +70,4 @@ fi
 echo ""
 echo "Perennial Task has been successfully uninstalled."
 exit 0
+
