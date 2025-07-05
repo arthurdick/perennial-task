@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+# Perennial Task - Main Controller Script
+# This script validates dependencies and dispatches commands to the appropriate PHP scripts.
+
+# --- Configuration ---
+VERSION="1.0.0"
+
+# --- Pre-flight Checks ---
+MIN_PHP_VERSION="7.4"
+if ! command -v php &> /dev/null; then
+    echo "Error: PHP is not installed. Perennial Task requires PHP version $MIN_PHP_VERSION or higher."
+    exit 1
+fi
+PHP_VERSION=$(php -v | head -n 1 | cut -d ' ' -f 2)
+if ! printf '%s\n' "$MIN_PHP_VERSION" "$PHP_VERSION" | sort -V -C; then
+    echo "Error: Your PHP version is $PHP_VERSION. Perennial Task requires PHP version $MIN_PHP_VERSION or higher."
+    exit 1
+fi
+if ! php -m | grep -q -i 'SimpleXML'; then
+    echo "Error: The required PHP extension 'SimpleXML' is not enabled."
+    echo "Please install or enable it to use Perennial Task (e.g., 'sudo apt-get install php-xml')."
+    exit 1
+fi
+
+# --- Script Setup ---
+APP_DIR="$(dirname "$(readlink -f "$0")")"
+COMMAND="$1"
+ARGUMENT="$2"
+
+# --- Command Dispatcher ---
+case "$COMMAND" in
+    create)
+        php "$APP_DIR/create.php"
+        ;;
+    edit|complete|describe|report)
+        SCRIPT_NAME="$COMMAND.php"
+        if [ -n "$ARGUMENT" ]; then
+            php "$APP_DIR/$SCRIPT_NAME" "$ARGUMENT"
+        else
+            php "$APP_DIR/$SCRIPT_NAME"
+        fi
+        ;;
+    help|--help|-h)
+        echo "Perennial Task - A simple command-line task manager."
+        echo ""
+        echo "Usage: prn [command] [argument]"
+        echo ""
+        echo "Commands:"
+        echo "  create              Interactively create a new task."
+        echo "  edit [task_file]    Edit a task. Select from a list or specify a file."
+        echo "  complete [task_file] Mark a task as complete."
+        echo "  describe [task_file] Show a detailed description of a task."
+        echo "  report [date]       Show a report of all due and upcoming tasks."
+        echo "  help                Show this help message."
+        echo "  version             Display the application version."
+        ;;
+    version|--version|-v)
+        echo "Perennial Task version $VERSION"
+        ;;
+    *)
+        if [ -z "$COMMAND" ]; then
+            echo "Error: No command provided."
+        else
+            echo "Error: Unknown command '$COMMAND'."
+        fi
+        echo "Use 'prn help' to see a list of available commands."
+        exit 1
+        ;;
+esac
