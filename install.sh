@@ -34,7 +34,6 @@ echo "Copying application files..."
 
 echo "Setting file permissions..."
 chmod +x "$INSTALL_DIR/$EXECUTABLE_NAME"
-chmod +x "$INSTALL_DIR"/*.php
 
 echo "Creating symbolic link at $BIN_DIR/$EXECUTABLE_NAME..."
 ln -sf "$INSTALL_DIR/$EXECUTABLE_NAME" "$BIN_DIR/$EXECUTABLE_NAME" || { echo "Error: Could not create symbolic link. Aborting."; exit 1; }
