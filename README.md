@@ -16,8 +16,8 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
 
 ## Installation
 
-1.  **Dependencies:** Ensure you have PHP version 7.4 or higher installed, with the `SimpleXML` and `DOM` extensions enabled (these are usually included by default). You can check this by running `php -v` and `php -m`.
-2.  **Gather Files:** Place all the packaged files (`prn`, `install.sh`, `uninstall.sh`, `README.md`, `task.xsd`, and all `*.php` scripts) into a single directory.
+1.  **Platform & Dependencies:** This utility is designed for Linux environments. Ensure you have PHP version 7.4 or higher installed, with the `SimpleXML` and `DOM` extensions enabled (these are usually included by default). You can check this by running `php -v` and `php -m`.
+2.  **Gather Files:** Place all the packaged files (`prn`, `install.sh`, `uninstall.sh`, `prn-completions.bash`, `task.xsd`, and all `*.php` scripts) into a single directory.
 3.  **Run the Installer:** From within that directory, make the installation script executable and run it with `sudo`:
     ```
     chmod +x install.sh
