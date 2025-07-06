@@ -47,7 +47,7 @@ function describe_recurring_task(SimpleXMLElement $task): void
     $recur_duration = (int)$task->recurring->duration;
     $completed_date_str = (string)$task->recurring->completed;
     
-    $now = new DateTime();
+    $now = new DateTime('today');
     $completed_date = new DateTime($completed_date_str);
     $interval = $completed_date->diff($now);
     
@@ -79,7 +79,7 @@ function describe_due_task(SimpleXMLElement $task): void
     $due_date_str = (string)$task->due;
     $preview_duration = isset($task->preview) ? (int)$task->preview : 0;
 
-    $now = new DateTime();
+    $now = new DateTime('today');
     $due_date = new DateTime($due_date_str);
     $due_interval = $now->diff($due_date);
     
