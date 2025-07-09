@@ -2,45 +2,6 @@
 
 require_once 'common.php';
 
-// --- Main Script Execution ---
-
-echo "--- Edit an Existing Task ---\n";
-
-// Use the shared function to select a task file.
-$filepath = select_task_file($argv, 'edit');
-
-// If no file was selected or found, exit gracefully.
-if ($filepath === null) {
-    exit(0);
-}
-
-// --- Main Edit Process ---
-// By this point, $filepath is set and validated.
-
-// Load the selected XML file for editing.
-$xml = simplexml_load_file($filepath);
-
-// Enter the editing loop.
-while (true) {
-    display_current_details($xml);
-    $type = get_task_type($xml); // get_task_type is in common.php
-    $choice = show_edit_menu($type);
-
-    if ($choice === 'save') {
-        break; // Exit the loop to save the file.
-    }
-    
-    process_edit_choice($xml, $choice);
-}
-
-// Save the modified XML file using the shared function.
-if (save_xml_file($filepath, $xml)) {
-    echo "\nSuccess! Task file updated at: $filepath\n";
-} else {
-    echo "\nError! Could not save the updated task file.\n";
-}
-
-
 // --- Helper Functions ---
 
 if (!function_exists('display_current_details')) {
@@ -175,5 +136,43 @@ if (!function_exists('process_edit_choice')) {
                 break;
         }
     }
+}
+
+// --- Main Script Execution ---
+
+echo "--- Edit an Existing Task ---\n";
+
+// Use the shared function to select a task file.
+$filepath = select_task_file($argv, 'edit');
+
+// If no file was selected or found, exit gracefully.
+if ($filepath === null) {
+    exit(0);
+}
+
+// --- Main Edit Process ---
+// By this point, $filepath is set and validated.
+
+// Load the selected XML file for editing.
+$xml = simplexml_load_file($filepath);
+
+// Enter the editing loop.
+while (true) {
+    display_current_details($xml);
+    $type = get_task_type($xml); // get_task_type is in common.php
+    $choice = show_edit_menu($type);
+
+    if ($choice === 'save') {
+        break; // Exit the loop to save the file.
+    }
+    
+    process_edit_choice($xml, $choice);
+}
+
+// Save the modified XML file using the shared function.
+if (save_xml_file($filepath, $xml)) {
+    echo "\nSuccess! Task file updated at: $filepath\n";
+} else {
+    echo "\nError! Could not save the updated task file.\n";
 }
 

@@ -2,38 +2,6 @@
 
 require_once 'common.php';
 
-// --- Main Script Execution ---
-
-echo "--- Describe a Task ---\n";
-
-// Use the shared function to select a task file, either by argument or interactively.
-$filepath = select_task_file($argv, 'describe');
-
-// If no file was selected or found, exit gracefully.
-if ($filepath === null) {
-    exit(0);
-}
-
-// Load the validated XML file.
-$xml = simplexml_load_file($filepath);
-
-// Use the shared function to determine the task type.
-$type = get_task_type($xml);
-
-// Call the appropriate function based on the type.
-switch ($type) {
-    case 'recurring':
-        describe_recurring_task($xml);
-        break;
-    case 'due':
-        describe_due_task($xml);
-        break;
-    case 'normal':
-        describe_normal_task($xml);
-        break;
-}
-
-
 // --- Function Definitions ---
 
 if (!function_exists('describe_recurring_task')) {
@@ -133,5 +101,36 @@ if (!function_exists('describe_normal_task')) {
         echo "Type: Normal\n";
         echo "Details: This is a simple, one-off task.\n";
     }
+}
+
+// --- Main Script Execution ---
+
+echo "--- Describe a Task ---\n";
+
+// Use the shared function to select a task file, either by argument or interactively.
+$filepath = select_task_file($argv, 'describe');
+
+// If no file was selected or found, exit gracefully.
+if ($filepath === null) {
+    exit(0);
+}
+
+// Load the validated XML file.
+$xml = simplexml_load_file($filepath);
+
+// Use the shared function to determine the task type.
+$type = get_task_type($xml);
+
+// Call the appropriate function based on the type.
+switch ($type) {
+    case 'recurring':
+        describe_recurring_task($xml);
+        break;
+    case 'due':
+        describe_due_task($xml);
+        break;
+    case 'normal':
+        describe_normal_task($xml);
+        break;
 }
 

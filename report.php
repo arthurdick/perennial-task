@@ -3,57 +3,6 @@
 
 require_once 'common.php';
 
-// --- Initialization ---
-
-echo "--- Task Report ---\n";
-
-// Use today's date at midnight as the baseline.
-// If a date is provided as a command-line argument, use that instead for testing.
-$now = new DateTimeImmutable('today');
-if (isset($argv[1])) {
-    try {
-        $now = new DateTimeImmutable($argv[1]);
-        echo "Generating report for date: " . $now->format('Y-m-d') . "\n";
-    } catch (Exception $e) {
-        echo "Error: Invalid date format provided. Please use a format like 'YYYY-MM-DD'.\n";
-        exit(1);
-    }
-}
-echo "-------------------\n";
-
-// --- Main Processing Loop ---
-
-$files = glob(TASKS_DIR . '/*.xml');
-
-if (empty($files)) {
-    echo "No tasks found to report on.\n";
-    exit(0);
-}
-
-foreach ($files as $file) {
-    // Use the shared validation function. Silently skip invalid files in report mode.
-    if (!validate_task_file($file, true)) {
-        continue;
-    }
-
-    $xml = simplexml_load_file($file);
-    $type = get_task_type($xml);
-
-    // Dispatch to the appropriate reporting function based on type.
-    switch ($type) {
-        case 'recurring':
-            report_on_recurring_task($xml, $now);
-            break;
-        case 'due':
-            report_on_due_task($xml, $now);
-            break;
-        case 'normal':
-            report_on_normal_task($xml);
-            break;
-    }
-}
-
-
 // --- Function Definitions ---
 
 if (!function_exists('report_on_recurring_task')) {
@@ -133,6 +82,56 @@ if (!function_exists('report_on_normal_task')) {
         // A normal task is always considered active.
         $name = (string)$task->name;
         echo "DUE TODAY: $name\n";
+    }
+}
+
+// --- Initialization ---
+
+echo "--- Task Report ---\n";
+
+// Use today's date at midnight as the baseline.
+// If a date is provided as a command-line argument, use that instead for testing.
+$now = new DateTimeImmutable('today');
+if (isset($argv[1])) {
+    try {
+        $now = new DateTimeImmutable($argv[1]);
+        echo "Generating report for date: " . $now->format('Y-m-d') . "\n";
+    } catch (Exception $e) {
+        echo "Error: Invalid date format provided. Please use a format like 'YYYY-MM-DD'.\n";
+        exit(1);
+    }
+}
+echo "-------------------\n";
+
+// --- Main Processing Loop ---
+
+$files = glob(TASKS_DIR . '/*.xml');
+
+if (empty($files)) {
+    echo "No tasks found to report on.\n";
+    exit(0);
+}
+
+foreach ($files as $file) {
+    // Use the shared validation function. Silently skip invalid files in report mode.
+    if (!validate_task_file($file, true)) {
+        continue;
+    }
+
+    $xml = simplexml_load_file($file);
+    $type = get_task_type($xml);
+
+    // Dispatch to the appropriate reporting function based on type.
+    switch ($type) {
+        case 'recurring':
+            report_on_recurring_task($xml, $now);
+            break;
+        case 'due':
+            report_on_due_task($xml, $now);
+            break;
+        case 'normal':
+            report_on_normal_task($xml);
+            break;
     }
 }
 
