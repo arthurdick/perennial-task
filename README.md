@@ -65,6 +65,38 @@ Once installed, you can use the `prn` command from any directory.
 **`prn version`**
 * Displays the application's version number.
 
+## Development and Testing
+
+This project includes a comprehensive test suite built with PHPUnit to ensure code quality and prevent regressions.
+
+### Prerequisites
+
+* **Composer**: The test suite dependencies are managed by [Composer](https://getcomposer.org/). Please follow the official instructions to install it if you haven't already.
+
+### Installing Dependencies
+
+1. Clone the repository to your local machine.
+
+2. Navigate to the project's root directory in your terminal.
+
+3. Run the following command to install PHPUnit:
+
+```
+composer install
+```
+
+This will download all necessary development dependencies into a `vendor/` directory.
+
+### Running the Test Suite
+
+From the project's root directory, run the following command to execute the entire test suite:
+
+```
+./vendor/bin/phpunit
+```
+
+A successful run will show a series of dots followed by an "OK" message, indicating that all tests have passed.
+
 ## Files and Directories
 
 * **Application Files**: `/usr/local/lib/perennial-task/`
