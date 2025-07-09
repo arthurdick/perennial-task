@@ -42,4 +42,9 @@ function initialize_perennial_task_config(): void
     define('TASKS_PER_PAGE', $tasks_per_page);
 }
 
-initialize_perennial_task_config();
+// Only run the configuration initializer if we are NOT in a testing environment.
+// The test environment will define its own constants.
+if (!defined('PERENNIAL_TASK_TESTING')) {
+    initialize_perennial_task_config();
+}
+

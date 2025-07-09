@@ -1,0 +1,16 @@
+# Composer dependencies
+/vendor/
+
+# User-specific configuration and data.
+# These are typically created outside the project repo,
+# but this prevents them from being added if created locally.
+/completions.log
+/config.ini
+/tasks/
+
+# Test-generated files and directories
+/tests/temp/
+/tests/temp_config/
+
+# PHPUnit cache
+.phpunit.result.cache
