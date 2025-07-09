@@ -4,7 +4,7 @@
 # This script validates dependencies and dispatches commands to the appropriate PHP scripts.
 
 # --- Configuration ---
-VERSION="1.0.2"
+VERSION="1.0.3"
 
 # --- Pre-flight Checks ---
 MIN_PHP_VERSION="7.4"
