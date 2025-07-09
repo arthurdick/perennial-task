@@ -38,7 +38,7 @@ switch ($type) {
 
     case 'due':
         while (true) {
-            $input = readline("Enter new due date (YYYY-MM-DD), or 'never' to remove: ");
+            $input = prompt_user("Enter new due date (YYYY-MM-DD), or 'never' to remove: ");
             if (strtolower($input) === 'never') {
                 if (unlink($filepath)) {
                     echo "Task '$task_name' will not have a new due date and has been deleted.\n";
@@ -62,7 +62,7 @@ switch ($type) {
 
     case 'recurring':
         while (true) {
-            $input = strtolower(readline("Will this task recur? (y/n): "));
+            $input = strtolower(prompt_user("Will this task recur? (y/n): "));
             if ($input === 'n') {
                 if (unlink($filepath)) {
                     echo "Task '$task_name' will not recur and has been deleted.\n";
@@ -73,7 +73,7 @@ switch ($type) {
             } elseif ($input === 'y') {
                 $new_completed_date = null;
                 while($new_completed_date === null) {
-                    $date_input = readline("Enter new completion date (YYYY-MM-DD, press Enter for today): ");
+                    $date_input = prompt_user("Enter new completion date (YYYY-MM-DD, press Enter for today): ");
                     if (empty($date_input)) {
                         $date_input = date('Y-m-d');
                     }
@@ -99,3 +99,4 @@ switch ($type) {
 }
 
 echo "Completion process finished.\n";
+

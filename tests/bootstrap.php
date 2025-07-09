@@ -50,7 +50,7 @@ function clean_temp_dir() {
 // Autoloader for PHPUnit
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Include the common functions file
+// Include the common functions file, which now contains our mockable `prompt_user` function.
 require_once __DIR__ . '/../common.php';
 
 // Clean up before running tests
@@ -62,4 +62,3 @@ register_shutdown_function(function () {
     // rmdir(TASKS_DIR);
     // rmdir(TESTS_TEMP_DIR);
 });
-

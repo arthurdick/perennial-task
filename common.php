@@ -7,6 +7,29 @@ require_once 'config.php';
 
 // --- Shared Functions ---
 
+/**
+ * A test-friendly wrapper for getting user input from the command line.
+ * In a testing environment, this function can be replaced by a mock version
+ * by setting the global variable '__MOCK_PROMPT_USER_FUNC'.
+ *
+ * @param string $prompt The prompt to display to the user.
+ * @return string The user's input.
+ */
+function prompt_user(string $prompt): string
+{
+    // Check if a mock function has been provided by the test environment.
+    if (isset($GLOBALS['__MOCK_PROMPT_USER_FUNC']) && is_callable($GLOBALS['__MOCK_PROMPT_USER_FUNC'])) {
+        return call_user_func($GLOBALS['__MOCK_PROMPT_USER_FUNC'], $prompt);
+    }
+
+    // Otherwise, use the real readline function for the live application.
+    $input = readline($prompt);
+    if ($input === false) {
+        return '';
+    }
+    return $input;
+}
+
 function select_task_file(array $argv, string $prompt_verb): ?string
 {
     if (isset($argv[1])) {
@@ -71,7 +94,7 @@ function select_task_file(array $argv, string $prompt_verb): ?string
         }
         $prompt .= ": ";
 
-        $input = readline($prompt);
+        $input = prompt_user($prompt);
 
         if (strtolower($input) === 'q') return null;
 
@@ -163,3 +186,4 @@ function pluralize_days(int $number): string
 {
     return abs($number) === 1 ? 'day' : 'days';
 }
+
