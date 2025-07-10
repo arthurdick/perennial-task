@@ -1,18 +1,18 @@
-#!/usr/bin/env php
 <?php
 
 require_once 'common.php';
 
 // --- Function Definitions ---
 
-if (!function_exists('report_on_recurring_task')) {
+if (!function_exists('get_recurring_task_report')) {
     /**
-     * Processes and reports on a recurring task.
+     * Processes a recurring task and returns its status and report message.
      *
      * @param SimpleXMLElement $task The XML element for the task.
      * @param DateTimeImmutable $now The current date for comparison.
+     * @return array|null An array with status and message, or null if not reportable.
      */
-    function report_on_recurring_task(SimpleXMLElement $task, DateTimeImmutable $now): void
+    function get_recurring_task_report(SimpleXMLElement $task, DateTimeImmutable $now): ?array
     {
         $name = (string)$task->name;
         $completed_date = new DateTimeImmutable((string)$task->recurring->completed);
@@ -28,26 +28,38 @@ if (!function_exists('report_on_recurring_task')) {
         if ($interval->invert) {
             // If the interval is inverted, the next due date is in the past, so it's overdue.
             $days_overdue = $days_until_due;
-            echo "OVERDUE: $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n";
+            return [
+                'status' => 'overdue',
+                'message' => "OVERDUE: $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
+            ];
         } elseif ($days_until_due === 0) {
             // Due today.
-            echo "DUE TODAY: $name\n";
+            return [
+                'status' => 'due_today',
+                'message' => "DUE TODAY: $name\n"
+            ];
         } elseif ($days_until_due <= $preview_duration) {
             // Due within the preview window.
-            echo "UPCOMING: $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n";
+            return [
+                'status' => 'upcoming',
+                'message' => "UPCOMING: $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
+            ];
         }
+        
         // If none of the above, the task is not yet within the preview window, so we don't report it.
+        return null;
     }
 }
 
-if (!function_exists('report_on_due_task')) {
+if (!function_exists('get_due_task_report')) {
     /**
-     * Processes and reports on a task with a specific due date.
+     * Processes a task with a specific due date and returns its status and report message.
      *
      * @param SimpleXMLElement $task The XML element for the task.
      * @param DateTimeImmutable $now The current date for comparison.
+     * @return array|null An array with status and message, or null if not reportable.
      */
-    function report_on_due_task(SimpleXMLElement $task, DateTimeImmutable $now): void
+    function get_due_task_report(SimpleXMLElement $task, DateTimeImmutable $now): ?array
     {
         $name = (string)$task->name;
         $due_date = new DateTimeImmutable((string)$task->due);
@@ -59,29 +71,44 @@ if (!function_exists('report_on_due_task')) {
         if ($interval->invert) {
             // Due date is in the past.
             $days_overdue = $days_until_due;
-            echo "OVERDUE: $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n";
+            return [
+                'status' => 'overdue',
+                'message' => "OVERDUE: $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
+            ];
         } elseif ($days_until_due === 0) {
             // Due today.
-            echo "DUE TODAY: $name\n";
+            return [
+                'status' => 'due_today',
+                'message' => "DUE TODAY: $name\n"
+            ];
         } elseif ($days_until_due <= $preview_duration) {
             // Due within the preview window.
-            echo "UPCOMING: $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n";
+            return [
+                'status' => 'upcoming',
+                'message' => "UPCOMING: $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
+            ];
         }
+
         // If not within the preview window, do not report.
+        return null;
     }
 }
 
-if (!function_exists('report_on_normal_task')) {
+if (!function_exists('get_normal_task_report')) {
     /**
-     * Processes and reports on a normal task.
+     * Processes a normal task and returns its status and report message.
      *
      * @param SimpleXMLElement $task The XML element for the task.
+     * @return array An array with status and message.
      */
-    function report_on_normal_task(SimpleXMLElement $task): void
+    function get_normal_task_report(SimpleXMLElement $task): array
     {
         // A normal task is always considered active.
         $name = (string)$task->name;
-        echo "DUE TODAY: $name\n";
+        return [
+            'status' => 'due_today',
+            'message' => "DUE TODAY: $name\n"
+        ];
     }
 }
 
@@ -107,10 +134,10 @@ echo "-------------------\n";
 
 $files = glob(TASKS_DIR . '/*.xml');
 
-if (empty($files)) {
-    echo "No tasks found to report on.\n";
-    exit(0);
-}
+// Arrays to hold tasks by status
+$overdue_tasks = [];
+$due_today_tasks = [];
+$upcoming_tasks = [];
 
 foreach ($files as $file) {
     // Use the shared validation function. Silently skip invalid files in report mode.
@@ -120,18 +147,59 @@ foreach ($files as $file) {
 
     $xml = simplexml_load_file($file);
     $type = get_task_type($xml);
+    $report_data = null;
 
-    // Dispatch to the appropriate reporting function based on type.
+    // Dispatch to the appropriate function to get report data.
     switch ($type) {
         case 'recurring':
-            report_on_recurring_task($xml, $now);
+            $report_data = get_recurring_task_report($xml, $now);
             break;
         case 'due':
-            report_on_due_task($xml, $now);
+            $report_data = get_due_task_report($xml, $now);
             break;
         case 'normal':
-            report_on_normal_task($xml);
+            $report_data = get_normal_task_report($xml);
             break;
+    }
+    
+    // If the task is reportable, add its message to the correct category.
+    if ($report_data) {
+        switch ($report_data['status']) {
+            case 'overdue':
+                $overdue_tasks[] = $report_data['message'];
+                break;
+            case 'due_today':
+                $due_today_tasks[] = $report_data['message'];
+                break;
+            case 'upcoming':
+                $upcoming_tasks[] = $report_data['message'];
+                break;
+        }
     }
 }
 
+// --- Report Output ---
+
+if (empty($overdue_tasks) && empty($due_today_tasks) && empty($upcoming_tasks)) {
+    echo "No tasks to report on at this time.\n";
+    exit(0);
+}
+
+// Print tasks in the desired order: Overdue -> Due Today -> Upcoming
+if (!empty($overdue_tasks)) {
+    foreach ($overdue_tasks as $task_line) {
+        echo $task_line;
+    }
+}
+
+if (!empty($due_today_tasks)) {
+    foreach ($due_today_tasks as $task_line) {
+        echo $task_line;
+    }
+}
+
+if (!empty($upcoming_tasks)) {
+    foreach ($upcoming_tasks as $task_line) {
+        echo $task_line;
+    }
+}
