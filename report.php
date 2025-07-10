@@ -1,6 +1,21 @@
+#!/usr/bin/env php
 <?php
 
 require_once 'common.php';
+
+// --- Constants ---
+
+if (!defined('IS_INTERACTIVE')) {
+    // Check if the script is running in an interactive terminal.
+    define('IS_INTERACTIVE', stream_isatty(STDOUT));
+
+    // Define ANSI color codes. If not interactive, the codes are empty strings.
+    define('COLOR_RED', IS_INTERACTIVE ? "\033[31m" : '');
+    define('COLOR_YELLOW', IS_INTERACTIVE ? "\033[33m" : '');
+    define('COLOR_BLUE', IS_INTERACTIVE ? "\033[34m" : '');
+    define('COLOR_RESET', IS_INTERACTIVE ? "\033[0m" : '');
+}
+
 
 // --- Function Definitions ---
 
@@ -30,19 +45,19 @@ if (!function_exists('get_recurring_task_report')) {
             $days_overdue = $days_until_due;
             return [
                 'status' => 'overdue',
-                'message' => "OVERDUE: $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
+                'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
             ];
         } elseif ($days_until_due === 0) {
             // Due today.
             return [
                 'status' => 'due_today',
-                'message' => "DUE TODAY: $name\n"
+                'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": $name\n"
             ];
         } elseif ($days_until_due <= $preview_duration) {
             // Due within the preview window.
             return [
                 'status' => 'upcoming',
-                'message' => "UPCOMING: $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
+                'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
             ];
         }
         
@@ -73,19 +88,19 @@ if (!function_exists('get_due_task_report')) {
             $days_overdue = $days_until_due;
             return [
                 'status' => 'overdue',
-                'message' => "OVERDUE: $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
+                'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
             ];
         } elseif ($days_until_due === 0) {
             // Due today.
             return [
                 'status' => 'due_today',
-                'message' => "DUE TODAY: $name\n"
+                'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": $name\n"
             ];
         } elseif ($days_until_due <= $preview_duration) {
             // Due within the preview window.
             return [
                 'status' => 'upcoming',
-                'message' => "UPCOMING: $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
+                'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
             ];
         }
 
@@ -107,7 +122,7 @@ if (!function_exists('get_normal_task_report')) {
         $name = (string)$task->name;
         return [
             'status' => 'due_today',
-            'message' => "DUE TODAY: $name\n"
+            'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": $name\n"
         ];
     }
 }

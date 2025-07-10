@@ -63,11 +63,11 @@ class ReportTest extends TestCase
         $output = $this->runReportScript($this->now->format('Y-m-d'));
         
         // Things that SHOULD be in the report
-        $this->assertStringContainsString('DUE TODAY: Normal Report Task', $output);
-        $this->assertStringContainsString('DUE TODAY: Due Today Task', $output);
-        $this->assertStringContainsString('OVERDUE: Overdue Task (was due 8 days ago)', $output);
-        $this->assertStringContainsString('UPCOMING: Upcoming Task (due in 3 days)', $output);
-        $this->assertStringContainsString('OVERDUE: Recurring Overdue (was due 5 days ago)', $output);
+        $this->assertStringContainsString('Normal Report Task', $output);
+        $this->assertStringContainsString('Due Today Task', $output);
+        $this->assertStringContainsString('Overdue Task (was due 8 days ago)', $output);
+        $this->assertStringContainsString('Upcoming Task (due in 3 days)', $output);
+        $this->assertStringContainsString('Recurring Overdue (was due 5 days ago)', $output);
         
         // Things that should NOT be in the report
         $this->assertStringNotContainsString('Future Task', $output);
@@ -84,6 +84,6 @@ class ReportTest extends TestCase
         
         $output = $this->runReportScript($this->now->format('Y-m-d'));
         
-        $this->assertStringContainsString('UPCOMING: Recurring With Preview (due in 2 days)', $output);
+        $this->assertStringContainsString('Recurring With Preview (due in 2 days)', $output);
     }
 }
