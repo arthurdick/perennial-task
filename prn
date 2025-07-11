@@ -54,29 +54,24 @@ function main(array $argv): void
 {
     run_preflight_checks();
 
-    // The application directory is the directory of this script file.
-    $app_dir = __DIR__;
+    // Determine the application's true directory
+    $app_dir = dirname(realpath(__FILE__));
     
     $command = $argv[1] ?? null;
 
     switch ($command) {
         case 'create':
-            require "$app_dir/create.php";
-            break;
-
         case 'edit':
         case 'complete':
         case 'describe':
         case 'report':
             // The sub-scripts expect their own, clean $argv array.
-            // We slice the main arguments to remove the dispatcher script name and command,
-            // then prepend the sub-script's name to simulate a direct call.
             global $argv;
             $script_name = "$command.php";
             $arguments = array_slice($argv, 2);
             $argv = array_merge([$script_name], $arguments);
 
-            require "$app_dir/$script_name";
+            require "{$app_dir}/{$script_name}";
             break;
 
         case 'help':
