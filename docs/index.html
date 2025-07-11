@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perennial Task - A Task Manager for the Command Line</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Define custom font families */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111010; /* Slightly off-black */
+            color: #e2e8f0;
+        }
+        h1, h2, h3 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Custom gradient for hero text - Wood Lily Orange Theme */
+        .hero-gradient-text {
+            background: linear-gradient(to right, #f97316, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        /* Custom styling for feature cards */
+        .feature-card {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .feature-card:hover {
+            background-color: rgba(255, 255, 255, 0.07);
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-sm border-b border-slate-800/50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold tracking-tighter flex items-center gap-2">
+                <span class="text-orange-500">$</span>
+                <span>prn</span>
+            </a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#philosophy" class="text-slate-300 hover:text-white transition-colors">Philosophy</a>
+                <a href="#features" class="text-slate-300 hover:text-white transition-colors">Features</a>
+                <a href="#install" class="text-slate-300 hover:text-white transition-colors">Install</a>
+            </nav>
+            <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                <span>View on GitHub</span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="pt-32 pb-20 text-center relative overflow-hidden">
+             <div class="absolute inset-0 bg-grid-slate-700/[0.05] bg-[bottom_1px_center] [mask-image:linear-gradient(to_bottom,transparent,black)]"></div>
+            <div class="container mx-auto px-6 relative">
+                <img src="prn_logo.png" alt="Perennial Task Logo" class="w-32 h-32 mx-auto mb-6 rounded-3xl shadow-lg">
+                
+                <h1 class="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-4">
+                    Cultivate Your Tasks.
+                    <br>
+                    <span class="hero-gradient-text">Season After Season.</span>
+                </h1>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-400 mb-8">
+                    Like the wood lily, some tasks are perennial. They return, requiring steady attention. Perennial Task is a command-line utility built to help you manage these recurring responsibilities.
+                </p>
+                <div class="flex justify-center space-x-4">
+                    <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform hover:scale-105">
+                        Get The Code
+                    </a>
+                    <a href="#install" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-3 px-8 rounded-lg text-lg transition-colors">
+                        Installation Guide
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Philosophy Section -->
+        <section id="philosophy" class="py-20 bg-black/20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-extrabold tracking-tight">A Radically Simple Philosophy</h2>
+                    <p class="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">Perennial Task was built on three core principles that set it apart.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <!-- Card 1: Data Ownership -->
+                    <div class="p-8 rounded-xl feature-card">
+                        <div class="bg-blue-500/10 text-blue-400 rounded-lg w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Your Data is Yours. Period.</h3>
+                        <p class="text-slate-400">Each task is a simple XML file in `~/.config/perennial-task/`. No cloud, no proprietary formats. You can back it up, version control it with Git, or sync it yourself. You have total control.</p>
+                    </div>
+                    <!-- Card 2: Perennial by Design -->
+                    <div class="p-8 rounded-xl feature-card">
+                        <div class="bg-orange-500/10 text-orange-400 rounded-lg w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Perennial, Not Disposable.</h3>
+                        <p class="text-slate-400">Recurring tasks aren't deleted and recreated. They persist, evolving over time. This encourages a mindset of continuous maintenance and habit-building, not just one-off completions.</p>
+                    </div>
+                    <!-- Card 3: CLI First -->
+                    <div class="p-8 rounded-xl feature-card">
+                        <div class="bg-purple-500/10 text-purple-400 rounded-lg w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Live Where You Work.</h3>
+                        <p class="text-slate-400">For developers and power users, the terminal is home. Manage your tasks without context switching. It's faster, scriptable, and integrates perfectly into a keyboard-driven workflow.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-extrabold tracking-tight">Designed for Clarity and Control</h2>
+                    <p class="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">A small set of powerful features gives you everything you need and nothing you don't.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-2 gap-10">
+                    <!-- Feature 1 -->
+                    <div class="flex gap-6">
+                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div></div>
+                        <div>
+                            <h3 class="text-xl font-bold">Three Task Types</h3>
+                            <p class="text-slate-400 mt-1">Manage any kind of job with Normal, Due Date, or Recurring tasks.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 2 -->
+                    <div class="flex gap-6">
+                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></div></div>
+                        <div>
+                            <h3 class="text-xl font-bold">Interactive Editing</h3>
+                            <p class="text-slate-400 mt-1">Easily edit any detail of an existing task from a simple menu.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 3 -->
+                    <div class="flex gap-6">
+                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg></div></div>
+                        <div>
+                            <h3 class="text-xl font-bold">Focused Reporting</h3>
+                            <p class="text-slate-400 mt-1">Generate clean reports of tasks that are due, overdue, or within their preview window.</p>
+                        </div>
+                    </div>
+                     <!-- Feature 4 -->
+                    <div class="flex gap-6">
+                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.37 3.63a2.121 2.121 0 1 1 3 3L12 16l-4 1 1-4Z"></path></svg></div></div>
+                        <div>
+                            <h3 class="text-xl font-bold">Paginated Selection</h3>
+                            <p class="text-slate-400 mt-1">Never get lost in a long list. Easily navigate and select from a large number of tasks with paginated menus.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-20 bg-slate-900/50 border border-slate-800 rounded-lg p-6 font-mono text-sm text-slate-300">
+                    <p><span class="text-orange-400">$</span> prn report</p>
+                    <p class="mt-4"><span class="text-red-500 font-bold">OVERDUE:</span> Deploy security patches (was due 3 days ago)</p>
+                    <p><span class="text-red-500 font-bold">OVERDUE:</span> Water the Plants (was due 1 day ago)</p>
+                    <p><span class="text-amber-400 font-bold">DUE TODAY:</span> Submit weekly report</p>
+                    <p><span class="text-sky-400 font-bold">UPCOMING:</span> Prepare for team meeting (due in 2 days)</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation Section -->
+        <section id="install" class="py-20 bg-black/20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-extrabold tracking-tight">Simple & Clean Installation</h2>
+                    <p class="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">Get up and running with a simple installer script.</p>
+                </div>
+                <div class="max-w-3xl mx-auto bg-slate-900/50 border border-slate-800 rounded-lg p-8">
+                    <h3 class="font-bold text-lg mb-4 text-white">System Requirements</h3>
+                    <ul class="list-disc list-inside space-y-2 text-slate-400 mb-8">
+                        <li>Linux Environment</li>
+                        <li>PHP 7.4+</li>
+                        <li>`SimpleXML` and `DOM` PHP extensions</li>
+                    </ul>
+
+                    <h3 class="font-bold text-lg mb-4 text-white">Installation Steps</h3>
+                    <div class="font-mono text-sm space-y-6">
+                        <div>
+                            <p class="text-slate-400 mb-1"># 1. Download the package files and place them in a directory.</p>
+                            <p class="text-slate-300"><span class="text-orange-400">$</span> cd /path/to/your/downloaded/files</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 mb-1"># 2. Make the installer executable.</p>
+                            <p class="text-slate-300"><span class="text-orange-400">$</span> chmod +x install.sh</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 mb-1"># 3. Run the installer with sudo.</p>
+                            <p class="text-slate-300"><span class="text-orange-400">$</span> sudo ./install.sh</p>
+                            <p class="text-slate-500 mt-2">The script will copy files to `/usr/local/lib/perennial-task` and create a symlink at `/usr/local/bin/prn`.</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 mb-1"># 4. Start managing your tasks!</p>
+                            <p class="text-slate-300"><span class="text-orange-400">$</span> prn create</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- License Section -->
+        <section class="py-20 text-center">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold">Free and Open Source</h2>
+                <p class="text-slate-400 mt-4 max-w-xl mx-auto">Perennial Task is released under the MIT License. Feel free to use, modify, and distribute it. Contributions and feedback are always welcome!</p>
+                <div class="mt-8">
+                     <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                        <span>Browse The Code on GitHub</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/50">
+        <div class="container mx-auto px-6 py-8 text-center text-slate-500">
+            <p>&copy; 2025 Perennial Task. All rights reserved.</p>
+            <p class="mt-2">Released under the MIT License.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
