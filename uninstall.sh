@@ -49,10 +49,18 @@ echo ""
 # --- User Data Removal (Optional) ---
 if [ -n "$SUDO_USER" ]; then
     USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-    USER_CONFIG_DIR="$USER_HOME/.config/$APP_NAME"
+    
+    # Determine the base config directory according to XDG Base Directory Specification.
+    # This relies on the user running `sudo -E ./uninstall.sh` if they use a custom XDG_CONFIG_HOME.
+    if [[ -n "$XDG_CONFIG_HOME" && -d "$XDG_CONFIG_HOME" ]]; then
+        CONFIG_BASE="$XDG_CONFIG_HOME"
+    else
+        CONFIG_BASE="$USER_HOME/.config"
+    fi
+    USER_CONFIG_DIR="$CONFIG_BASE/$APP_NAME"
 
     if [ -d "$USER_CONFIG_DIR" ]; then
-        echo "User data (tasks and logs) was found at $USER_CONFIG_DIR."
+        echo "User data (tasks and configuration) was found at $USER_CONFIG_DIR."
         read -p "Do you want to remove this user data as well? THIS CANNOT BE UNDONE. (y/n) " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -64,7 +72,8 @@ if [ -n "$SUDO_USER" ]; then
         fi
     fi
 else
-    echo "Warning: Could not determine the original user. Please manually check for and remove '~/.config/$APP_NAME' if desired."
+    echo "Warning: Could not determine the original user. Please manually check for and remove user data."
+    echo "Common locations are '~/.config/$APP_NAME' or '\$XDG_CONFIG_HOME/$APP_NAME'."
 fi
 
 echo ""
