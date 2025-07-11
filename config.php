@@ -27,41 +27,96 @@ function get_perennial_task_config_dir(): string
 
     if (!$home_dir) {
         // This is a fatal error as we cannot locate the configuration.
-        echo "Error: Could not determine user's home directory. Cannot find configuration.\n";
+        file_put_contents('php://stderr', "Error: Could not determine user's home directory. Cannot find configuration.\n");
         exit(1);
     }
 
     return $home_dir . '/.config/perennial-task';
 }
 
+/**
+ * Creates a default configuration file if one does not exist.
+ *
+ * @param string $config_path The full path where the config file should be created.
+ * @throws Exception if directories or the file cannot be created.
+ */
+function create_default_config(string $config_path): void
+{
+    $config_dir = dirname($config_path);
+    $tasks_dir = $config_dir . '/tasks';
+
+    // Create the configuration and tasks directories if they don't exist.
+    if (!is_dir($config_dir)) {
+        if (!mkdir($config_dir, 0775, true)) {
+            throw new Exception("Error: Could not create configuration directory at '$config_dir'.");
+        }
+    }
+    if (!is_dir($tasks_dir)) {
+        if (!mkdir($tasks_dir, 0775, true)) {
+            throw new Exception("Error: Could not create tasks directory at '$tasks_dir'.");
+        }
+    }
+
+    // The application's installation directory, where this script and the schema reside.
+    $install_dir = __DIR__;
+    $xsd_path = $install_dir . '/task.xsd';
+    $completions_log = $config_dir . '/completions.log';
+
+    $config_content = <<<INI
+; Perennial Task Configuration File
+; This file was automatically generated.
+; You can edit these paths and settings.
+
+tasks_dir = "$tasks_dir"
+completions_log = "$completions_log"
+xsd_path = "$xsd_path"
+tasks_per_page = 10
+INI;
+
+    if (file_put_contents($config_path, $config_content) === false) {
+        throw new Exception("Error: Could not write configuration file to '$config_path'.");
+    }
+
+    echo "Notice: A new configuration file has been created at '$config_path'.\n";
+}
+
+
+/**
+ * Initializes the application configuration.
+ * It finds, parses, or creates the config.ini file and defines global constants.
+ */
 function initialize_perennial_task_config(): void
 {
-    $config_dir = get_perennial_task_config_dir();
-    $config_path = $config_dir . '/config.ini';
+    try {
+        $config_dir = get_perennial_task_config_dir();
+        $config_path = $config_dir . '/config.ini';
 
-    if (!is_file($config_path)) {
-        echo "Error: Configuration file not found at '$config_path'.\n";
-        echo "Please run the installer ('sudo ./install.sh') to generate it.\n";
+        if (!is_file($config_path)) {
+            // If config doesn't exist, create a default one.
+            create_default_config($config_path);
+        }
+
+        $config = parse_ini_file($config_path);
+
+        if ($config === false) {
+            throw new Exception("Error: Could not parse configuration file at '$config_path'.");
+        }
+
+        // Define global constants for the application to use.
+        define('TASKS_DIR', $config['tasks_dir']);
+        define('COMPLETIONS_LOG', $config['completions_log']);
+        define('XSD_PATH', $config['xsd_path']);
+
+        $tasks_per_page = 10;
+        if (isset($config['tasks_per_page']) && ctype_digit((string)$config['tasks_per_page']) && $config['tasks_per_page'] > 0) {
+            $tasks_per_page = (int)$config['tasks_per_page'];
+        }
+        define('TASKS_PER_PAGE', $tasks_per_page);
+
+    } catch (Exception $e) {
+        file_put_contents('php://stderr', $e->getMessage() . "\n");
         exit(1);
     }
-
-    $config = parse_ini_file($config_path);
-
-    if ($config === false) {
-        echo "Error: Could not parse configuration file at '$config_path'.\n";
-        exit(1);
-    }
-
-    // Define global constants for the application to use.
-    define('TASKS_DIR', $config['tasks_dir']);
-    define('COMPLETIONS_LOG', $config['completions_log']);
-    define('XSD_PATH', $config['xsd_path']);
-
-    $tasks_per_page = 10;
-    if (isset($config['tasks_per_page']) && ctype_digit((string)$config['tasks_per_page']) && $config['tasks_per_page'] > 0) {
-        $tasks_per_page = (int)$config['tasks_per_page'];
-    }
-    define('TASKS_PER_PAGE', $tasks_per_page);
 }
 
 // Only run the configuration initializer if we are NOT in a testing environment.
