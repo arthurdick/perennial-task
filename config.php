@@ -2,20 +2,42 @@
 
 // Perennial Task - Configuration Loader
 
-function initialize_perennial_task_config(): void
+/**
+ * Determines the configuration directory path based on the XDG Base Directory Specification.
+ *
+ * @return string The path to the perennial-task configuration directory.
+ */
+function get_perennial_task_config_dir(): string
 {
+    // Check for XDG_CONFIG_HOME environment variable.
+    $xdg_config_home = getenv('XDG_CONFIG_HOME');
+    if ($xdg_config_home && is_dir($xdg_config_home)) {
+        return $xdg_config_home . '/perennial-task';
+    }
+
+    // Fallback to the default directory: $HOME/.config
     $home_dir = getenv('HOME');
     if (!$home_dir) {
-        if (isset($_SERVER['HOME'])) $home_dir = $_SERVER['HOME'];
-        elseif (isset($_SERVER['HOMEDRIVE']) && isset($_SERVER['HOMEPATH'])) $home_dir = $_SERVER['HOMEDRIVE'] . $_SERVER['HOMEPATH'];
+        if (isset($_SERVER['HOME'])) {
+            $home_dir = $_SERVER['HOME'];
+        } elseif (isset($_SERVER['HOMEDRIVE']) && isset($_SERVER['HOMEPATH'])) {
+            $home_dir = $_SERVER['HOMEDRIVE'] . $_SERVER['HOMEPATH'];
+        }
     }
 
     if (!$home_dir) {
+        // This is a fatal error as we cannot locate the configuration.
         echo "Error: Could not determine user's home directory. Cannot find configuration.\n";
         exit(1);
     }
 
-    $config_path = $home_dir . '/.config/perennial-task/config.ini';
+    return $home_dir . '/.config/perennial-task';
+}
+
+function initialize_perennial_task_config(): void
+{
+    $config_dir = get_perennial_task_config_dir();
+    $config_path = $config_dir . '/config.ini';
 
     if (!is_file($config_path)) {
         echo "Error: Configuration file not found at '$config_path'.\n";
@@ -30,7 +52,7 @@ function initialize_perennial_task_config(): void
         exit(1);
     }
 
-    // Define global constants.
+    // Define global constants for the application to use.
     define('TASKS_DIR', $config['tasks_dir']);
     define('COMPLETIONS_LOG', $config['completions_log']);
     define('XSD_PATH', $config['xsd_path']);

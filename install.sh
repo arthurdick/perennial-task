@@ -13,8 +13,8 @@ COMPLETIONS_SCRIPT="prn-completions.bash"
 
 # --- Pre-flight Checks ---
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root or with sudo." 
-   exit 1
+    echo "This script must be run as root or with sudo." 
+    exit 1
 fi
 
 echo "Starting Perennial Task installation..."
@@ -63,15 +63,24 @@ USER_HOME=""
 if [ -n "$SUDO_USER" ]; then
     USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 else
-    echo "Warning: Could not determine the original user. Please manually create '~/.config/$APP_NAME/tasks'."
+    echo "Warning: Could not determine the original user. User-specific configuration will be skipped."
+    # Exit gracefully, as the system-wide part of the installation is complete.
     exit 0
 fi
 
-USER_CONFIG_DIR="$USER_HOME/.config/$APP_NAME"
+# Determine the base config directory according to XDG Base Directory Specification.
+# If XDG_CONFIG_HOME is set (e.g., via `sudo -E`), we use it. Otherwise, we default to $HOME/.config.
+if [[ -n "$XDG_CONFIG_HOME" && -d "$XDG_CONFIG_HOME" ]]; then
+    CONFIG_BASE="$XDG_CONFIG_HOME"
+else
+    CONFIG_BASE="$USER_HOME/.config"
+fi
+
+USER_CONFIG_DIR="$CONFIG_BASE/$APP_NAME"
 USER_TASKS_DIR="$USER_CONFIG_DIR/tasks"
 
 echo "Creating user configuration directory at $USER_CONFIG_DIR..."
-mkdir -p "$USER_TASKS_DIR"
+mkdir -p "$USER_TASKS_DIR" || { echo "Error: Could not create directory $USER_TASKS_DIR. Aborting."; exit 1; }
 
 CONFIG_FILE="$USER_CONFIG_DIR/config.ini"
 
@@ -92,8 +101,9 @@ else
     echo "Configuration file already exists at $CONFIG_FILE. Skipping creation."
 fi
 
-# Set correct ownership for the entire user config directory.
-chown -R "$SUDO_USER:$SUDO_USER" "$USER_HOME/.config"
+# Set correct ownership for the application's user config directory.
+echo "Setting ownership for $USER_CONFIG_DIR..."
+chown -R "$SUDO_USER:$SUDO_USER" "$USER_CONFIG_DIR" || echo "Warning: Could not set ownership for $USER_CONFIG_DIR."
 
 # --- Finalization ---
 echo ""

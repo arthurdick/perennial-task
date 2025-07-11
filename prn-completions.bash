@@ -18,7 +18,16 @@ _prn_complete()
 
     # If the previous argument is a command that takes a file
     if [[ " ${file_commands[*]} " =~ " ${prev} " ]]; then
-        local config_file="$HOME/.config/perennial-task/config.ini"
+        # Determine config file path based on XDG Base Directory Spec
+        local config_dir
+        if [[ -n "$XDG_CONFIG_HOME" && -d "$XDG_CONFIG_HOME" ]]; then
+            config_dir="$XDG_CONFIG_HOME/perennial-task"
+        else
+            config_dir="$HOME/.config/perennial-task"
+        fi
+        
+        local config_file="$config_dir/config.ini"
+
         if [ -f "$config_file" ]; then
             # Read the tasks_dir from the config file, trim whitespace and quotes
             local tasks_dir_raw=$(grep 'tasks_dir' "$config_file" | cut -d '=' -f 2)
@@ -42,3 +51,4 @@ _prn_complete()
 
 # Register the completion function for the 'prn' command
 complete -F _prn_complete prn
+
