@@ -1,70 +1,107 @@
-#!/usr/bin/env bash
+#!/usr/bin/env php
+<?php
 
-# Perennial Task - Main Controller Script
-# This script validates dependencies and dispatches commands to the appropriate PHP scripts.
+// Perennial Task - Main Controller Script
+// This script validates dependencies and dispatches commands to the appropriate PHP scripts.
 
-# --- Configuration ---
-VERSION="1.0.5"
+const VERSION = '1.0.5';
+const MIN_PHP_VERSION = '7.4';
 
-# --- Pre-flight Checks ---
-MIN_PHP_VERSION="7.4"
-if ! command -v php &> /dev/null; then
-    echo "Error: PHP is not installed. Perennial Task requires PHP version $MIN_PHP_VERSION or higher."
-    exit 1
-fi
-PHP_VERSION=$(php -v | head -n 1 | cut -d ' ' -f 2)
-if ! printf '%s\n' "$MIN_PHP_VERSION" "$PHP_VERSION" | sort -V -C; then
-    echo "Error: Your PHP version is $PHP_VERSION. Perennial Task requires PHP version $MIN_PHP_VERSION or higher."
-    exit 1
-fi
-if ! php -m | grep -q -i 'SimpleXML'; then
-    echo "Error: The required PHP extension 'SimpleXML' is not enabled."
-    echo "Please install or enable it to use Perennial Task (e.g., 'sudo apt-get install php-xml')."
-    exit 1
-fi
+/**
+ * --- Pre-flight Checks ---
+ * Ensures the environment meets the application's requirements.
+ */
+function run_preflight_checks(): void
+{
+    // Check for minimum PHP version.
+    if (version_compare(PHP_VERSION, MIN_PHP_VERSION, '<')) {
+        file_put_contents('php://stderr', "Error: Your PHP version is " . PHP_VERSION . ". Perennial Task requires PHP version " . MIN_PHP_VERSION . " or higher.\n");
+        exit(1);
+    }
 
-# --- Script Setup ---
-APP_DIR="$(dirname "$(readlink -f "$0")")"
-COMMAND="$1"
-ARGUMENT="$2"
+    // Check for required SimpleXML extension.
+    if (!extension_loaded('SimpleXML')) {
+        file_put_contents('php://stderr', "Error: The required PHP extension 'SimpleXML' is not enabled.\n");
+        file_put_contents('php://stderr', "Please install or enable it to use Perennial Task (e.g., 'sudo apt-get install php-xml').\n");
+        exit(1);
+    }
+}
 
-# --- Command Dispatcher ---
-case "$COMMAND" in
-    create)
-        php "$APP_DIR/create.php"
-        ;;
-    edit|complete|describe|report)
-        SCRIPT_NAME="$COMMAND.php"
-        if [ -n "$ARGUMENT" ]; then
-            php "$APP_DIR/$SCRIPT_NAME" "$ARGUMENT"
-        else
-            php "$APP_DIR/$SCRIPT_NAME"
-        fi
-        ;;
-    help|--help|-h)
-        echo "Perennial Task - A simple command-line task manager."
-        echo ""
-        echo "Usage: prn [command] [argument]"
-        echo ""
-        echo "Commands:"
-        echo "  create              Interactively create a new task."
-        echo "  edit [task_file]    Edit a task. Select from a list or specify a file."
-        echo "  complete [task_file] Mark a task as complete."
-        echo "  describe [task_file] Show a detailed description of a task."
-        echo "  report [date]       Show a report of all due and upcoming tasks."
-        echo "  help                Show this help message."
-        echo "  version             Display the application version."
-        ;;
-    version|--version|-v)
-        echo "Perennial Task version $VERSION"
-        ;;
-    *)
-        if [ -z "$COMMAND" ]; then
-            echo "Error: No command provided."
-        else
-            echo "Error: Unknown command '$COMMAND'."
-        fi
-        echo "Use 'prn help' to see a list of available commands."
-        exit 1
-        ;;
-esac
+/**
+ * --- Help Message ---
+ * Displays the help text for the application.
+ */
+function display_help(): void
+{
+    echo "Perennial Task - A simple command-line task manager.\n";
+    echo "\n";
+    echo "Usage: prn [command] [argument]\n";
+    echo "\n";
+    echo "Commands:\n";
+    echo "  create             Interactively create a new task.\n";
+    echo "  edit [task_file]   Edit a task. Select from a list or specify a file.\n";
+    echo "  complete [task_file] Mark a task as complete.\n";
+    echo "  describe [task_file] Show a detailed description of a task.\n";
+    echo "  report [date]      Show a report of all due and upcoming tasks.\n";
+    echo "  help               Show this help message.\n";
+    echo "  version            Display the application version.\n";
+}
+
+/**
+ * --- Main Application Logic ---
+ */
+function main(array $argv): void
+{
+    run_preflight_checks();
+
+    // The application directory is the directory of this script file.
+    $app_dir = __DIR__;
+    
+    $command = $argv[1] ?? null;
+
+    switch ($command) {
+        case 'create':
+            require "$app_dir/create.php";
+            break;
+
+        case 'edit':
+        case 'complete':
+        case 'describe':
+        case 'report':
+            // The sub-scripts expect their own, clean $argv array.
+            // We slice the main arguments to remove the dispatcher script name and command,
+            // then prepend the sub-script's name to simulate a direct call.
+            global $argv;
+            $script_name = "$command.php";
+            $arguments = array_slice($argv, 2);
+            $argv = array_merge([$script_name], $arguments);
+
+            require "$app_dir/$script_name";
+            break;
+
+        case 'help':
+        case '--help':
+        case '-h':
+            display_help();
+            break;
+
+        case 'version':
+        case '--version':
+        case '-v':
+            echo "Perennial Task version " . VERSION . "\n";
+            break;
+
+        default:
+            if (is_null($command)) {
+                file_put_contents('php://stderr', "Error: No command provided.\n");
+            } else {
+                file_put_contents('php://stderr', "Error: Unknown command '$command'.\n");
+            }
+            file_put_contents('php://stderr', "Use 'prn help' to see a list of available commands.\n");
+            exit(1);
+    }
+}
+
+// Run the application.
+main($argv);
+
