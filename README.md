@@ -23,7 +23,7 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
     chmod +x install.sh
     sudo ./install.sh
     ```
-    The installer will copy the application files to `/usr/local/lib/perennial-task`, create your user configuration directory at `~/.config/perennial-task/`, and create a symbolic link at `/usr/local/bin/prn`.
+    The installer will copy the application files to `/usr/local/lib/perennial-task`, create a symbolic link at `/usr/local/bin/prn`, and set up your user configuration directory.
 
 ## Uninstallation
 
@@ -100,5 +100,7 @@ A successful run will show a series of dots followed by an "OK" message, indicat
 ## Files and Directories
 
 * **Application Files**: `/usr/local/lib/perennial-task/`
-* **User Configuration & Tasks**: `~/.config/perennial-task/`
 * **Executable**: `/usr/local/bin/prn`
+* **User Configuration & Tasks**: `$XDG_CONFIG_HOME/perennial-task/`
+    * If the `$XDG_CONFIG_HOME` environment variable is not set, this defaults to `~/.config/perennial-task/`.
+
