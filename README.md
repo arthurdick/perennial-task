@@ -40,7 +40,7 @@ sudo ./uninstall.sh
 
 The script will remove all application files and will prompt you if you also wish to remove your personal task data.
 
-## Method 2: Composer Installation
+### Method 2: Composer Installation
 
 1. **Install the Package:** Run the following command to install the package globally:
 
