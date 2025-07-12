@@ -4,46 +4,395 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perennial Task - A Task Manager for the Command Line</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* Define custom font families */
+        /* CSS Reset */
+        html, body, div, span, applet, object, iframe,
+        h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+        a, abbr, acronym, address, big, cite, code,
+        del, dfn, em, img, ins, kbd, q, s, samp,
+        small, strike, strong, sub, sup, tt, var,
+        b, u, i, center,
+        dl, dt, dd, ol, ul, li,
+        fieldset, form, label, legend,
+        table, caption, tbody, tfoot, thead, tr, th, td,
+        article, aside, canvas, details, embed,
+        figure, figcaption, footer, header, hgroup,
+        menu, nav, output, ruby, section, summary,
+        time, mark, audio, video {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+        article, aside, details, figcaption, figure,
+        footer, header, hgroup, menu, nav, section {
+            display: block;
+        }
+        body {
+            line-height: 1;
+        }
+        ol, ul {
+            list-style: none;
+        }
+        blockquote, q {
+            quotes: none;
+        }
+        blockquote:before, blockquote:after,
+        q:before, q:after {
+            content: '';
+            content: none;
+        }
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+        html {
+            -webkit-text-size-adjust: 100%;
+            -moz-tab-size: 4;
+            -o-tab-size: 4;
+            tab-size: 4;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+
+        /* Custom Styles */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111010; /* Slightly off-black */
+            background-color: #111010;
             color: #e2e8f0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         h1, h2, h3 {
             font-family: 'Inter', sans-serif;
             font-weight: 900;
         }
-        .font-mono {
-            font-family: 'Fira Code', monospace;
+        .scroll-smooth {
+            scroll-behavior: smooth;
         }
-        /* Custom gradient for hero text - Wood Lily Orange Theme */
+        .container {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+        @media (min-width: 640px) {
+            .container { max-width: 640px; }
+        }
+        @media (min-width: 768px) {
+            .container { max-width: 768px; }
+        }
+        @media (min-width: 1024px) {
+            .container { max-width: 1024px; }
+        }
+        @media (min-width: 1280px) {
+            .container { max-width: 1280px; }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background-color: rgba(0, 0, 0, 0.3);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            border-bottom: 1px solid rgba(45, 55, 72, 0.5);
+        }
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        header a {
+            color: #d1d5db;
+            transition: color 0.3s;
+        }
+        header a:hover {
+            color: #ffffff;
+        }
+        header .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        header nav {
+            display: none;
+        }
+        @media (min-width: 768px) {
+            header nav {
+                display: flex;
+                gap: 2rem;
+            }
+        }
+        header .github-link {
+            background-color: #334155;
+            color: #ffffff;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        header .github-link:hover {
+            background-color: #475569;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding-top: 8rem;
+            padding-bottom: 5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero .bg-grid {
+             position: absolute;
+             top: 0; right: 0; bottom: 0; left: 0;
+             background-image: linear-gradient(rgba(100, 116, 139, 0.05) 1px, transparent 1px), linear-gradient(to right, rgba(100, 116, 139, 0.05) 1px, transparent 1px);
+             background-size: 1rem 1rem;
+             background-position: bottom 1px center;
+             -webkit-mask-image: linear-gradient(to bottom, transparent, black);
+             mask-image: linear-gradient(to bottom, transparent, black);
+        }
+        .hero .container {
+            position: relative;
+        }
+        .hero-logo {
+            width: 8rem;
+            height: 8rem;
+            margin: 0 auto 1.5rem auto;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+        }
+        @media (min-width: 768px) {
+            .hero h1 { font-size: 4.5rem; }
+        }
         .hero-gradient-text {
             background: linear-gradient(to right, #f97316, #f59e0b);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-fill-color: transparent;
+            color: transparent;
         }
-        /* Custom styling for feature cards */
+        .hero p {
+            max-width: 48rem;
+            margin: 0 auto 2rem auto;
+            font-size: 1.125rem;
+            color: #94a3b8;
+        }
+        @media (min-width: 768px) {
+            .hero p { font-size: 1.25rem; }
+        }
+        .hero .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .hero .button {
+            font-weight: 700;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            text-decoration: none;
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+        .hero .button-primary {
+            background-color: #ea580c;
+            color: #ffffff;
+        }
+        .hero .button-primary:hover {
+            background-color: #c2410c;
+            transform: scale(1.05);
+        }
+        .hero .button-secondary {
+            background-color: #334155;
+            color: #f1f5f9;
+        }
+        .hero .button-secondary:hover {
+            background-color: #475569;
+        }
+
+
+        /* Philosophy & Features Sections Common */
+        .section {
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+        }
+        .bg-darker {
+            background-color: rgba(0,0,0,0.2);
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .section-header h2 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+        .section-header p {
+            margin-top: 1rem;
+            font-size: 1.125rem;
+            color: #94a3b8;
+            max-width: 42rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .grid {
+            display: grid;
+            gap: 2rem;
+        }
+        @media (min-width: 768px) {
+            .md-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .md-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) {
+             .lg-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        /* Philosophy Section */
         .feature-card {
+            padding: 2rem;
+            border-radius: 0.75rem;
             background-color: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: background-color 0.3s ease, transform 0.3s ease;
+            text-align: center;
         }
         .feature-card:hover {
             background-color: rgba(255, 255, 255, 0.07);
             transform: translateY(-4px);
         }
-        /* Styles for the tabbed installation section */
-        .tab-button.active {
-            background-color: #f97316;
+        .feature-card .icon-wrapper {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem auto;
+        }
+        .icon-wrapper.bg-blue { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        .icon-wrapper.bg-orange { background-color: rgba(249, 115, 22, 0.1); color: #fb923c; }
+        .icon-wrapper.bg-purple { background-color: rgba(168, 85, 247, 0.1); color: #c084fc; }
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .feature-card p {
+            color: #94a3b8;
+        }
+
+        /* Features Section */
+        #features .section-header {
+            margin-bottom: 4rem;
+        }
+        .feature-item {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+        .feature-item .icon-wrapper {
+             flex-shrink: 0;
+             width: 2.5rem;
+             height: 2.5rem;
+             background-color: rgba(249, 115, 22, 0.1);
+             color: #fb923c;
+             border-radius: 0.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+        }
+        .feature-item h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .feature-item p {
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+        .code-block {
+            margin-top: 5rem;
+            background-color: rgba(45, 55, 72, 0.5);
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            color: #d1d5db;
+        }
+        .code-block p { margin-bottom: 0.5rem; }
+        .code-block p:last-child { margin-bottom: 0; }
+        .code-block .text-orange { color: #fb923c; }
+        .code-block .text-red { color: #f87171; font-weight: 700; }
+        .code-block .text-amber { color: #fcd34d; font-weight: 700; }
+        .code-block .text-sky { color: #7dd3fc; font-weight: 700; }
+
+        /* Installation Section */
+        #install .max-w-4xl {
+             max-width: 56rem;
+             margin-left: auto;
+             margin-right: auto;
+        }
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 2rem;
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.125rem;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 2px solid transparent;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+        .tab-button:hover {
             color: #ffffff;
+        }
+        .tab-button.active {
+            color: #ffffff;
+            border-bottom-color: #f97316;
+        }
+        .tab-panel-container {
+            background-color: rgba(45, 55, 72, 0.5);
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 2rem;
         }
         .tab-panel {
             display: none;
@@ -51,23 +400,106 @@
         .tab-panel.active {
             display: block;
         }
+        .tab-panel h3 {
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+        .tab-panel ul {
+            list-style: disc;
+            list-style-position: inside;
+            margin-bottom: 2rem;
+            color: #94a3b8;
+            line-height: 1.75;
+        }
+        .code-listing {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+        }
+        .code-listing > div {
+            margin-bottom: 1.5rem;
+        }
+        .code-listing > div:last-child {
+            margin-bottom: 0;
+        }
+        .code-listing p {
+            line-height: 1.5;
+        }
+        .code-listing .comment {
+            color: #94a3b8;
+            margin-bottom: 0.25rem;
+        }
+        .code-listing .prompt { color: #d1d5db; }
+        .code-listing .dollar { color: #fb923c; }
+
+        /* License Section & Footer */
+        .license {
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+            text-align: center;
+        }
+        .license h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+        }
+        .license p {
+            color: #94a3b8;
+            margin-top: 1rem;
+            max-width: 36rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .license .button-group {
+            margin-top: 2rem;
+        }
+        .license .github-button {
+            background-color: #334155;
+            color: #ffffff;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        .license .github-button:hover {
+            background-color: #475569;
+        }
+
+        footer {
+            border-top: 1px solid rgba(45, 55, 72, 0.5);
+        }
+        footer .container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            text-align: center;
+            color: #64748b;
+        }
+        footer p {
+            margin-top: 0.5rem;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-sm border-b border-slate-800/50">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" class="text-2xl font-bold tracking-tighter flex items-center gap-2">
-                <span class="text-orange-500">$</span>
+    <header>
+        <div class="container">
+            <a href="#" class="logo">
+                <span style="color: #f97316;">$</span>
                 <span>prn</span>
             </a>
-            <nav class="hidden md:flex space-x-8">
-                <a href="#philosophy" class="text-slate-300 hover:text-white transition-colors">Philosophy</a>
-                <a href="#features" class="text-slate-300 hover:text-white transition-colors">Features</a>
-                <a href="#install" class="text-slate-300 hover:text-white transition-colors">Install</a>
+            <nav>
+                <a href="#philosophy">Philosophy</a>
+                <a href="#features">Features</a>
+                <a href="#install">Install</a>
             </nav>
-            <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2">
+            <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="github-link">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                 <span>View on GitHub</span>
             </a>
@@ -75,233 +507,206 @@
     </header>
 
     <main>
-        <!-- Hero Section -->
-        <section class="pt-32 pb-20 text-center relative overflow-hidden">
-             <div class="absolute inset-0 bg-grid-slate-700/[0.05] bg-[bottom_1px_center] [mask-image:linear-gradient(to_bottom,transparent,black)]"></div>
-            <div class="container mx-auto px-6 relative">
-                <img src="prn_logo.png" alt="Perennial Task Logo" class="w-32 h-32 mx-auto mb-6 rounded-3xl shadow-lg">
-                
-                <h1 class="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-4">
+        <section class="hero">
+            <div class="bg-grid"></div>
+            <div class="container">
+                <img src="prn_logo.png" alt="Perennial Task Logo" class="hero-logo">
+                <h1>
                     Cultivate Your Tasks.
                     <br>
                     <span class="hero-gradient-text">Season After Season.</span>
                 </h1>
-                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-400 mb-8">
+                <p>
                     Like the wood lily, some tasks are perennial. They return, requiring steady attention. Perennial Task is a command-line utility built to help you manage these recurring responsibilities.
                 </p>
-                <div class="flex justify-center space-x-4">
-                    <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform hover:scale-105">
+                <div class="buttons">
+                    <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="button button-primary">
                         Get The Code
                     </a>
-                    <a href="#install" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-3 px-8 rounded-lg text-lg transition-colors">
+                    <a href="#install" class="button button-secondary">
                         Installation Guide
                     </a>
                 </div>
             </div>
         </section>
 
-        <!-- Philosophy Section -->
-        <section id="philosophy" class="py-20 bg-black/20">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-12">
-                    <h2 class="text-4xl font-extrabold tracking-tight">A Radically Simple Philosophy</h2>
-                    <p class="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">Perennial Task was built on three core principles that set it apart.</p>
+        <section id="philosophy" class="section bg-darker">
+            <div class="container">
+                <div class="section-header">
+                    <h2>A Radically Simple Philosophy</h2>
+                    <p>Perennial Task was built on three core principles that set it apart.</p>
                 </div>
-                <div class="grid md:grid-cols-3 gap-8 text-center">
-                    <!-- Card 1: Data Ownership -->
-                    <div class="p-8 rounded-xl feature-card">
-                        <div class="bg-blue-500/10 text-blue-400 rounded-lg w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                <div class="grid md-grid-cols-3">
+                    <div class="feature-card">
+                        <div class="icon-wrapper bg-blue">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         </div>
-                        <h3 class="text-xl font-bold mb-2">Your Data is Yours. Period.</h3>
-                        <p class="text-slate-400">Each task is a simple XML file. No cloud, no proprietary formats. You can back it up, version control it with Git, or sync it yourself. You have total control.</p>
+                        <h3>Your Data is Yours. Period.</h3>
+                        <p>Each task is a simple XML file. No cloud, no proprietary formats. You can back it up, version control it with Git, or sync it yourself. You have total control.</p>
                     </div>
-                    <!-- Card 2: Perennial by Design -->
-                    <div class="p-8 rounded-xl feature-card">
-                        <div class="bg-orange-500/10 text-orange-400 rounded-lg w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                    <div class="feature-card">
+                        <div class="icon-wrapper bg-orange">
                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </div>
-                        <h3 class="text-xl font-bold mb-2">Perennial, Not Disposable.</h3>
-                        <p class="text-slate-400">Recurring tasks aren't deleted and recreated. They persist, evolving over time. This encourages a mindset of continuous maintenance and habit-building, not just one-off completions.</p>
+                        <h3>Perennial, Not Disposable.</h3>
+                        <p>Recurring tasks aren't deleted and recreated. They persist, evolving over time. This encourages a mindset of continuous maintenance and habit-building, not just one-off completions.</p>
                     </div>
-                    <!-- Card 3: CLI First -->
-                    <div class="p-8 rounded-xl feature-card">
-                        <div class="bg-purple-500/10 text-purple-400 rounded-lg w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                    <div class="feature-card">
+                        <div class="icon-wrapper bg-purple">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
                         </div>
-                        <h3 class="text-xl font-bold mb-2">Live Where You Work.</h3>
-                        <p class="text-slate-400">For developers and power users, the terminal is home. Manage your tasks without context switching. It's faster, scriptable, and integrates perfectly into a keyboard-driven workflow.</p>
+                        <h3>Live Where You Work.</h3>
+                        <p>For developers and power users, the terminal is home. Manage your tasks without context switching. It's faster, scriptable, and integrates perfectly into a keyboard-driven workflow.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Features Section -->
-        <section id="features" class="py-20">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-extrabold tracking-tight">Designed for Clarity and Control</h2>
-                    <p class="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">A small set of powerful features gives you everything you need and nothing you don't.</p>
+        <section id="features" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Designed for Clarity and Control</h2>
+                    <p>A small set of powerful features gives you everything you need and nothing you don't.</p>
                 </div>
-
-                <div class="grid md:grid-cols-2 lg:grid-cols-2 gap-10">
-                    <!-- Feature 1 -->
-                    <div class="flex gap-6">
-                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div></div>
+                <div class="grid md-grid-cols-2 lg-grid-cols-2" style="gap: 2.5rem;">
+                    <div class="feature-item">
+                        <div class="icon-wrapper"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
                         <div>
-                            <h3 class="text-xl font-bold">Three Task Types</h3>
-                            <p class="text-slate-400 mt-1">Manage any kind of job with Normal, Due Date, or Recurring tasks.</p>
+                            <h3>Three Task Types</h3>
+                            <p>Manage any kind of job with Normal, Due Date, or Recurring tasks.</p>
                         </div>
                     </div>
-                    <!-- Feature 2 -->
-                    <div class="flex gap-6">
-                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></div></div>
+                    <div class="feature-item">
+                        <div class="icon-wrapper"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></div>
                         <div>
-                            <h3 class="text-xl font-bold">Interactive Editing</h3>
-                            <p class="text-slate-400 mt-1">Easily edit any detail of an existing task from a simple menu.</p>
+                            <h3>Interactive Editing</h3>
+                            <p>Easily edit any detail of an existing task from a simple menu.</p>
                         </div>
                     </div>
-                    <!-- Feature 3 -->
-                    <div class="flex gap-6">
-                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg></div></div>
+                    <div class="feature-item">
+                        <div class="icon-wrapper"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg></div>
                         <div>
-                            <h3 class="text-xl font-bold">Focused Reporting</h3>
-                            <p class="text-slate-400 mt-1">Generate clean reports of tasks that are due, overdue, or within their preview window.</p>
+                            <h3>Focused Reporting</h3>
+                            <p>Generate clean reports of tasks that are due, overdue, or within their preview window.</p>
                         </div>
                     </div>
-                     <!-- Feature 4 -->
-                    <div class="flex gap-6">
-                        <div class="flex-shrink-0"><div class="bg-orange-500/10 text-orange-400 rounded-lg w-10 h-10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.37 3.63a2.121 2.121 0 1 1 3 3L12 16l-4 1 1-4Z"></path></svg></div></div>
+                    <div class="feature-item">
+                        <div class="icon-wrapper"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.37 3.63a2.121 2.121 0 1 1 3 3L12 16l-4 1 1-4Z"></path></svg></div>
                         <div>
-                            <h3 class="text-xl font-bold">Paginated Selection</h3>
-                            <p class="text-slate-400 mt-1">Never get lost in a long list. Easily navigate and select from a large number of tasks with paginated menus.</p>
+                            <h3>Paginated Selection</h3>
+                            <p>Never get lost in a long list. Easily navigate and select from a large number of tasks with paginated menus.</p>
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-20 bg-slate-900/50 border border-slate-800 rounded-lg p-6 font-mono text-sm text-slate-300">
-                    <p><span class="text-orange-400">$</span> prn report</p>
-                    <p class="mt-4"><span class="text-red-500 font-bold">OVERDUE:</span> Deploy security patches (was due 3 days ago)</p>
-                    <p><span class="text-red-500 font-bold">OVERDUE:</span> Water the Plants (was due 1 day ago)</p>
-                    <p><span class="text-amber-400 font-bold">DUE TODAY:</span> Submit weekly report</p>
-                    <p><span class="text-sky-400 font-bold">UPCOMING:</span> Prepare for team meeting (due in 2 days)</p>
+                <div class="code-block">
+                    <p><span class="text-orange">$</span> prn report</p>
+                    <p style="margin-top: 1rem;"><span class="text-red">OVERDUE:</span> Deploy security patches (was due 3 days ago)</p>
+                    <p><span class="text-red">OVERDUE:</span> Water the Plants (was due 1 day ago)</p>
+                    <p><span class="text-amber">DUE TODAY:</span> Submit weekly report</p>
+                    <p><span class="text-sky">UPCOMING:</span> Prepare for team meeting (due in 2 days)</p>
                 </div>
             </div>
         </section>
 
-        <!-- Installation Section -->
-        <section id="install" class="py-20 bg-black/20">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-12">
-                    <h2 class="text-4xl font-extrabold tracking-tight">Flexible Installation</h2>
-                    <p class="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">Install globally with Composer or use the manual installer script.</p>
+        <section id="install" class="section bg-darker">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Flexible Installation</h2>
+                    <p>Install globally with Composer or use the manual installer script.</p>
                 </div>
-                <div class="max-w-4xl mx-auto">
-                    <!-- Tab Buttons -->
-                    <div class="flex justify-center border-b border-slate-800 mb-8">
-                        <button data-tab="manual" class="tab-button active font-semibold text-lg py-3 px-6 border-b-2 border-transparent hover:text-white transition">Manual</button>
-                        <button data-tab="composer" class="tab-button font-semibold text-lg py-3 px-6 border-b-2 border-transparent text-slate-400 hover:text-white transition">Composer</button>
+                <div class="max-w-4xl">
+                    <div class="tabs-container">
+                        <button data-tab="manual" class="tab-button active">Manual</button>
+                        <button data-tab="composer" class="tab-button">Composer</button>
                     </div>
-
-                    <!-- Tab Panels -->
-                    <div class="bg-slate-900/50 border border-slate-800 rounded-lg p-8">
-                        <!-- Composer Panel -->
+                    <div class="tab-panel-container">
                         <div id="composer-panel" class="tab-panel">
-                            <div class="font-mono text-sm space-y-6">
+                            <div class="code-listing">
                                 <div>
-                                    <p class="text-slate-400 mb-1"># 1. Install the package globally.</p>
-                                    <p class="text-slate-300"><span class="text-orange-400">$</span> composer global require arthurdick/perennial-task</p>
+                                    <p class="comment"># 1. Install the package globally.</p>
+                                    <p class="prompt"><span class="dollar">$</span> composer global require arthurdick/perennial-task</p>
                                 </div>
                                 <div>
-                                    <p class="text-slate-400 mb-1"># 2. Ensure Composer's bin directory is in your PATH.</p>
-                                    <p class="text-slate-300"><span class="text-orange-400">$</span> echo 'export PATH="$PATH:$(composer global config bin-dir --absolute -q)"' >> ~/.bashrc</p>
+                                    <p class="comment"># 2. Ensure Composer's bin directory is in your PATH.</p>
+                                    <p class="prompt"><span class="dollar">$</span> echo 'export PATH="$PATH:$(composer global config bin-dir --absolute -q)"' >> ~/.bashrc</p>
                                 </div>
                                 <div>
-                                    <p class="text-slate-400 mb-1"># 3. Apply the changes.</p>
-                                    <p class="text-slate-300"><span class="text-orange-400">$</span> source ~/.bashrc</p>
+                                    <p class="comment"># 3. Apply the changes.</p>
+                                    <p class="prompt"><span class="dollar">$</span> source ~/.bashrc</p>
                                 </div>
                                 <div>
-                                    <p class="text-slate-400 mb-1"># 4. Start managing tasks!</p>
-                                    <p class="text-slate-300"><span class="text-orange-400">$</span> prn create</p>
+                                    <p class="comment"># 4. Start managing tasks!</p>
+                                    <p class="prompt"><span class="dollar">$</span> prn create</p>
                                 </div>
                             </div>
                         </div>
-                        <!-- Manual Panel -->
                         <div id="manual-panel" class="tab-panel active">
-                             <h3 class="font-bold text-lg mb-4 text-white">System Requirements</h3>
-                             <ul class="list-disc list-inside space-y-2 text-slate-400 mb-8">
+                             <h3>System Requirements</h3>
+                             <ul>
                                  <li>Linux Environment</li>
                                  <li>PHP 7.4+ with `SimpleXML` and `DOM` extensions</li>
                              </ul>
-                             <div class="font-mono text-sm space-y-6">
-                                <div>
-                                    <p class="text-slate-400 mb-1"># 1. Download the package files into a directory.</p>
-                                    <p class="text-slate-300"><span class="text-orange-400">$</span> cd /path/to/downloaded/files</p>
-                                </div>
-                                <div>
-                                    <p class="text-slate-400 mb-1"># 2. Make the installer executable.</p>
-                                    <p class="text-slate-300"><span class="text-orange-400">$</span> chmod +x install.sh</p>
-                                </div>
-                                <div>
-                                    <p class="text-slate-400 mb-1"># 3. Run the installer with sudo.</p>
-                                    <p class="text-slate-300"><span class="text-orange-400">$</span> sudo ./install.sh</p>
-                                </div>
-                            </div>
+                             <div class="code-listing">
+                                 <div>
+                                     <p class="comment"># 1. Download the package files into a directory.</p>
+                                     <p class="prompt"><span class="dollar">$</span> cd /path/to/downloaded/files</p>
+                                 </div>
+                                 <div>
+                                     <p class="comment"># 2. Make the installer executable.</p>
+                                     <p class="prompt"><span class="dollar">$</span> chmod +x install.sh</p>
+                                 </div>
+                                 <div>
+                                     <p class="comment"># 3. Run the installer with sudo.</p>
+                                     <p class="prompt"><span class="dollar">$</span> sudo ./install.sh</p>
+                                 </div>
+                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        
-        <!-- License Section -->
-        <section class="py-20 text-center">
-            <div class="container mx-auto px-6">
-                <h2 class="text-3xl font-bold">Free and Open Source</h2>
-                <p class="text-slate-400 mt-4 max-w-xl mx-auto">Perennial Task is released under the MIT License. Feel free to use, modify, and distribute it. Contributions and feedback are always welcome!</p>
-                <div class="mt-8">
-                     <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-                        <span>Browse The Code on GitHub</span>
-                    </a>
+
+        <section class="license">
+            <div class="container">
+                <h2>Free and Open Source</h2>
+                <p>Perennial Task is released under the MIT License. Feel free to use, modify, and distribute it. Contributions and feedback are always welcome!</p>
+                <div class="button-group">
+                     <a href="https://github.com/arthurdick/perennial-task" target="_blank" class="github-button">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                         <span>Browse The Code on GitHub</span>
+                     </a>
                 </div>
             </div>
         </section>
-
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-800/50">
-        <div class="container mx-auto px-6 py-8 text-center text-slate-500">
+    <footer>
+        <div class="container">
             <p>&copy; 2025 Perennial Task. All rights reserved.</p>
-            <p class="mt-2">Released under the MIT License.</p>
+            <p>Released under the MIT License.</p>
         </div>
     </footer>
-    
+
     <script>
-        // JavaScript for the tabbed installation section
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabPanels = {
-            composer: document.getElementById('composer-panel'),
-            manual: document.getElementById('manual-panel')
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = {
+                composer: document.getElementById('composer-panel'),
+                manual: document.getElementById('manual-panel')
+            };
 
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const tab = button.dataset.tab;
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tab = button.dataset.tab;
 
-                // Update button styles
-                tabButtons.forEach(btn => {
-                    btn.classList.remove('active', 'text-white');
-                    btn.classList.add('text-slate-400');
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    Object.values(tabPanels).forEach(panel => panel.classList.remove('active'));
+                    if (tabPanels[tab]) {
+                        tabPanels[tab].classList.add('active');
+                    }
                 });
-                button.classList.add('active', 'text-white');
-                button.classList.remove('text-slate-400');
-
-                // Show the correct panel
-                Object.values(tabPanels).forEach(panel => panel.classList.remove('active'));
-                if (tabPanels[tab]) {
-                    tabPanels[tab].classList.add('active');
-                }
             });
         });
     </script>
