@@ -291,6 +291,12 @@ function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
     return $dom->save($filepath) !== false;
 }
 
+/**
+ * Returns 'day' or 'days' based on the number.
+ *
+ * @param int $number The number to check.
+ * @return string The pluralized string.
+ */
 function pluralize_days(int $number): string
 {
     return abs($number) === 1 ? 'day' : 'days';
