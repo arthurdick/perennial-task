@@ -69,12 +69,28 @@ else
 fi
 
 # --- Finalization ---
+
+# Determine the likely configuration path for the user who ran sudo
+CONFIG_LOCATION_MSG="in ~/.config/$APP_NAME/ or \$XDG_CONFIG_HOME/$APP_NAME/"
+if [ -n "$SUDO_USER" ]; then
+    USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+    
+    # Check for XDG_CONFIG_HOME, defaulting to ~/.config
+    if [[ -n "$XDG_CONFIG_HOME" && -d "$XDG_CONFIG_HOME" ]]; then
+        CONFIG_BASE="$XDG_CONFIG_HOME"
+    else
+        CONFIG_BASE="$USER_HOME/.config"
+    fi
+    CONFIG_LOCATION_MSG="in the '$CONFIG_BASE/$APP_NAME/' directory"
+fi
+
 echo ""
 echo "-------------------------------------------"
 echo " Perennial Task installation complete!"
 echo "-------------------------------------------"
 echo "You can now use the 'prn' command from anywhere in your terminal."
-echo "Your configuration is located at: $CONFIG_FILE"
+echo "Your configuration will be created automatically on first run,"
+echo "$CONFIG_LOCATION_MSG."
 echo "Run 'prn help' to get started."
 echo ""
 
