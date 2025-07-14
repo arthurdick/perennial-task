@@ -7,7 +7,7 @@ require_once 'common.php';
 echo "--- Complete a Task ---\n";
 
 // Use the shared function to select a task file.
-$filepath = select_task_file($argv, 'complete');
+$filepath = select_task_file($argv, 'complete', 'reportable');
 
 // If no file was selected or found, exit gracefully.
 if ($filepath === null) {
@@ -20,39 +20,31 @@ if ($filepath === null) {
 $xml = simplexml_load_file($filepath);
 $task_name = (string)$xml->name;
 
-// 1. Create a completion record in the log file.
-$log_entry = date('c') . " | Completed: " . $task_name . "\n";
-file_put_contents(COMPLETIONS_LOG, $log_entry, FILE_APPEND);
+// 1. Add a completion record to the task's history.
+if (!isset($xml->history)) {
+    $xml->addChild('history');
+}
+$xml->history->addChild('entry', date('Y-m-d'));
+
 
 // 2. Handle the task based on its type.
 $type = get_task_type($xml);
 
 switch ($type) {
     case 'normal':
-        if (unlink($filepath)) {
-            echo "Task '$task_name' was a normal task and has been deleted.\n";
-        } else {
-            echo "Error: Could not delete the task file for '$task_name'.\n";
-        }
+        echo "Task '$task_name' has been marked as complete.\n";
         break;
 
     case 'due':
         while (true) {
             $input = prompt_user("Enter new due date (YYYY-MM-DD), or 'never' to remove: ");
             if (strtolower($input) === 'never') {
-                if (unlink($filepath)) {
-                    echo "Task '$task_name' will not have a new due date and has been deleted.\n";
-                } else {
-                    echo "Error: Could not delete the task file for '$task_name'.\n";
-                }
+                unset($xml->due); // Remove the due date
+                echo "Task '$task_name' has been marked as complete and will no longer have a due date.\n";
                 break; // Exit loop
             } elseif (validate_date($input)) {
                 $xml->due = $input;
-                if (save_xml_file($filepath, $xml)) {
-                    echo "Task '$task_name' has been updated with a new due date of $input.\n";
-                } else {
-                    echo "Error: Could not save the updated task file.\n";
-                }
+                echo "Task '$task_name' has been updated with a new due date of $input.\n";
                 break; // Exit loop
             } else {
                 echo "Invalid input. Please use YYYY-MM-DD format or type 'never'.\n";
@@ -64,11 +56,8 @@ switch ($type) {
         while (true) {
             $input = strtolower(prompt_user("Will this task recur? (y/n): "));
             if ($input === 'n') {
-                if (unlink($filepath)) {
-                    echo "Task '$task_name' will not recur and has been deleted.\n";
-                } else {
-                    echo "Error: Could not delete the task file for '$task_name'.\n";
-                }
+                unset($xml->recurring); // Remove the recurring element
+                echo "Task '$task_name' has been marked as complete and will no longer recur.\n";
                 break; // Exit loop
             } elseif ($input === 'y') {
                 $new_completed_date = null;
@@ -85,11 +74,7 @@ switch ($type) {
                 }
                 
                 $xml->recurring->completed = $new_completed_date;
-                if (save_xml_file($filepath, $xml)) {
-                    echo "Task '$task_name' has been updated with a new completion date of $new_completed_date.\n";
-                } else {
-                    echo "Error: Could not save the updated task file.\n";
-                }
+                echo "Task '$task_name' has been updated with a new completion date of $new_completed_date.\n";
                 break; // Exit loop
             } else {
                 echo "Invalid input. Please enter 'y' or 'n'.\n";
@@ -97,6 +82,17 @@ switch ($type) {
         }
         break;
 }
+
+// 3. Save the modified file.
+if (save_xml_file($filepath, $xml)) {
+    echo "Task file for '$task_name' updated successfully.\n";
+} else {
+    echo "Error: Could not save the updated task file.\n";
+}
+
+// 4. Log to the central completions log.
+$log_entry = date('c') . " | Completed: " . $task_name . "\n";
+file_put_contents(COMPLETIONS_LOG, $log_entry, FILE_APPEND);
 
 echo "Completion process finished.\n";
 

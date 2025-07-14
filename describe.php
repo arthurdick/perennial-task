@@ -108,7 +108,7 @@ if (!function_exists('describe_normal_task')) {
 echo "--- Describe a Task ---\n";
 
 // Use the shared function to select a task file, either by argument or interactively.
-$filepath = select_task_file($argv, 'describe');
+$filepath = select_task_file($argv, 'describe', 'all');
 
 // If no file was selected or found, exit gracefully.
 if ($filepath === null) {
@@ -132,5 +132,13 @@ switch ($type) {
     case 'normal':
         describe_normal_task($xml);
         break;
+}
+
+if (isset($xml->history)) {
+    echo "--- Completion History ---\n";
+    foreach ($xml->history->entry as $entry) {
+        echo "- " . (string)$entry . "\n";
+    }
+    echo "------------------------\n";
 }
 

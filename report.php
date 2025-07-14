@@ -113,11 +113,15 @@ if (!function_exists('get_normal_task_report')) {
      * Processes a normal task and returns its status and report message.
      *
      * @param SimpleXMLElement $task The XML element for the task.
-     * @return array An array with status and message.
+     * @return array|null An array with status and message, or null if not reportable.
      */
-    function get_normal_task_report(SimpleXMLElement $task): array
+    function get_normal_task_report(SimpleXMLElement $task): ?array
     {
-        // A normal task is always considered active.
+        // A normal task is only reportable if it has not been completed.
+        if (isset($task->history)) {
+            return null;
+        }
+
         $name = (string)$task->name;
         return [
             'status' => 'due_today',
@@ -217,3 +221,4 @@ if (!empty($upcoming_tasks)) {
         echo $task_line;
     }
 }
+

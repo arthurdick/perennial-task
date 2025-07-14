@@ -28,6 +28,9 @@ if (!function_exists('display_current_details')) {
         if (isset($xml->preview)) {
             echo "Preview: " . $xml->preview . " days in advance\n";
         }
+        if (isset($xml->history)) {
+            echo "Completion History: " . $xml->history->count() . " " . ($xml->history->count() === 1 ? "entry" : "entries") . "\n";
+        }
         echo "---------------------------\n";
     }
 }
@@ -143,7 +146,7 @@ if (!function_exists('process_edit_choice')) {
 echo "--- Edit an Existing Task ---\n";
 
 // Use the shared function to select a task file.
-$filepath = select_task_file($argv, 'edit');
+$filepath = select_task_file($argv, 'edit', 'active');
 
 // If no file was selected or found, exit gracefully.
 if ($filepath === null) {

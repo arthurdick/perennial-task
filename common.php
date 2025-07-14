@@ -30,7 +30,7 @@ function prompt_user(string $prompt): string
     return $input;
 }
 
-function select_task_file(array $argv, string $prompt_verb): ?string
+function select_task_file(array $argv, string $prompt_verb, string $initial_filter = 'reportable'): ?string
 {
     if (isset($argv[1])) {
         $filepath_arg = $argv[1];
@@ -56,40 +56,50 @@ function select_task_file(array $argv, string $prompt_verb): ?string
         return null;
     }
 
-    $valid_tasks = [];
-    foreach ($task_files as $file) {
-        if (validate_task_file($file, true)) {
-            $xml = simplexml_load_file($file);
-            $valid_tasks[] = ['path' => $file, 'name' => (string)$xml->name];
-        }
-    }
-
-    if (empty($valid_tasks)) {
-        echo "No valid tasks found. You may need to fix or remove corrupt files.\n";
-        return null;
-    }
-
-    $total_tasks = count($valid_tasks);
-    $total_pages = ceil($total_tasks / TASKS_PER_PAGE);
+    $current_filter = $initial_filter;
+    $now = new DateTimeImmutable('today');
     $current_page = 1;
 
     while (true) {
-        $page_info = ($total_pages > 1) ? " (Page $current_page of $total_pages)" : "";
-        echo "\n--- Select a task to $prompt_verb$page_info ---\n";
-        
-        $start_index = ($current_page - 1) * TASKS_PER_PAGE;
-        $tasks_on_page = array_slice($valid_tasks, $start_index, TASKS_PER_PAGE);
+        $visible_tasks = [];
+        foreach ($task_files as $file) {
+            if (!validate_task_file($file, true)) continue;
 
-        foreach ($tasks_on_page as $index_on_page => $task) {
-            $display_number = $start_index + $index_on_page + 1;
-            echo "  [" . $display_number . "] " . $task['name'] . "\n";
+            $xml = simplexml_load_file($file);
+
+            // Apply the current filter
+            if ($current_filter === 'active') {
+                if (get_task_type($xml) === 'normal' && isset($xml->history)) continue; // Skip completed normal tasks
+            } elseif ($current_filter === 'reportable') {
+                if (!is_task_reportable($xml, $now)) continue;
+            }
+
+            $visible_tasks[] = ['path' => $file, 'name' => (string)$xml->name];
         }
 
-        $prompt = "Enter #, (q)uit";
+        $total_tasks = count($visible_tasks);
+        $total_pages = ceil($total_tasks / TASKS_PER_PAGE);
+
+        if ($total_tasks === 0) {
+            echo "\nNo tasks match the current filter ('" . ucfirst($current_filter) . "').\n";
+        } else {
+            $page_info = ($total_pages > 1) ? " (Page $current_page of $total_pages)" : "";
+            echo "\n--- Select a task to $prompt_verb --- Filter: " . ucfirst($current_filter) . "$page_info\n";
+
+            $start_index = ($current_page - 1) * TASKS_PER_PAGE;
+            $tasks_on_page = array_slice($visible_tasks, $start_index, TASKS_PER_PAGE);
+
+            foreach ($tasks_on_page as $index_on_page => $task) {
+                $display_number = $start_index + $index_on_page + 1;
+                echo "  [" . $display_number . "] " . $task['name'] . "\n";
+            }
+        }
+
+        $prompt = "Enter #, (f)ilter, (q)uit";
         if ($total_pages > 1) {
             $nav_prompt = [];
             if ($current_page > 1) $nav_prompt[] = "(p)rev";
-            if ($current_page < $total_pages) $nav_prompt[] = "[Enter] for next";
+            if ($current_page < $total_pages && $current_page < $total_pages) $nav_prompt[] = "[Enter] for next";
             $prompt .= ", " . implode(", ", $nav_prompt);
         }
         $prompt .= ": ";
@@ -97,6 +107,17 @@ function select_task_file(array $argv, string $prompt_verb): ?string
         $input = prompt_user($prompt);
 
         if (strtolower($input) === 'q') return null;
+
+        if (strtolower($input) === 'f') {
+            $new_filter = prompt_user("Choose filter (all, active, reportable): ");
+            if (in_array($new_filter, ['all', 'active', 'reportable'])) {
+                $current_filter = $new_filter;
+                $current_page = 1; // Reset to first page
+            } else {
+                echo "Invalid filter.\n";
+            }
+            continue;
+        }
 
         if (($input === '' || strtolower($input) === 'n') && $current_page < $total_pages) {
             $current_page++;
@@ -109,12 +130,49 @@ function select_task_file(array $argv, string $prompt_verb): ?string
 
         if (ctype_digit($input)) {
             $selected_index = (int)$input - 1;
-            if (isset($valid_tasks[$selected_index])) {
-                return $valid_tasks[$selected_index]['path'];
+            if (isset($visible_tasks[$selected_index])) {
+                return $visible_tasks[$selected_index]['path'];
             }
         }
 
         echo "Invalid selection. Please try again.\n";
+    }
+}
+
+/**
+ * Checks if a task is "reportable" (overdue, due today, or upcoming).
+ *
+ * @param SimpleXMLElement $task The XML element for the task.
+ * @param DateTimeImmutable $now The current date for comparison.
+ * @return bool True if the task is reportable, false otherwise.
+ */
+function is_task_reportable(SimpleXMLElement $task, DateTimeImmutable $now): bool
+{
+    $type = get_task_type($task);
+
+    switch ($type) {
+        case 'recurring':
+            $completed_date = new DateTimeImmutable((string)$task->recurring->completed);
+            $recur_duration = (int)$task->recurring->duration;
+            $preview = isset($task->preview) ? (int)$task->preview : 0;
+            $next_due = $completed_date->modify("+$recur_duration days");
+            $interval = $now->diff($next_due);
+            if ($interval->invert) return true; // Overdue
+            return $interval->days <= $preview;
+
+        case 'due':
+            $due_date = new DateTimeImmutable((string)$task->due);
+            $preview = isset($task->preview) ? (int)$task->preview : 0;
+            $interval = $now->diff($due_date);
+            if ($interval->invert) return true; // Overdue
+            return $interval->days <= $preview;
+
+        case 'normal':
+            // A normal task is only "reportable" if it has not been completed yet.
+            return !isset($task->history);
+
+        default:
+            return false;
     }
 }
 
