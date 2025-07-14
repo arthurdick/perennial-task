@@ -150,7 +150,7 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
         if ($total_pages > 1) {
             $nav_prompt = [];
             if ($current_page > 1) $nav_prompt[] = "(p)rev";
-            if ($current_page < $total_pages && $current_page < $total_pages) $nav_prompt[] = "[Enter] for next";
+            if ($current_page < $total_pages) $nav_prompt[] = "(n)ext";
             $prompt .= ", " . implode(", ", $nav_prompt);
         }
         $prompt .= ": ";
