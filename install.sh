@@ -17,6 +17,16 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+echo "Checking for dependencies..."
+if ! php -m | grep -qi 'SimpleXML'; then
+    echo "Error: The 'SimpleXML' PHP extension is required but not installed."
+    exit 1
+fi
+if ! php -m | grep -qi 'dom'; then
+    echo "Error: The 'dom' PHP extension is required but not installed."
+    exit 1
+fi
+
 echo "Starting Perennial Task installation..."
 
 # --- Installation Steps ---
