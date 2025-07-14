@@ -81,24 +81,24 @@ class CommonTest extends TestCase
         $valid_filepath = TASKS_DIR . '/valid_task.xml';
         file_put_contents($valid_filepath, $valid_xml_content);
 
-        $this->assertTrue(validate_task_file($valid_filepath));
+        $this->assertTrue(validate_task_file($valid_filepath, true));
 
         // Create an invalid (malformed) task file
         $invalid_xml_content = '<task><name>Invalid Task</nme></task>';
         $invalid_filepath = TASKS_DIR . '/invalid_task.xml';
         file_put_contents($invalid_filepath, $invalid_xml_content);
 
-        $this->assertFalse(validate_task_file($invalid_filepath));
+        $this->assertFalse(validate_task_file($invalid_filepath, true));
 
         // Create a file that doesn't conform to the schema
         $non_conforming_xml = '<?xml version="1.0" encoding="UTF-8"?><badtask></badtask>';
         $non_conforming_filepath = TASKS_DIR . '/non_conforming.xml';
         file_put_contents($non_conforming_filepath, $non_conforming_xml);
 
-        $this->assertFalse(validate_task_file($non_conforming_filepath));
+        $this->assertFalse(validate_task_file($non_conforming_filepath, true));
 
         // Test with a non-existent file
-        $this->assertFalse(validate_task_file(TASKS_DIR . '/non_existent.xml'));
+        $this->assertFalse(validate_task_file(TASKS_DIR . '/non_existent.xml', true));
     }
     
     public function testSaveXmlFile()
