@@ -81,16 +81,21 @@ while (empty(trim($name))) {
     }
 }
 
-// 2. Get the task type.
-$type = '';
-$validTypes = ['normal', 'due', 'recurring'];
-while (!in_array(strtolower($type), $validTypes)) {
-    $type = prompt_user("Enter task type (normal, due, recurring): ");
-    if (!in_array(strtolower($type), $validTypes)) {
-        echo "Invalid type. Please choose 'normal', 'due', or 'recurring'.\n";
+// 2. Get the task type using a numbered menu.
+$type_choice = '';
+$validTypes = ['1' => 'normal', '2' => 'due', '3' => 'recurring'];
+while (!array_key_exists($type_choice, $validTypes)) {
+    echo "Select task type:\n";
+    echo "  [1] Normal (a simple, one-off task)\n";
+    echo "  [2] Due (a task with a specific due date)\n";
+    echo "  [3] Recurring (a task that repeats)\n";
+    $type_choice = prompt_user("Enter your choice: ");
+
+    if (!array_key_exists($type_choice, $validTypes)) {
+        echo "Invalid choice. Please try again.\n";
     }
 }
-$type = strtolower($type);
+$type = $validTypes[$type_choice];
 
 // Initialize the XML structure.
 $xml = new SimpleXMLElement('<task></task>');

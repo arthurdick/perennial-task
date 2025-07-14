@@ -45,7 +45,7 @@ class CreateTest extends TestCase
     {
         $inputs = [
             'Test Normal Task', // name
-            'normal',           // type
+            '1',                // type (normal)
             '',                 // preview (skip)
         ];
 
@@ -68,7 +68,7 @@ class CreateTest extends TestCase
     {
         $inputs = [
             'Test Due Task',    // name
-            'due',              // type
+            '2',                // type (due)
             '2025-12-25',       // due date
             '5',                // preview
         ];
@@ -91,7 +91,7 @@ class CreateTest extends TestCase
     {
         $inputs = [
             'Test Recurring Task', // name
-            'recurring',           // type
+            '3',                   // type (recurring)
             '2025-07-01',          // last completed
             '14',                  // duration
             '3',                   // preview
@@ -115,15 +115,16 @@ class CreateTest extends TestCase
     public function testFilenameSanitizationAndUniqueness()
     {
         // First task
-        $this->runCreateScript(['Test @Task!', 'normal', '']);
+        $this->runCreateScript(['Test @Task!', '1', '']);
         $this->assertFileExists(TASKS_DIR . '/test_task.xml');
 
         // Second task with the same name
-        $this->runCreateScript(['Test @Task!', 'normal', '']);
+        $this->runCreateScript(['Test @Task!', '1', '']);
         $this->assertFileExists(TASKS_DIR . '/test_task_1.xml');
         
         // Third task
-        $this->runCreateScript(['Test @Task!', 'normal', '']);
+        $this->runCreateScript(['Test @Task!', '1', '']);
         $this->assertFileExists(TASKS_DIR . '/test_task_2.xml');
     }
 }
+
