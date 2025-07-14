@@ -61,6 +61,7 @@ function create_default_config(string $config_path): void
     $install_dir = __DIR__;
     $xsd_path = $install_dir . '/task.xsd';
     $completions_log = $config_dir . '/completions.log';
+    $system_timezone = date_default_timezone_get();
 
     $config_content = <<<INI
 ; Perennial Task Configuration File
@@ -71,6 +72,7 @@ tasks_dir = "$tasks_dir"
 completions_log = "$completions_log"
 xsd_path = "$xsd_path"
 tasks_per_page = 10
+timezone = "$system_timezone"
 INI;
 
     if (file_put_contents($config_path, $config_content) === false) {
@@ -100,6 +102,11 @@ function initialize_perennial_task_config(): void
 
         if ($config === false) {
             throw new Exception("Error: Could not parse configuration file at '$config_path'.");
+        }
+
+        // Set timezone from config, if it is a valid option.
+        if (!empty($config['timezone']) && in_array($config['timezone'], timezone_identifiers_list())) {
+            date_default_timezone_set($config['timezone']);
         }
 
         // Define global constants for the application to use.
