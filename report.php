@@ -18,41 +18,43 @@ if (!defined('IS_INTERACTIVE')) {
 
 // --- Function Definitions ---
 
-/**
- * Shared logic to generate a report line based on a due date.
- * @param string $name The name of the task.
- * @param DateTimeImmutable $due_date The date the task is due.
- * @param int $preview_duration The preview days.
- * @param DateTimeImmutable $now The current date for comparison.
- * @return array|null An array with status and message, or null.
- */
-function generate_report_for_date(string $name, DateTimeImmutable $due_date, int $preview_duration, DateTimeImmutable $now): ?array
-{
-    $interval = $now->diff($due_date);
-    $days_until_due = $interval->days;
+if (!function_exists('generate_report_for_date')) {
+    /**
+     * Shared logic to generate a report line based on a due date.
+     * @param string $name The name of the task.
+     * @param DateTimeImmutable $due_date The date the task is due.
+     * @param int $preview_duration The preview days.
+     * @param DateTimeImmutable $now The current date for comparison.
+     * @return array|null An array with status and message, or null.
+     */
+    function generate_report_for_date(string $name, DateTimeImmutable $due_date, int $preview_duration, DateTimeImmutable $now): ?array
+    {
+        $interval = $now->diff($due_date);
+        $days_until_due = $interval->days;
 
-    if ($interval->invert) {
-        // Due date is in the past.
-        $days_overdue = $days_until_due;
-        return [
-            'status' => 'overdue',
-            'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
-        ];
-    } elseif ($days_until_due === 0) {
-        // Due today.
-        return [
-            'status' => 'due_today',
-            'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": $name\n"
-        ];
-    } elseif ($days_until_due <= $preview_duration) {
-        // Due within the preview window.
-        return [
-            'status' => 'upcoming',
-            'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
-        ];
+        if ($interval->invert) {
+            // Due date is in the past.
+            $days_overdue = $days_until_due;
+            return [
+                'status' => 'overdue',
+                'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
+            ];
+        } elseif ($days_until_due === 0) {
+            // Due today.
+            return [
+                'status' => 'due_today',
+                'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": $name\n"
+            ];
+        } elseif ($days_until_due <= $preview_duration) {
+            // Due within the preview window.
+            return [
+                'status' => 'upcoming',
+                'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
+            ];
+        }
+        
+        return null;
     }
-    
-    return null;
 }
 
 if (!function_exists('get_recurring_task_report')) {
