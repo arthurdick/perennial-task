@@ -31,6 +31,7 @@ class EditTest extends TestCase
         };
 
         ob_start();
+        // Use `include` so the script is re-evaluated for each test run.
         include $this->script_path;
         $output = ob_get_clean();
         
@@ -49,7 +50,7 @@ class EditTest extends TestCase
         $inputs = [
             '1', // Edit Name
             'New Awesome Name',
-            '2', // Save and Exit (assuming normal task)
+            '3', // Save and Exit (normal task menu)
         ];
 
         $output = $this->runEditScript($filepath, $inputs);
@@ -66,9 +67,9 @@ class EditTest extends TestCase
         save_xml_file($filepath, $xml);
 
         $inputs = [
-            '2', // Edit Due Date
+            '3', // Edit Due Date
             '2025-11-01',
-            '4', // Save and Exit
+            '5', // Save and Exit
         ];
 
         $this->runEditScript($filepath, $inputs);
@@ -83,11 +84,11 @@ class EditTest extends TestCase
         save_xml_file($filepath, $xml);
 
         $inputs = [
-            '2', // Edit Last Completed Date
+            '3', // Edit Last Completed Date
             '2025-06-15',
-            '3', // Edit Recurrence Duration
+            '4', // Edit Recurrence Duration
             '15',
-            '5'  // Save and Exit
+            '6'  // Save and Exit
         ];
 
         $this->runEditScript($filepath, $inputs);
@@ -104,9 +105,9 @@ class EditTest extends TestCase
         
         // Add preview
         $inputs_add = [
-            '3', // Edit/Add Preview
+            '4', // Edit/Add Preview
             '7',
-            '4'  // Save
+            '5'  // Save
         ];
         $this->runEditScript($filepath, $inputs_add);
         $xml_with_preview = simplexml_load_file($filepath);
@@ -114,12 +115,40 @@ class EditTest extends TestCase
 
         // Remove preview
         $inputs_remove = [
-            '3', // Edit/Add Preview
+            '4', // Edit/Add Preview
             '0',
-            '4'  // Save
+            '5'  // Save
         ];
         $this->runEditScript($filepath, $inputs_remove);
         $xml_without_preview = simplexml_load_file($filepath);
         $this->assertFalse(isset($xml_without_preview->preview));
     }
+    
+    public function testChangeTaskType()
+    {
+        $xml = new SimpleXMLElement('<task><name>Convert Me</name><due>2025-01-01</due></task>');
+        $filepath = TASKS_DIR . '/convert_type.xml';
+        save_xml_file($filepath, $xml);
+
+        $inputs = [
+            '2', // Change Task Type (from 'due' menu)
+            '3', // Select 'recurring'
+            '2025-07-10', // Enter last completed date
+            '7',          // Recur every 7 days
+            '6'           // Save and Exit (from the new 'recurring' menu)
+        ];
+        
+        $this->runEditScript($filepath, $inputs);
+        
+        $updated_xml = simplexml_load_file($filepath);
+        
+        // Assert the old structure is gone
+        $this->assertFalse(isset($updated_xml->due));
+        
+        // Assert the new structure is present and correct
+        $this->assertTrue(isset($updated_xml->recurring));
+        $this->assertEquals('2025-07-10', (string)$updated_xml->recurring->completed);
+        $this->assertEquals('7', (string)$updated_xml->recurring->duration);
+    }
 }
+

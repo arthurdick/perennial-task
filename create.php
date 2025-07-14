@@ -2,62 +2,6 @@
 
 require_once 'common.php';
 
-// --- Helper Functions ---
-
-if (!function_exists('collect_due_task_details')) {
-    /**
-     * Interactively collects details for a 'due' task.
-     * @param SimpleXMLElement $xml The XML object to modify.
-     */
-    function collect_due_task_details(SimpleXMLElement $xml): void
-    {
-        $dueDate = null;
-        while ($dueDate === null) {
-            $dateStr = prompt_user("Enter due date (YYYY-MM-DD): ");
-            if (validate_date($dateStr)) {
-                $dueDate = $dateStr;
-            } else {
-                echo "Invalid date format. Please use YYYY-MM-DD.\n";
-            }
-        }
-        $xml->addChild('due', $dueDate);
-    }
-}
-
-if (!function_exists('collect_recurring_task_details')) {
-    /**
-     * Interactively collects details for a 'recurring' task.
-     * @param SimpleXMLElement $xml The XML object to modify.
-     */
-    function collect_recurring_task_details(SimpleXMLElement $xml): void
-    {
-        $completedDate = null;
-        while ($completedDate === null) {
-            $dateStr = prompt_user("Enter last completed date (YYYY-MM-DD, press Enter for today): ");
-            if (empty($dateStr)) {
-                $dateStr = date('Y-m-d');
-            }
-            if (validate_date($dateStr)) {
-                $completedDate = $dateStr;
-            } else {
-                echo "Invalid date format. Please use YYYY-MM-DD.\n";
-            }
-        }
-
-        $duration = '';
-        while (!ctype_digit($duration) || (int)$duration <= 0) {
-            $duration = prompt_user("Recur every X days (e.g., 7): ");
-            if (!ctype_digit($duration) || (int)$duration <= 0) {
-                echo "Please enter a positive whole number for the duration.\n";
-            }
-        }
-
-        $recurring = $xml->addChild('recurring');
-        $recurring->addChild('completed', $completedDate);
-        $recurring->addChild('duration', $duration);
-    }
-}
-
 // --- Main Script Execution ---
 
 echo "--- Create a New Task ---\n";
@@ -101,7 +45,7 @@ $type = $validTypes[$type_choice];
 $xml = new SimpleXMLElement('<task></task>');
 $xml->addChild('name', htmlspecialchars($name));
 
-// 3. Branch logic based on task type.
+// 3. Branch logic based on task type, calling functions from common.php
 switch ($type) {
     case 'due':
         collect_due_task_details($xml);

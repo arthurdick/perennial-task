@@ -43,7 +43,7 @@ if (!function_exists('show_edit_menu')) {
      */
     function show_edit_menu(string $type): string
     {
-        $menu_options = ['name' => 'Edit Name'];
+        $menu_options = ['name' => 'Edit Name', 'type' => 'Change Task Type'];
         switch ($type) {
             case 'due':
                 $menu_options['due'] = 'Edit Due Date';
@@ -81,9 +81,12 @@ if (!function_exists('process_edit_choice')) {
      * Calls the correct function to handle the user's edit choice.
      * @param SimpleXMLElement $xml The XML object to modify.
      * @param string $choice The user's chosen action.
+     * @return string The potentially new task type.
      */
-    function process_edit_choice(SimpleXMLElement $xml, string $choice): void
+    function process_edit_choice(SimpleXMLElement $xml, string $choice): string
     {
+        $currentType = get_task_type($xml);
+
         switch ($choice) {
             case 'name':
                 $newName = '';
@@ -92,6 +95,34 @@ if (!function_exists('process_edit_choice')) {
                     if (empty(trim($newName))) echo "Name cannot be empty.\n";
                 }
                 $xml->name = htmlspecialchars($newName);
+                break;
+            case 'type':
+                $type_choice = '';
+                $validTypes = ['1' => 'normal', '2' => 'due', '3' => 'recurring'];
+                while (!array_key_exists($type_choice, $validTypes)) {
+                    echo "Select new task type:\n";
+                    echo "  [1] Normal (a simple, one-off task)\n";
+                    echo "  [2] Due (a task with a specific due date)\n";
+                    echo "  [3] Recurring (a task that repeats)\n";
+                    $type_choice = prompt_user("Enter your choice: ");
+                }
+                $newType = $validTypes[$type_choice];
+
+                if ($newType !== $currentType) {
+                    // Remove old type-specific elements
+                    if (isset($xml->due)) unset($xml->due);
+                    if (isset($xml->recurring)) unset($xml->recurring);
+                    if (isset($xml->preview)) unset($xml->preview); // Preview is tied to due/recurring
+
+                    // Add new type-specific elements by calling the shared functions
+                    if ($newType === 'due') {
+                        collect_due_task_details($xml);
+                    } elseif ($newType === 'recurring') {
+                        collect_recurring_task_details($xml);
+                    }
+                    echo "Task type changed to '" . ucfirst($newType) . "'.\n";
+                    return $newType;
+                }
                 break;
             case 'due':
                 $dueDate = null;
@@ -138,6 +169,7 @@ if (!function_exists('process_edit_choice')) {
                 }
                 break;
         }
+        return $currentType; // Return original type if no change occurred
     }
 }
 
@@ -158,18 +190,18 @@ if ($filepath === null) {
 
 // Load the selected XML file for editing.
 $xml = simplexml_load_file($filepath);
+$type = get_task_type($xml); // Get initial type
 
 // Enter the editing loop.
 while (true) {
     display_current_details($xml);
-    $type = get_task_type($xml); // get_task_type is in common.php
     $choice = show_edit_menu($type);
 
     if ($choice === 'save') {
         break; // Exit the loop to save the file.
     }
     
-    process_edit_choice($xml, $choice);
+    $type = process_edit_choice($xml, $choice); // Update type in case it changed
 }
 
 // Save the modified XML file using the shared function.
