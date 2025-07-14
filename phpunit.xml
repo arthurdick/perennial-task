@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="tests/bootstrap.php"
-         colors="true"
-         verbose="true"
-         stopOnFailure="false">
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.2/phpunit.xsd"
+    bootstrap="tests/bootstrap.php"
+    colors="true"
+    stopOnFailure="false"
+    cacheDirectory=".phpunit.result.cache"
+>
     <testsuites>
         <testsuite name="Perennial Task Test Suite">
             <directory>tests</directory>
