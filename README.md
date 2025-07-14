@@ -6,13 +6,14 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
 
 ## Features
 
-  * **Create Tasks**: Quickly create normal, due-date, or recurring tasks.
-  * **Edit Tasks**: Interactively edit any detail of an existing task.
-  * **Complete Tasks**: Mark tasks as complete, which either deletes them or updates their next due/completion date.
-  * **Describe Tasks**: Get a detailed, human-readable description of any single task.
-  * **Run Reports**: Generate a report of all tasks that are due, overdue, or upcoming.
-  * **Paginated Selection**: Easily navigate and select from a large number of tasks.
-  * **Command-Line Driven**: Designed for efficient use within a terminal environment.
+* **Create Tasks**: Quickly create normal, due-date, or recurring tasks.
+* **Edit Tasks**: Interactively edit any detail of an existing task.
+* **Complete Tasks**: Mark tasks as complete, which updates their next due/completion date or archives them with a full history.
+* **Completion History**: Every completed task retains a full history of when it was completed, allowing you to track consistency and habits over time.
+* **Describe Tasks**: Get a detailed, human-readable description of any single task, including its full completion history.
+* **Run Reports**: Generate a report of all tasks that are due, overdue, or upcoming.
+* **Intelligent Filtering**: The task selection menu is filterable, allowing you to view all tasks, only active ones, or just the reportable ones.
+* **Command-Line Driven**: Designed for efficient use within a terminal environment.
 
 ## Installation
 
@@ -77,41 +78,33 @@ Once installed, you can use the `prn` command from any directory.
 ### **Commands**
 
 **`prn create`**
+* Interactively prompts you to create a new task.
 
-  * Interactively prompts you to create a new task.
+**`prn edit`**
+* Interactively edit an existing task. Defaults to showing `active` tasks.
 
-**`prn edit [task_file]`**
+**`prn complete`**
+* Mark a task as complete. Defaults to showing `reportable` (due or upcoming) tasks.
 
-  * Interactively edit an existing task via a paginated menu, or edit `[task_file]` directly.
-
-**`prn complete [task_file]`**
-
-  * Mark a task as complete via a paginated menu, or complete `[task_file]` directly.
-
-**`prn describe [task_file]`**
-
-  * Shows a detailed description of a task, selected from a menu or specified by `[task_file]`.
+**`prn describe`**
+* Shows a detailed description and history of a task. Defaults to showing `all` tasks.
 
 **`prn report [date]`**
-
-  * Generates a report of all due and upcoming tasks. Optionally run for a specific `[date]`.
+* Generates a report of all due and upcoming tasks. Optionally run for a specific `[date]`.
 
 **`prn help`**
-
-  * Displays a list of available commands.
+* Displays a list of available commands.
 
 **`prn version`**
-
-  * Displays the application's version number.
+* Displays the application's version number.
 
 ## Configuration
 
 Perennial Task stores its configuration in a file named `config.ini`. This file is automatically created the first time you run a command.
 
 The configuration file allows you to customize paths for your tasks, logs, and other settings. The location of this file follows the XDG Base Directory Specification:
-
-  * It will be created in `$XDG_CONFIG_HOME/perennial-task/`.
-  * If the `$XDG_CONFIG_HOME` environment variable is not set, it defaults to `~/.config/perennial-task/`.
+* It will be created in `$XDG_CONFIG_HOME/perennial-task/`.
+* If the `$XDG_CONFIG_HOME` environment variable is not set, it defaults to `~/.config/perennial-task/`.
 
 Here is an example of the default `config.ini` file:
 
