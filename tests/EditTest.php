@@ -48,9 +48,9 @@ class EditTest extends TestCase
         save_xml_file($filepath, $xml);
 
         $inputs = [
-            '1', // Edit Name
+            'n', // Edit Name
             'New Awesome Name',
-            '3', // Save and Exit (normal task menu)
+            's', // Save and Exit
         ];
 
         $output = $this->runEditScript($filepath, $inputs);
@@ -67,9 +67,9 @@ class EditTest extends TestCase
         save_xml_file($filepath, $xml);
 
         $inputs = [
-            '3', // Edit Due Date
+            'd', // Edit Due Date
             '2025-11-01',
-            '5', // Save and Exit
+            's', // Save and Exit
         ];
 
         $this->runEditScript($filepath, $inputs);
@@ -84,11 +84,11 @@ class EditTest extends TestCase
         save_xml_file($filepath, $xml);
 
         $inputs = [
-            '3', // Edit Last Completed Date
+            'c', // Edit Last Completed Date
             '2025-06-15',
-            '4', // Edit Recurrence Duration
+            'r', // Edit Recurrence Duration
             '15',
-            '6'  // Save and Exit
+            's'  // Save and Exit
         ];
 
         $this->runEditScript($filepath, $inputs);
@@ -105,9 +105,9 @@ class EditTest extends TestCase
         
         // Add preview
         $inputs_add = [
-            '4', // Edit/Add Preview
+            'p', // Edit/Add Preview
             '7',
-            '5'  // Save
+            's'  // Save
         ];
         $this->runEditScript($filepath, $inputs_add);
         $xml_with_preview = simplexml_load_file($filepath);
@@ -115,9 +115,9 @@ class EditTest extends TestCase
 
         // Remove preview
         $inputs_remove = [
-            '4', // Edit/Add Preview
+            'p', // Edit/Add Preview
             '0',
-            '5'  // Save
+            's'  // Save
         ];
         $this->runEditScript($filepath, $inputs_remove);
         $xml_without_preview = simplexml_load_file($filepath);
@@ -131,11 +131,11 @@ class EditTest extends TestCase
         save_xml_file($filepath, $xml);
 
         $inputs = [
-            '2', // Change Task Type (from 'due' menu)
-            '3', // Select 'recurring'
+            't',          // Change Task Type
+            'r',          // Select 'recurring'
             '2025-07-10', // Enter last completed date
             '7',          // Recur every 7 days
-            '6'           // Save and Exit (from the new 'recurring' menu)
+            's'           // Save and Exit
         ];
         
         $this->runEditScript($filepath, $inputs);

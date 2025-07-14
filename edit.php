@@ -43,33 +43,34 @@ if (!function_exists('show_edit_menu')) {
      */
     function show_edit_menu(string $type): string
     {
-        $menu_options = ['name' => 'Edit Name', 'type' => 'Change Task Type'];
+        // Define menu options with sensible letter commands
+        $menu_options = [
+            'n' => 'Edit Name',
+            't' => 'Change Task Type',
+        ];
+
         switch ($type) {
             case 'due':
-                $menu_options['due'] = 'Edit Due Date';
-                $menu_options['preview'] = 'Edit/Add Preview Days';
+                $menu_options['d'] = 'Edit Due Date';
+                $menu_options['p'] = 'Edit/Add Preview Days';
                 break;
             case 'recurring':
-                $menu_options['completed'] = 'Edit Last Completed Date';
-                $menu_options['duration'] = 'Edit Recurrence Duration';
-                $menu_options['preview'] = 'Edit/Add Preview Days';
+                $menu_options['c'] = 'Edit Last Completed Date';
+                $menu_options['r'] = 'Edit Recurrence Duration';
+                $menu_options['p'] = 'Edit/Add Preview Days';
                 break;
         }
-        $menu_options['save'] = 'Save and Exit';
+        $menu_options['s'] = 'Save and Exit';
 
         echo "What would you like to edit?\n";
-        $i = 1;
-        $indexed_options = [];
         foreach ($menu_options as $key => $text) {
-            echo "  [$i] $text\n";
-            $indexed_options[$i] = $key;
-            $i++;
+            echo "  ($key) $text\n";
         }
         
         while (true) {
-            $input = prompt_user("Enter your choice: ");
-            if (ctype_digit($input) && isset($indexed_options[(int)$input])) {
-                return $indexed_options[(int)$input];
+            $input = strtolower(prompt_user("Enter your choice: "));
+            if (array_key_exists($input, $menu_options)) {
+                return $input;
             }
             echo "Invalid choice. Please try again.\n";
         }
@@ -88,7 +89,7 @@ if (!function_exists('process_edit_choice')) {
         $currentType = get_task_type($xml);
 
         switch ($choice) {
-            case 'name':
+            case 'n': // Name
                 $newName = '';
                 while (empty(trim($newName))) {
                     $newName = prompt_user("Enter the new task name: ");
@@ -96,25 +97,21 @@ if (!function_exists('process_edit_choice')) {
                 }
                 $xml->name = htmlspecialchars($newName);
                 break;
-            case 'type':
+            case 't': // Type
                 $type_choice = '';
-                $validTypes = ['1' => 'normal', '2' => 'due', '3' => 'recurring'];
+                $validTypes = ['n' => 'normal', 'd' => 'due', 'r' => 'recurring'];
                 while (!array_key_exists($type_choice, $validTypes)) {
                     echo "Select new task type:\n";
-                    echo "  [1] Normal (a simple, one-off task)\n";
-                    echo "  [2] Due (a task with a specific due date)\n";
-                    echo "  [3] Recurring (a task that repeats)\n";
-                    $type_choice = prompt_user("Enter your choice: ");
+                    echo "  (n) Normal\n  (d) Due\n  (r) Recurring\n";
+                    $type_choice = strtolower(prompt_user("Enter your choice: "));
                 }
                 $newType = $validTypes[$type_choice];
 
                 if ($newType !== $currentType) {
-                    // Remove old type-specific elements
                     if (isset($xml->due)) unset($xml->due);
                     if (isset($xml->recurring)) unset($xml->recurring);
-                    if (isset($xml->preview)) unset($xml->preview); // Preview is tied to due/recurring
+                    if (isset($xml->preview)) unset($xml->preview);
 
-                    // Add new type-specific elements by calling the shared functions
                     if ($newType === 'due') {
                         collect_due_task_details($xml);
                     } elseif ($newType === 'recurring') {
@@ -124,7 +121,7 @@ if (!function_exists('process_edit_choice')) {
                     return $newType;
                 }
                 break;
-            case 'due':
+            case 'd': // Due date
                 $dueDate = null;
                 while ($dueDate === null) {
                     $dateStr = prompt_user("Enter new due date (YYYY-MM-DD): ");
@@ -133,7 +130,7 @@ if (!function_exists('process_edit_choice')) {
                 }
                 $xml->due = $dueDate;
                 break;
-            case 'completed':
+            case 'c': // Completed date
                 $completedDate = null;
                 while ($completedDate === null) {
                     $dateStr = prompt_user("Enter new last completed date (YYYY-MM-DD): ");
@@ -142,7 +139,7 @@ if (!function_exists('process_edit_choice')) {
                 }
                 $xml->recurring->completed = $completedDate;
                 break;
-            case 'duration':
+            case 'r': // Recurrence duration
                 $duration = '';
                 while (!ctype_digit($duration) || (int)$duration <= 0) {
                     $duration = prompt_user("Recur every X days (e.g., 7): ");
@@ -150,7 +147,7 @@ if (!function_exists('process_edit_choice')) {
                 }
                 $xml->recurring->duration = $duration;
                 break;
-            case 'preview':
+            case 'p': // Preview
                 $preview = prompt_user("Preview days in advance? (Enter a number, or 0 to remove): ");
                 if (ctype_digit($preview)) {
                     if ((int)$preview > 0) {
@@ -186,22 +183,19 @@ if ($filepath === null) {
 }
 
 // --- Main Edit Process ---
-// By this point, $filepath is set and validated.
-
-// Load the selected XML file for editing.
 $xml = simplexml_load_file($filepath);
-$type = get_task_type($xml); // Get initial type
+$type = get_task_type($xml);
 
 // Enter the editing loop.
 while (true) {
     display_current_details($xml);
     $choice = show_edit_menu($type);
 
-    if ($choice === 'save') {
-        break; // Exit the loop to save the file.
+    if ($choice === 's') { // Save
+        break; 
     }
     
-    $type = process_edit_choice($xml, $choice); // Update type in case it changed
+    $type = process_edit_choice($xml, $choice);
 }
 
 // Save the modified XML file using the shared function.

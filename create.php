@@ -25,15 +25,15 @@ while (empty(trim($name))) {
     }
 }
 
-// 2. Get the task type using a numbered menu.
+// 2. Get the task type using a letter-based menu.
 $type_choice = '';
-$validTypes = ['1' => 'normal', '2' => 'due', '3' => 'recurring'];
+$validTypes = ['n' => 'normal', 'd' => 'due', 'r' => 'recurring'];
 while (!array_key_exists($type_choice, $validTypes)) {
     echo "Select task type:\n";
-    echo "  [1] Normal (a simple, one-off task)\n";
-    echo "  [2] Due (a task with a specific due date)\n";
-    echo "  [3] Recurring (a task that repeats)\n";
-    $type_choice = prompt_user("Enter your choice: ");
+    echo "  (n) Normal (a simple, one-off task)\n";
+    echo "  (d) Due (a task with a specific due date)\n";
+    echo "  (r) Recurring (a task that repeats)\n";
+    $type_choice = strtolower(prompt_user("Enter your choice: "));
 
     if (!array_key_exists($type_choice, $validTypes)) {
         echo "Invalid choice. Please try again.\n";
