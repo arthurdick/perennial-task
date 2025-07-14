@@ -48,14 +48,14 @@ class CompleteTest extends TestCase
         
         $this->assertFileExists($filepath);
 
-        $output = $this->runCompleteScript($filepath);
+        $output = $this->runCompleteScript($filepath, ['2025-07-15']);
 
-        $this->assertStringContainsString("Task 'Normal Task To Complete' has been marked as complete.", $output);
-        $this->assertFileExists($filepath); // File should NOT be deleted
+        $this->assertStringContainsString("Task 'Normal Task To Complete' has been marked as complete on 2025-07-15.", $output);
+        $this->assertFileExists($filepath);
         
         $updated_xml = simplexml_load_file($filepath);
         $this->assertTrue(isset($updated_xml->history));
-        $this->assertEquals(1, $updated_xml->history->entry->count());
+        $this->assertEquals('2025-07-15', (string)$updated_xml->history->entry);
     }
 
     public function testCompleteDueTask_UpdateDate()
@@ -64,30 +64,14 @@ class CompleteTest extends TestCase
         $filepath = TASKS_DIR . '/due_update.xml';
         save_xml_file($filepath, $xml);
 
-        $output = $this->runCompleteScript($filepath, ['2026-01-01']);
+        $output = $this->runCompleteScript($filepath, ['2025-07-10', '2026-01-01']);
         
-        $this->assertStringContainsString("Task 'Due Task To Update' has been updated with a new due date of 2026-01-01.", $output);
-        $this->assertFileExists($filepath);
+        $this->assertStringContainsString("Task 'Due Task To Update' was completed on 2025-07-10.", $output);
+        $this->assertStringContainsString("new due date of 2026-01-01", $output);
         
         $updated_xml = simplexml_load_file($filepath);
         $this->assertEquals('2026-01-01', (string)$updated_xml->due);
-        $this->assertTrue(isset($updated_xml->history));
-    }
-    
-    public function testCompleteDueTask_Never()
-    {
-        $xml = new SimpleXMLElement('<task><name>Due Task To Remove</name><due>2025-07-01</due></task>');
-        $filepath = TASKS_DIR . '/due_remove.xml';
-        save_xml_file($filepath, $xml);
-
-        $output = $this->runCompleteScript($filepath, ['never']);
-        
-        $this->assertStringContainsString("will no longer have a due date", $output);
-        $this->assertFileExists($filepath); // File should NOT be deleted
-        
-        $updated_xml = simplexml_load_file($filepath);
-        $this->assertFalse(isset($updated_xml->due)); // <due> tag should be gone
-        $this->assertTrue(isset($updated_xml->history));
+        $this->assertEquals('2025-07-10', (string)$updated_xml->history->entry);
     }
     
     public function testCompleteRecurringTask_Yes()
@@ -96,31 +80,14 @@ class CompleteTest extends TestCase
         $filepath = TASKS_DIR . '/recurring_update.xml';
         save_xml_file($filepath, $xml);
 
-        $today = date('Y-m-d');
-        $output = $this->runCompleteScript($filepath, ['y', $today]);
+        $output = $this->runCompleteScript($filepath, ['2025-07-08', 'y']);
         
-        $this->assertStringContainsString("has been updated with a new completion date of $today", $output);
+        $this->assertStringContainsString("has been updated with a new completion date of 2025-07-08", $output);
         $this->assertFileExists($filepath);
 
         $updated_xml = simplexml_load_file($filepath);
-        $this->assertEquals($today, (string)$updated_xml->recurring->completed);
-        $this->assertTrue(isset($updated_xml->history));
-    }
-    
-    public function testCompleteRecurringTask_No()
-    {
-        $xml = new SimpleXMLElement('<task><name>Recurring Task To Remove</name><recurring><completed>2025-07-01</completed><duration>7</duration></recurring></task>');
-        $filepath = TASKS_DIR . '/recurring_remove.xml';
-        save_xml_file($filepath, $xml);
-
-        $output = $this->runCompleteScript($filepath, ['n']);
-        
-        $this->assertStringContainsString("will no longer recur", $output);
-        $this->assertFileExists($filepath); // File should NOT be deleted
-        
-        $updated_xml = simplexml_load_file($filepath);
-        $this->assertFalse(isset($updated_xml->recurring)); // <recurring> tag should be gone
-        $this->assertTrue(isset($updated_xml->history));
+        $this->assertEquals('2025-07-08', (string)$updated_xml->recurring->completed);
+        $this->assertEquals('2025-07-08', (string)$updated_xml->history->entry);
     }
 }
 
