@@ -4,7 +4,7 @@
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
 
-const VERSION = '1.1.0';
+const VERSION = '1.1.1';
 const MIN_PHP_VERSION = '7.4';
 
 /**
