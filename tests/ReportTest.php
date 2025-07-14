@@ -17,8 +17,12 @@ class ReportTest extends TestCase
         $this->now = new DateTimeImmutable('today');
         
         // Create test tasks with relative dates
-        // Normal task - always due
+        // Normal task (uncompleted) - always due
         save_xml_file(TASKS_DIR . '/normal.xml', new SimpleXMLElement('<task><name>Normal Report Task</name></task>'));
+        
+        // Normal task (completed) - should not be in report
+        $completed_normal_xml = new SimpleXMLElement('<task><name>Completed Normal Task</name><history><entry>2025-01-01</entry></history></task>');
+        save_xml_file(TASKS_DIR . '/normal_completed.xml', $completed_normal_xml);
         
         // Due today
         $due_today_date = $this->now->format('Y-m-d');
@@ -72,6 +76,7 @@ class ReportTest extends TestCase
         // Things that should NOT be in the report
         $this->assertStringNotContainsString('Future Task', $output);
         $this->assertStringNotContainsString('Recurring Upcoming No Preview', $output);
+        $this->assertStringNotContainsString('Completed Normal Task', $output); // New check
     }
     
     public function testReportWithPreviewForRecurring()
@@ -87,3 +92,4 @@ class ReportTest extends TestCase
         $this->assertStringContainsString('Recurring With Preview (due in 2 days)', $output);
     }
 }
+

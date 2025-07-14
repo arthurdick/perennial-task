@@ -12,9 +12,6 @@ class CompleteTest extends TestCase
         if (!is_dir(TASKS_DIR)) {
             mkdir(TASKS_DIR, 0777, true);
         }
-        if (file_exists(COMPLETIONS_LOG)) {
-            unlink(COMPLETIONS_LOG);
-        }
     }
 
     private function runCompleteScript(string $task_filepath, array $inputs = []): string
@@ -53,13 +50,12 @@ class CompleteTest extends TestCase
 
         $output = $this->runCompleteScript($filepath);
 
-        $this->assertStringContainsString("Task 'Normal Task To Complete' was a normal task and has been deleted.", $output);
-        $this->assertFileDoesNotExist($filepath);
+        $this->assertStringContainsString("Task 'Normal Task To Complete' has been marked as complete.", $output);
+        $this->assertFileExists($filepath); // File should NOT be deleted
         
-        // Check log file
-        $this->assertFileExists(COMPLETIONS_LOG);
-        $log_content = file_get_contents(COMPLETIONS_LOG);
-        $this->assertStringContainsString("Completed: Normal Task To Complete", $log_content);
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertTrue(isset($updated_xml->history));
+        $this->assertEquals(1, $updated_xml->history->entry->count());
     }
 
     public function testCompleteDueTask_UpdateDate()
@@ -75,6 +71,7 @@ class CompleteTest extends TestCase
         
         $updated_xml = simplexml_load_file($filepath);
         $this->assertEquals('2026-01-01', (string)$updated_xml->due);
+        $this->assertTrue(isset($updated_xml->history));
     }
     
     public function testCompleteDueTask_Never()
@@ -85,8 +82,12 @@ class CompleteTest extends TestCase
 
         $output = $this->runCompleteScript($filepath, ['never']);
         
-        $this->assertStringContainsString("will not have a new due date and has been deleted", $output);
-        $this->assertFileDoesNotExist($filepath);
+        $this->assertStringContainsString("will no longer have a due date", $output);
+        $this->assertFileExists($filepath); // File should NOT be deleted
+        
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertFalse(isset($updated_xml->due)); // <due> tag should be gone
+        $this->assertTrue(isset($updated_xml->history));
     }
     
     public function testCompleteRecurringTask_Yes()
@@ -95,13 +96,15 @@ class CompleteTest extends TestCase
         $filepath = TASKS_DIR . '/recurring_update.xml';
         save_xml_file($filepath, $xml);
 
-        $output = $this->runCompleteScript($filepath, ['y', '2025-07-09']);
+        $today = date('Y-m-d');
+        $output = $this->runCompleteScript($filepath, ['y', $today]);
         
-        $this->assertStringContainsString("has been updated with a new completion date of 2025-07-09", $output);
+        $this->assertStringContainsString("has been updated with a new completion date of $today", $output);
         $this->assertFileExists($filepath);
 
         $updated_xml = simplexml_load_file($filepath);
-        $this->assertEquals('2025-07-09', (string)$updated_xml->recurring->completed);
+        $this->assertEquals($today, (string)$updated_xml->recurring->completed);
+        $this->assertTrue(isset($updated_xml->history));
     }
     
     public function testCompleteRecurringTask_No()
@@ -112,7 +115,12 @@ class CompleteTest extends TestCase
 
         $output = $this->runCompleteScript($filepath, ['n']);
         
-        $this->assertStringContainsString("will not recur and has been deleted", $output);
-        $this->assertFileDoesNotExist($filepath);
+        $this->assertStringContainsString("will no longer recur", $output);
+        $this->assertFileExists($filepath); // File should NOT be deleted
+        
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertFalse(isset($updated_xml->recurring)); // <recurring> tag should be gone
+        $this->assertTrue(isset($updated_xml->history));
     }
 }
+

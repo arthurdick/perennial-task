@@ -92,5 +92,29 @@ class DescribeTest extends TestCase
         $this->assertStringContainsString('Repeats every 10 days.', $output);
         $this->assertStringContainsString('Status: Last completed on ' . $completed_date->format('Y-m-d') . ' (7 days ago).', $output);
     }
+    
+    public function testDescribeTaskWithHistory()
+    {
+        $xml = new SimpleXMLElement('<task><name>A Task With History</name><history><entry>2025-01-01</entry><entry>2025-01-15</entry></history></task>');
+        $filepath = TASKS_DIR . '/history.xml';
+        save_xml_file($filepath, $xml);
+
+        $output = $this->runDescribeScript($filepath);
+
+        $this->assertStringContainsString('--- Completion History ---', $output);
+        $this->assertStringContainsString('- 2025-01-01', $output);
+        $this->assertStringContainsString('- 2025-01-15', $output);
+    }
+    
+    public function testDescribeTaskWithoutHistory()
+    {
+        $xml = new SimpleXMLElement('<task><name>A Task Without History</name></task>');
+        $filepath = TASKS_DIR . '/no_history.xml';
+        save_xml_file($filepath, $xml);
+
+        $output = $this->runDescribeScript($filepath);
+
+        $this->assertStringNotContainsString('--- Completion History ---', $output);
+    }
 }
 

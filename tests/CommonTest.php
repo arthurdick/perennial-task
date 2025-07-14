@@ -13,6 +13,35 @@ class CommonTest extends TestCase
         }
     }
 
+    public function testIsTaskReportable()
+    {
+        $now = new DateTimeImmutable('today');
+
+        // Normal task, not completed -> reportable
+        $xml_normal_active = new SimpleXMLElement('<task><name>Active</name></task>');
+        $this->assertTrue(is_task_reportable($xml_normal_active, $now));
+
+        // Normal task, completed -> not reportable
+        $xml_normal_done = new SimpleXMLElement('<task><name>Done</name><history><entry>2025-01-01</entry></history></task>');
+        $this->assertFalse(is_task_reportable($xml_normal_done, $now));
+
+        // Due task, overdue -> reportable
+        $xml_due_overdue = new SimpleXMLElement('<task><name>Overdue</name><due>' . $now->modify('-1 day')->format('Y-m-d') . '</due></task>');
+        $this->assertTrue(is_task_reportable($xml_due_overdue, $now));
+
+        // Due task, due today -> reportable
+        $xml_due_today = new SimpleXMLElement('<task><name>Today</name><due>' . $now->format('Y-m-d') . '</due></task>');
+        $this->assertTrue(is_task_reportable($xml_due_today, $now));
+
+        // Due task, upcoming within preview -> reportable
+        $xml_due_preview = new SimpleXMLElement('<task><name>Preview</name><due>' . $now->modify('+3 days')->format('Y-m-d') . '</due><preview>5</preview></task>');
+        $this->assertTrue(is_task_reportable($xml_due_preview, $now));
+
+        // Due task, upcoming outside preview -> not reportable
+        $xml_due_future = new SimpleXMLElement('<task><name>Future</name><due>' . $now->modify('+10 days')->format('Y-m-d') . '</due><preview>5</preview></task>');
+        $this->assertFalse(is_task_reportable($xml_due_future, $now));
+    }
+
     public function testValidateDate()
     {
         $this->assertTrue(validate_date('2025-07-09'));
