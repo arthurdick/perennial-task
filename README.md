@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.1.2
+# Perennial Task (`prn`) v1.1.3
 
 Like the wood lily that graces the prairies each summer, some tasks are perennial. They return, season after season, requiring steady attention. **Perennial Task** is a simple, command-line utility built to help you cultivate these recurring responsibilities, ensuring nothing is ever overlooked.
 
