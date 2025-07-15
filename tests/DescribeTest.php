@@ -37,7 +37,9 @@ class DescribeTest extends TestCase
 
         $this->assertStringContainsString('Task: A Normal Task', $output);
         $this->assertStringContainsString('Type: Normal', $output);
-        $this->assertStringContainsString('This is a simple, one-off task', $output);
+        $this->assertStringContainsString('Details: This is a simple, one-off task.', $output);
+        $this->assertStringContainsString('Status: Not yet completed.', $output);
+        $this->assertStringNotContainsString('History:', $output);
     }
 
     public function testDescribeDueTask()
@@ -57,6 +59,7 @@ class DescribeTest extends TestCase
         $this->assertStringContainsString('Status: Due in 10 days.', $output_future);
         $this->assertStringContainsString('Preview: Set to display 5 days in advance', $output_future);
         $this->assertStringContainsString('Display Status: Will be displayed in 5 days.', $output_future);
+        $this->assertStringNotContainsString('History:', $output_future);
 
         // Overdue task
         $due_date_overdue = $now->modify('-8 days');
@@ -66,6 +69,7 @@ class DescribeTest extends TestCase
         $output_overdue = $this->runDescribeScript($filepath_overdue);
         $this->assertStringContainsString('Task: Overdue Task', $output_overdue);
         $this->assertStringContainsString('Status: Overdue by 8 days.', $output_overdue);
+        $this->assertStringNotContainsString('History:', $output_overdue);
         
         // Due today
         $xml_today = new SimpleXMLElement('<task><name>Due Today Task</name><due>' . $now->format('Y-m-d') . '</due></task>');
@@ -74,6 +78,7 @@ class DescribeTest extends TestCase
         $output_today = $this->runDescribeScript($filepath_today);
         $this->assertStringContainsString('Task: Due Today Task', $output_today);
         $this->assertStringContainsString('Status: Due today.', $output_today);
+        $this->assertStringNotContainsString('History:', $output_today);
     }
     
     public function testDescribeRecurringTask()
@@ -91,6 +96,7 @@ class DescribeTest extends TestCase
         $this->assertStringContainsString('Type: Recurring', $output);
         $this->assertStringContainsString('Repeats every 10 days.', $output);
         $this->assertStringContainsString('Status: Last completed on ' . $completed_date->format('Y-m-d') . ' (7 days ago).', $output);
+        $this->assertStringNotContainsString('History:', $output);
     }
     
     public function testDescribeTaskWithHistory()
@@ -101,9 +107,10 @@ class DescribeTest extends TestCase
 
         $output = $this->runDescribeScript($filepath);
 
-        $this->assertStringContainsString('--- Completion History ---', $output);
-        $this->assertStringContainsString('- 2025-01-01', $output);
-        $this->assertStringContainsString('- 2025-01-15', $output);
+        $this->assertStringNotContainsString('--- Completion History ---', $output);
+        $this->assertStringNotContainsString('- 2025-01-01', $output);
+        $this->assertStringContainsString('Status: Completed.', $output);
+        $this->assertStringContainsString('History: 2 completions logged.', $output);
     }
     
     public function testDescribeTaskWithoutHistory()
@@ -115,6 +122,7 @@ class DescribeTest extends TestCase
         $output = $this->runDescribeScript($filepath);
 
         $this->assertStringNotContainsString('--- Completion History ---', $output);
+        $this->assertStringNotContainsString('History:', $output);
     }
 }
 

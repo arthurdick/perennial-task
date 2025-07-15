@@ -28,9 +28,6 @@ if (!function_exists('display_current_details')) {
         if (isset($xml->preview)) {
             echo "Preview: " . $xml->preview . " days in advance\n";
         }
-        if (isset($xml->history)) {
-            echo "Completion History: " . $xml->history->count() . " " . ($xml->history->count() === 1 ? "entry" : "entries") . "\n";
-        }
         echo "---------------------------\n";
     }
 }

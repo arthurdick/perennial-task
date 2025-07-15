@@ -4,7 +4,7 @@
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
 
-const VERSION = '1.1.1';
+const VERSION = '1.1.2';
 const MIN_PHP_VERSION = '7.4';
 
 /**
@@ -42,6 +42,7 @@ function display_help(): void
     echo "  edit [task_file]   Edit a task. Select from a list or specify a file.\n";
     echo "  complete [task_file] Mark a task as complete.\n";
     echo "  describe [task_file] Show a detailed description of a task.\n";
+    echo "  history [task_file] Show the full completion history of a single task.\n";
     echo "  report [date]      Show a report of all due and upcoming tasks.\n";
     echo "  help               Show this help message.\n";
     echo "  version            Display the application version.\n";
@@ -64,6 +65,7 @@ function main(array $argv): void
         case 'edit':
         case 'complete':
         case 'describe':
+        case 'history':
         case 'report':
             // The sub-scripts expect their own, clean $argv array.
             global $argv;

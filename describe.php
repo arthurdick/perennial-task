@@ -21,7 +21,6 @@ if (!function_exists('describe_recurring_task')) {
         $interval = $completed_date->diff($now);
         
         $days_since_completed = $interval->days;
-        // If the completion date is in the future, it's not logical, but we'll show it as negative.
         if ($interval->invert) {
              $days_since_completed *= -1;
         }
@@ -34,6 +33,11 @@ if (!function_exists('describe_recurring_task')) {
             echo "Status: Last completed on $completed_date_str (" . $days_since_completed . " " . pluralize_days($days_since_completed) . " ago).\n";
         } else {
              echo "Status: Last completed date is in the future ($completed_date_str).\n";
+        }
+        
+        if (isset($task->history)) {
+            $completion_count = count($task->history->entry);
+            echo "History: " . $completion_count . " " . ($completion_count === 1 ? "completion" : "completions") . " logged.\n";
         }
     }
 }
@@ -60,7 +64,6 @@ if (!function_exists('describe_due_task')) {
         echo "Type: Due Date\n";
         echo "Details: Due on $due_date_str.\n";
         
-        // Describe the due status
         if ($due_interval->invert) {
             echo "Status: Overdue by $days_until_due " . pluralize_days($days_until_due) . ".\n";
         } elseif ($days_until_due === 0) {
@@ -69,7 +72,6 @@ if (!function_exists('describe_due_task')) {
             echo "Status: Due in $days_until_due " . pluralize_days($days_until_due) . ".\n";
         }
         
-        // Describe the preview/display status
         if ($preview_duration > 0) {
             $display_date = (clone $due_date)->modify("-$preview_duration days");
             $display_interval = $now->diff($display_date);
@@ -84,6 +86,11 @@ if (!function_exists('describe_due_task')) {
             } else {
                  echo "Display Status: Will be displayed in $days_until_display " . pluralize_days($days_until_display) . ".\n";
             }
+        }
+
+        if (isset($task->history)) {
+            $completion_count = count($task->history->entry);
+            echo "History: " . $completion_count . " " . ($completion_count === 1 ? "completion" : "completions") . " logged.\n";
         }
     }
 }
@@ -100,6 +107,13 @@ if (!function_exists('describe_normal_task')) {
         echo "Task: $name\n";
         echo "Type: Normal\n";
         echo "Details: This is a simple, one-off task.\n";
+        if (isset($task->history)) {
+            $completion_count = count($task->history->entry);
+            echo "Status: Completed. History logged.\n";
+            echo "History: " . $completion_count . " " . ($completion_count === 1 ? "completion" : "completions") . " logged.\n";
+        } else {
+            echo "Status: Not yet completed.\n";
+        }
     }
 }
 
@@ -107,21 +121,15 @@ if (!function_exists('describe_normal_task')) {
 
 echo "--- Describe a Task ---\n";
 
-// Use the shared function to select a task file, either by argument or interactively.
 $filepath = select_task_file($argv, 'describe', 'all');
 
-// If no file was selected or found, exit gracefully.
 if ($filepath === null) {
     exit(0);
 }
 
-// Load the validated XML file.
 $xml = simplexml_load_file($filepath);
-
-// Use the shared function to determine the task type.
 $type = get_task_type($xml);
 
-// Call the appropriate function based on the type.
 switch ($type) {
     case 'recurring':
         describe_recurring_task($xml);
@@ -132,13 +140,5 @@ switch ($type) {
     case 'normal':
         describe_normal_task($xml);
         break;
-}
-
-if (isset($xml->history)) {
-    echo "--- Completion History ---\n";
-    foreach ($xml->history->entry as $entry) {
-        echo "- " . (string)$entry . "\n";
-    }
-    echo "------------------------\n";
 }
 
