@@ -26,20 +26,15 @@ while (empty(trim($name))) {
 }
 
 // 2. Get the task type using a letter-based menu.
-$type_choice = '';
+$type_options = [
+    'n' => 'Normal (a simple, one-off task)',
+    'd' => 'Due (a task with a specific due date)',
+    'r' => 'Recurring (a task that repeats)'
+];
+$type_choice = get_menu_choice("Select task type:", $type_options);
 $validTypes = ['n' => 'normal', 'd' => 'due', 'r' => 'recurring'];
-while (!array_key_exists($type_choice, $validTypes)) {
-    echo "Select task type:\n";
-    echo "  (n) Normal (a simple, one-off task)\n";
-    echo "  (d) Due (a task with a specific due date)\n";
-    echo "  (r) Recurring (a task that repeats)\n";
-    $type_choice = strtolower(prompt_user("Enter your choice: "));
-
-    if (!array_key_exists($type_choice, $validTypes)) {
-        echo "Invalid choice. Please try again.\n";
-    }
-}
 $type = $validTypes[$type_choice];
+
 
 // Initialize the XML structure.
 $xml = new SimpleXMLElement('<task></task>');
@@ -57,8 +52,8 @@ switch ($type) {
 
 // 4. Ask for an optional preview duration.
 if ($type !== 'normal') {
-    $preview = prompt_user("Preview days in advance? (optional, press Enter to skip): ");
-    if (ctype_digit($preview)) {
+    $preview = get_optional_positive_integer_input("Preview days in advance? (optional, press Enter to skip): ");
+    if ($preview !== null && $preview > 0) {
         $xml->addChild('preview', $preview);
     }
 }

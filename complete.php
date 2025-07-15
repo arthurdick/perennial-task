@@ -52,20 +52,13 @@ switch ($type) {
 
     case 'recurring':
         echo "Task '$task_name' was completed on $completion_date.\n";
-        while (true) {
-            $input = strtolower(prompt_user("Will this task recur? (y/n): "));
-            if ($input === 'n') {
-                unset($xml->recurring);
-                echo "Task will no longer recur.\n";
-                break;
-            } elseif ($input === 'y') {
-                // Use the already-provided completion date for the recurring->completed tag
-                $xml->recurring->completed = $completion_date;
-                echo "Task has been updated with a new completion date of $completion_date.\n";
-                break;
-            } else {
-                echo "Invalid input. Please enter 'y' or 'n'.\n";
-            }
+        if (get_yes_no_input("Will this task recur? (Y/n): ", 'y')) {
+            // Use the already-provided completion date for the recurring->completed tag
+            $xml->recurring->completed = $completion_date;
+            echo "Task has been updated with a new completion date of $completion_date.\n";
+        } else {
+            unset($xml->recurring);
+            echo "Task will no longer recur.\n";
         }
         break;
 }

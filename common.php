@@ -31,6 +31,96 @@ function prompt_user(string $prompt): string
 }
 
 /**
+ * Prompts the user for a yes/no answer and returns a boolean.
+ *
+ * @param string $prompt The prompt to display to the user.
+ * @param string $default The default value if the user presses enter ('y' or 'n').
+ * @return bool True for 'yes', false for 'no'.
+ */
+function get_yes_no_input(string $prompt, string $default = ''): bool
+{
+    while (true) {
+        $input = strtolower(prompt_user($prompt));
+        if (empty($input) && !empty($default)) {
+            $input = $default;
+        }
+
+        if (in_array($input, ['y', 'yes'])) {
+            return true;
+        }
+        if (in_array($input, ['n', 'no'])) {
+            return false;
+        }
+        echo "Invalid input. Please enter 'y' or 'n'.\n";
+    }
+}
+
+/**
+ * Prompts the user for a positive integer.
+ *
+ * @param string $prompt The prompt to display to the user.
+ * @param bool   $allow_zero If true, allows 0 as a valid input.
+ * @return int The validated positive integer.
+ */
+function get_positive_integer_input(string $prompt, bool $allow_zero = false): int
+{
+    while (true) {
+        $input = prompt_user($prompt);
+        if (ctype_digit($input)) {
+            $number = (int)$input;
+            if ($number > 0 || ($allow_zero && $number === 0)) {
+                return $number;
+            }
+        }
+        echo "Invalid input. Please enter a positive whole number.\n";
+    }
+}
+
+/**
+ * Prompts the user for an optional positive integer.
+ *
+ * @param string $prompt The prompt to display to the user.
+ * @return ?int The validated positive integer, or null if the input is empty.
+ */
+function get_optional_positive_integer_input(string $prompt): ?int
+{
+    while (true) {
+        $input = prompt_user($prompt);
+        if (empty($input)) {
+            return null;
+        }
+        if (ctype_digit($input) && (int)$input >= 0) {
+            return (int)$input;
+        }
+        echo "Invalid input. Please enter a positive whole number or press Enter to skip.\n";
+    }
+}
+
+/**
+ * Prompts the user to select an option from a menu.
+ *
+ * @param string $prompt The prompt to display to the user.
+ * @param array  $options An associative array of options, where the key is the input and the value is the description.
+ * @return string The key of the selected option.
+ */
+function get_menu_choice(string $prompt, array $options): string
+{
+    echo "$prompt\n";
+    foreach ($options as $key => $text) {
+        echo "  ($key) $text\n";
+    }
+
+    while (true) {
+        $input = strtolower(prompt_user("Enter your choice: "));
+        if (array_key_exists($input, $options)) {
+            return $input;
+        }
+        echo "Invalid choice. Please try again.\n";
+    }
+}
+
+
+/**
  * Prompts the user for a date and validates it.
  *
  * @param string $prompt The message to display to the user.
@@ -71,14 +161,7 @@ function collect_due_task_details(SimpleXMLElement $xml): void
 function collect_recurring_task_details(SimpleXMLElement $xml): void
 {
     $completedDate = get_validated_date_input("Enter last completed date (YYYY-MM-DD, press Enter for today): ", true);
-
-    $duration = '';
-    while (!ctype_digit($duration) || (int)$duration <= 0) {
-        $duration = prompt_user("Recur every X days (e.g., 7): ");
-        if (!ctype_digit($duration) || (int)$duration <= 0) {
-            echo "Please enter a positive whole number for the duration.\n";
-        }
-    }
+    $duration = get_positive_integer_input("Recur every X days (e.g., 7): ");
 
     $recurring = $xml->addChild('recurring');
     $recurring->addChild('completed', $completedDate);

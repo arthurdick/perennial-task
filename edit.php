@@ -32,48 +32,6 @@ if (!function_exists('display_current_details')) {
     }
 }
 
-if (!function_exists('show_edit_menu')) {
-    /**
-     * Displays the appropriate edit menu and gets the user's choice.
-     * @param string $type The type of task.
-     * @return string The user's validated choice.
-     */
-    function show_edit_menu(string $type): string
-    {
-        // Define menu options with sensible letter commands
-        $menu_options = [
-            'n' => 'Edit Name',
-            't' => 'Change Task Type',
-        ];
-
-        switch ($type) {
-            case 'due':
-                $menu_options['d'] = 'Edit Due Date';
-                $menu_options['p'] = 'Edit/Add Preview Days';
-                break;
-            case 'recurring':
-                $menu_options['c'] = 'Edit Last Completed Date';
-                $menu_options['r'] = 'Edit Recurrence Duration';
-                $menu_options['p'] = 'Edit/Add Preview Days';
-                break;
-        }
-        $menu_options['s'] = 'Save and Exit';
-
-        echo "What would you like to edit?\n";
-        foreach ($menu_options as $key => $text) {
-            echo "  ($key) $text\n";
-        }
-
-        while (true) {
-            $input = strtolower(prompt_user("Enter your choice: "));
-            if (array_key_exists($input, $menu_options)) {
-                return $input;
-            }
-            echo "Invalid choice. Please try again.\n";
-        }
-    }
-}
-
 if (!function_exists('process_edit_choice')) {
     /**
      * Calls the correct function to handle the user's edit choice.
@@ -97,13 +55,13 @@ if (!function_exists('process_edit_choice')) {
                 $xml->name = htmlspecialchars($newName);
                 break;
             case 't': // Type
-                $type_choice = '';
+                $type_options = [
+                    'n' => 'Normal',
+                    'd' => 'Due',
+                    'r' => 'Recurring'
+                ];
+                $type_choice = get_menu_choice("Select new task type:", $type_options);
                 $validTypes = ['n' => 'normal', 'd' => 'due', 'r' => 'recurring'];
-                while (!array_key_exists($type_choice, $validTypes)) {
-                    echo "Select new task type:\n";
-                    echo "  (n) Normal\n  (d) Due\n  (r) Recurring\n";
-                    $type_choice = strtolower(prompt_user("Enter your choice: "));
-                }
                 $newType = $validTypes[$type_choice];
 
                 if ($newType !== $currentType) {
@@ -133,31 +91,22 @@ if (!function_exists('process_edit_choice')) {
                 $xml->recurring->completed = get_validated_date_input("Enter new last completed date (YYYY-MM-DD): ");
                 break;
             case 'r': // Recurrence duration
-                $duration = '';
-                while (!ctype_digit($duration) || (int)$duration <= 0) {
-                    $duration = prompt_user("Recur every X days (e.g., 7): ");
-                    if (!ctype_digit($duration) || (int)$duration <= 0) {
-                        echo "Please enter a positive number.\n";
-                    }
-                }
-                $xml->recurring->duration = $duration;
+                $xml->recurring->duration = get_positive_integer_input("Recur every X days (e.g., 7): ");
                 break;
             case 'p': // Preview
-                $preview = prompt_user("Preview days in advance? (Enter a number, or 0 to remove): ");
-                if (ctype_digit($preview)) {
-                    if ((int)$preview > 0) {
+                $preview = get_optional_positive_integer_input("Preview days in advance? (Enter 0 to remove, Enter to skip): ");
+                if ($preview !== null) {
+                    if ($preview > 0) {
                         if (isset($xml->preview)) {
                             $xml->preview = $preview;
                         } else {
                             $xml->addChild('preview', $preview);
                         }
-                    } else {
+                    } else { // $preview is 0
                         if (isset($xml->preview)) {
                             unset($xml->preview);
                         }
                     }
-                } else {
-                    echo "Invalid input. Please enter a whole number.\n";
                 }
                 break;
         }
@@ -185,7 +134,25 @@ $original_name = (string)$xml->name; // Store original name before loop
 // Enter the editing loop.
 while (true) {
     display_current_details($xml);
-    $choice = show_edit_menu($type);
+
+    $menu_options = [
+        'n' => 'Edit Name',
+        't' => 'Change Task Type',
+    ];
+    switch ($type) {
+        case 'due':
+            $menu_options['d'] = 'Edit Due Date';
+            $menu_options['p'] = 'Edit/Add Preview Days';
+            break;
+        case 'recurring':
+            $menu_options['c'] = 'Edit Last Completed Date';
+            $menu_options['r'] = 'Edit Recurrence Duration';
+            $menu_options['p'] = 'Edit/Add Preview Days';
+            break;
+    }
+    $menu_options['s'] = 'Save and Exit';
+
+    $choice = get_menu_choice("What would you like to edit?", $menu_options);
 
     if ($choice === 's') { // Save
         break;
@@ -196,8 +163,7 @@ while (true) {
     // --- RENAME LOGIC ---
     $new_name = (string)$xml->name;
     if ($new_name !== $original_name) {
-        $input = strtolower(prompt_user("Task name has changed. Rename the file on disk? (y/n): "));
-        if ($input === 'y') {
+        if (get_yes_no_input("Task name has changed. Rename the file on disk? (Y/n): ", 'y')) {
             $base_filename = sanitize_filename($new_name);
             $new_filepath = TASKS_DIR . '/' . $base_filename . '.xml';
             $counter = 1;
