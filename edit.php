@@ -127,28 +127,10 @@ if (!function_exists('process_edit_choice')) {
                 }
                 break;
             case 'd': // Due date
-                $dueDate = null;
-                while ($dueDate === null) {
-                    $dateStr = prompt_user("Enter new due date (YYYY-MM-DD): ");
-                    if (validate_date($dateStr)) {
-                        $dueDate = $dateStr;
-                    } else {
-                        echo "Invalid date format.\n";
-                    }
-                }
-                $xml->due = $dueDate;
+                $xml->due = get_validated_date_input("Enter new due date (YYYY-MM-DD): ");
                 break;
             case 'c': // Completed date
-                $completedDate = null;
-                while ($completedDate === null) {
-                    $dateStr = prompt_user("Enter new last completed date (YYYY-MM-DD): ");
-                    if (validate_date($dateStr)) {
-                        $completedDate = $dateStr;
-                    } else {
-                        echo "Invalid date format.\n";
-                    }
-                }
-                $xml->recurring->completed = $completedDate;
+                $xml->recurring->completed = get_validated_date_input("Enter new last completed date (YYYY-MM-DD): ");
                 break;
             case 'r': // Recurrence duration
                 $duration = '';

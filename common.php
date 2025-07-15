@@ -31,20 +31,36 @@ function prompt_user(string $prompt): string
 }
 
 /**
+ * Prompts the user for a date and validates it.
+ *
+ * @param string $prompt The message to display to the user.
+ * @param bool   $allow_empty If true, allows the user to press Enter for the current date.
+ * @return string The validated date in YYYY-MM-DD format.
+ */
+function get_validated_date_input(string $prompt, bool $allow_empty = false): string
+{
+    $date = null;
+    while ($date === null) {
+        $input = prompt_user($prompt);
+        if ($allow_empty && empty($input)) {
+            return date('Y-m-d');
+        }
+        if (validate_date($input)) {
+            $date = $input;
+        } else {
+            echo "Invalid date format. Please use YYYY-MM-DD.\n";
+        }
+    }
+    return $date;
+}
+
+/**
  * Interactively collects details for a 'due' task.
  * @param SimpleXMLElement $xml The XML object to modify.
  */
 function collect_due_task_details(SimpleXMLElement $xml): void
 {
-    $dueDate = null;
-    while ($dueDate === null) {
-        $dateStr = prompt_user("Enter due date (YYYY-MM-DD): ");
-        if (validate_date($dateStr)) {
-            $dueDate = $dateStr;
-        } else {
-            echo "Invalid date format. Please use YYYY-MM-DD.\n";
-        }
-    }
+    $dueDate = get_validated_date_input("Enter due date (YYYY-MM-DD): ");
     $xml->addChild('due', $dueDate);
 }
 
@@ -54,18 +70,7 @@ function collect_due_task_details(SimpleXMLElement $xml): void
  */
 function collect_recurring_task_details(SimpleXMLElement $xml): void
 {
-    $completedDate = null;
-    while ($completedDate === null) {
-        $dateStr = prompt_user("Enter last completed date (YYYY-MM-DD, press Enter for today): ");
-        if (empty($dateStr)) {
-            $dateStr = date('Y-m-d');
-        }
-        if (validate_date($dateStr)) {
-            $completedDate = $dateStr;
-        } else {
-            echo "Invalid date format. Please use YYYY-MM-DD.\n";
-        }
-    }
+    $completedDate = get_validated_date_input("Enter last completed date (YYYY-MM-DD, press Enter for today): ", true);
 
     $duration = '';
     while (!ctype_digit($duration) || (int)$duration <= 0) {

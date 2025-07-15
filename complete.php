@@ -2,30 +2,6 @@
 
 require_once 'common.php';
 
-if (!function_exists('get_completion_date_from_user')) {
-    /**
-     * Gets a valid completion date from the user.
-     *
-     * @return string The validated date in YYYY-MM-DD format.
-     */
-    function get_completion_date_from_user(): string
-    {
-        $completion_date = null;
-        while ($completion_date === null) {
-            $date_input = prompt_user("Enter completion date (YYYY-MM-DD, press Enter for today): ");
-            if (empty($date_input)) {
-                $date_input = date('Y-m-d');
-            }
-            if (validate_date($date_input)) {
-                $completion_date = $date_input;
-            } else {
-                echo "Invalid date format. Please use YYYY-MM-DD.\n";
-            }
-        }
-        return $completion_date;
-    }
-}
-
 // --- Main Script Execution ---
 
 echo "--- Complete a Task ---\n";
@@ -40,7 +16,7 @@ $xml = simplexml_load_file($filepath);
 $task_name = (string)$xml->name;
 
 // 1. Get the completion date from the user FIRST.
-$completion_date = get_completion_date_from_user();
+$completion_date = get_validated_date_input("Enter completion date (YYYY-MM-DD, press Enter for today): ", true);
 
 // 2. Add the correct completion record to the task's history.
 if (!isset($xml->history)) {
