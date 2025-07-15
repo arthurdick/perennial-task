@@ -79,4 +79,3 @@ if (save_xml_file($filepath, $xml)) {
 } else {
     echo "\nError! Could not save the task file.\n";
 }
-

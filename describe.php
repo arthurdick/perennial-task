@@ -15,26 +15,26 @@ if (!function_exists('describe_recurring_task')) {
         $name = (string)$task->name;
         $recur_duration = (int)$task->recurring->duration;
         $completed_date_str = (string)$task->recurring->completed;
-        
+
         $now = new DateTime('today');
         $completed_date = new DateTime($completed_date_str);
         $interval = $completed_date->diff($now);
-        
+
         $days_since_completed = $interval->days;
         if ($interval->invert) {
-             $days_since_completed *= -1;
+            $days_since_completed *= -1;
         }
 
         echo "Task: $name\n";
         echo "Type: Recurring\n";
         echo "Details: Repeats every $recur_duration " . pluralize_days($recur_duration) . ".\n";
-        
+
         if ($days_since_completed >= 0) {
             echo "Status: Last completed on $completed_date_str (" . $days_since_completed . " " . pluralize_days($days_since_completed) . " ago).\n";
         } else {
-             echo "Status: Last completed date is in the future ($completed_date_str).\n";
+            echo "Status: Last completed date is in the future ($completed_date_str).\n";
         }
-        
+
         if (isset($task->history)) {
             $completion_count = count($task->history->entry);
             echo "History: " . $completion_count . " " . ($completion_count === 1 ? "completion" : "completions") . " logged.\n";
@@ -57,13 +57,13 @@ if (!function_exists('describe_due_task')) {
         $now = new DateTime('today');
         $due_date = new DateTime($due_date_str);
         $due_interval = $now->diff($due_date);
-        
+
         $days_until_due = $due_interval->days;
-        
+
         echo "Task: $name\n";
         echo "Type: Due Date\n";
         echo "Details: Due on $due_date_str.\n";
-        
+
         if ($due_interval->invert) {
             echo "Status: Overdue by $days_until_due " . pluralize_days($days_until_due) . ".\n";
         } elseif ($days_until_due === 0) {
@@ -71,20 +71,20 @@ if (!function_exists('describe_due_task')) {
         } else {
             echo "Status: Due in $days_until_due " . pluralize_days($days_until_due) . ".\n";
         }
-        
+
         if ($preview_duration > 0) {
             $display_date = (clone $due_date)->modify("-$preview_duration days");
             $display_interval = $now->diff($display_date);
             $days_until_display = $display_interval->days;
 
             echo "Preview: Set to display $preview_duration " . pluralize_days($preview_duration) . " in advance (on " . $display_date->format('Y-m-d') . ").\n";
-            
+
             if ($display_interval->invert) {
-                 echo "Display Status: Is currently being displayed (for the last $days_until_display " . pluralize_days($days_until_display) . ").\n";
+                echo "Display Status: Is currently being displayed (for the last $days_until_display " . pluralize_days($days_until_display) . ").\n";
             } elseif ($days_until_display === 0) {
-                 echo "Display Status: Starts displaying today.\n";
+                echo "Display Status: Starts displaying today.\n";
             } else {
-                 echo "Display Status: Will be displayed in $days_until_display " . pluralize_days($days_until_display) . ".\n";
+                echo "Display Status: Will be displayed in $days_until_display " . pluralize_days($days_until_display) . ".\n";
             }
         }
 
@@ -141,4 +141,3 @@ switch ($type) {
         describe_normal_task($xml);
         break;
 }
-

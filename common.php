@@ -126,15 +126,21 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
     while (true) {
         $visible_tasks = [];
         foreach ($task_files as $file) {
-            if (!validate_task_file($file, true)) continue;
+            if (!validate_task_file($file, true)) {
+                continue;
+            }
 
             $xml = simplexml_load_file($file);
 
             // Apply the current filter
             if ($current_filter === 'active') {
-                if (get_task_type($xml) === 'normal' && isset($xml->history)) continue; // Skip completed normal tasks
+                if (get_task_type($xml) === 'normal' && isset($xml->history)) {
+                    continue;
+                } // Skip completed normal tasks
             } elseif ($current_filter === 'reportable') {
-                if (!is_task_reportable($xml, $now)) continue;
+                if (!is_task_reportable($xml, $now)) {
+                    continue;
+                }
             }
 
             $visible_tasks[] = ['path' => $file, 'name' => (string)$xml->name];
@@ -161,15 +167,21 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
         $prompt = "Enter #, (f)ilter, (q)uit";
         if ($total_pages > 1) {
             $nav_prompt = [];
-            if ($current_page > 1) $nav_prompt[] = "(p)rev";
-            if ($current_page < $total_pages) $nav_prompt[] = "(n)ext";
+            if ($current_page > 1) {
+                $nav_prompt[] = "(p)rev";
+            }
+            if ($current_page < $total_pages) {
+                $nav_prompt[] = "(n)ext";
+            }
             $prompt .= ", " . implode(", ", $nav_prompt);
         }
         $prompt .= ": ";
 
         $input = prompt_user($prompt);
 
-        if (strtolower($input) === 'q') return null;
+        if (strtolower($input) === 'q') {
+            return null;
+        }
 
         if (strtolower($input) === 'f') {
             $new_filter = prompt_user("Choose filter (all, active, reportable): ");
@@ -220,14 +232,18 @@ function is_task_reportable(SimpleXMLElement $task, DateTimeImmutable $now): boo
             $preview = isset($task->preview) ? (int)$task->preview : 0;
             $next_due = $completed_date->modify("+$recur_duration days");
             $interval = $now->diff($next_due);
-            if ($interval->invert) return true; // Overdue
+            if ($interval->invert) {
+                return true;
+            } // Overdue
             return $interval->days <= $preview;
 
         case 'due':
             $due_date = new DateTimeImmutable((string)$task->due);
             $preview = isset($task->preview) ? (int)$task->preview : 0;
             $interval = $now->diff($due_date);
-            if ($interval->invert) return true; // Overdue
+            if ($interval->invert) {
+                return true;
+            } // Overdue
             return $interval->days <= $preview;
 
         case 'normal':
@@ -248,19 +264,25 @@ function is_task_reportable(SimpleXMLElement $task, DateTimeImmutable $now): boo
  */
 function validate_task_file(string $filepath, bool $silent = false): bool
 {
-    if (!is_file($filepath) || !is_readable($filepath)) return false;
+    if (!is_file($filepath) || !is_readable($filepath)) {
+        return false;
+    }
 
     // Use DOMDocument for schema validation
     $dom = new DOMDocument();
     // Suppress warnings from load(), we check the return value.
     if (!@$dom->load($filepath)) {
-        if (!$silent) echo "Error: Failed to load XML file '" . basename($filepath) . "'. It may be malformed.\n";
+        if (!$silent) {
+            echo "Error: Failed to load XML file '" . basename($filepath) . "'. It may be malformed.\n";
+        }
         return false;
     }
-    
+
     // Suppress warnings from schemaValidate(), we check the return value.
     if (!@$dom->schemaValidate(XSD_PATH)) {
-        if (!$silent) echo "Error: The task file '" . basename($filepath) . "' does not conform to the required schema.\n";
+        if (!$silent) {
+            echo "Error: The task file '" . basename($filepath) . "' does not conform to the required schema.\n";
+        }
         return false;
     }
 
@@ -269,8 +291,12 @@ function validate_task_file(string $filepath, bool $silent = false): bool
 
 function get_task_type(SimpleXMLElement $xml): string
 {
-    if (isset($xml->due)) return 'due';
-    if (isset($xml->recurring)) return 'recurring';
+    if (isset($xml->due)) {
+        return 'due';
+    }
+    if (isset($xml->recurring)) {
+        return 'recurring';
+    }
     return 'normal';
 }
 
@@ -295,7 +321,7 @@ function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
     $node = dom_import_simplexml($xml);
     $node = $dom->importNode($node, true);
     $dom->appendChild($node);
-    
+
     // Add a reference to the XSD schema in the saved XML file.
     // This makes the file self-validating with standard XML tools.
     $dom->documentElement->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:noNamespaceSchemaLocation', XSD_PATH);
@@ -313,4 +339,3 @@ function pluralize_days(int $number): string
 {
     return abs($number) === 1 ? 'day' : 'days';
 }
-

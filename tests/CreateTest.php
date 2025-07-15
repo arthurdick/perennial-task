@@ -24,7 +24,7 @@ class CreateTest extends TestCase
         rewind($input_stream);
 
         // Define the mock function that reads from our stream and set it globally.
-        $GLOBALS['__MOCK_PROMPT_USER_FUNC'] = function(string $prompt) use ($input_stream): string {
+        $GLOBALS['__MOCK_PROMPT_USER_FUNC'] = function (string $prompt) use ($input_stream): string {
             $line = fgets($input_stream);
             return $line !== false ? trim($line) : '';
         };
@@ -33,14 +33,14 @@ class CreateTest extends TestCase
         // The included script will now use our mock prompt_user function
         include $this->script_path;
         $output = ob_get_clean();
-        
+
         // Clean up the global and the stream resource.
         unset($GLOBALS['__MOCK_PROMPT_USER_FUNC']);
         fclose($input_stream);
 
         return ['output' => $output, 'files' => glob(TASKS_DIR . '/*.xml')];
     }
-    
+
     public function testCreateNormalTask()
     {
         $inputs = [
@@ -50,13 +50,13 @@ class CreateTest extends TestCase
         ];
 
         $result = $this->runCreateScript($inputs);
-        
+
         $this->assertStringContainsString('Success! Task file created', $result['output']);
         $this->assertCount(1, $result['files']);
-        
+
         $filepath = $result['files'][0];
         $this->assertFileExists($filepath);
-        
+
         $xml = simplexml_load_file($filepath);
         $this->assertEquals('Test Normal Task', (string)$xml->name);
         $this->assertFalse(isset($xml->due));
@@ -86,7 +86,7 @@ class CreateTest extends TestCase
         $this->assertEquals('5', (string)$xml->preview);
         $this->assertFalse(isset($xml->recurring));
     }
-    
+
     public function testCreateRecurringTask()
     {
         $inputs = [
@@ -111,7 +111,7 @@ class CreateTest extends TestCase
         $this->assertEquals('3', (string)$xml->preview);
         $this->assertFalse(isset($xml->due));
     }
-    
+
     public function testFilenameSanitizationAndUniqueness()
     {
         // First task
@@ -121,10 +121,9 @@ class CreateTest extends TestCase
         // Second task with the same name
         $this->runCreateScript(['Test @Task!', 'n', '']);
         $this->assertFileExists(TASKS_DIR . '/test_task_1.xml');
-        
+
         // Third task
         $this->runCreateScript(['Test @Task!', 'n', '']);
         $this->assertFileExists(TASKS_DIR . '/test_task_2.xml');
     }
 }
-

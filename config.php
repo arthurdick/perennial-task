@@ -131,4 +131,3 @@ function initialize_perennial_task_config(): void
 if (!defined('PERENNIAL_TASK_TESTING')) {
     initialize_perennial_task_config();
 }
-

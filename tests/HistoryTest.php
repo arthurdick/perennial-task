@@ -36,7 +36,7 @@ class HistoryTest extends TestCase
         $this->assertStringContainsString('- 2025-01-01', $output);
         $this->assertStringContainsString('- 2025-01-15', $output);
     }
-    
+
     public function testHistoryForTaskWithoutHistory()
     {
         $xml = new SimpleXMLElement('<task><name>A Task Without History</name></task>');

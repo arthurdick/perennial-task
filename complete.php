@@ -106,4 +106,3 @@ $log_entry = date('c') . " | Completed: " . $task_name . " on " . $completion_da
 file_put_contents(COMPLETIONS_LOG, $log_entry, FILE_APPEND);
 
 echo "Completion process finished.\n";
-

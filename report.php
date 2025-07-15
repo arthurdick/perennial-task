@@ -52,7 +52,7 @@ if (!function_exists('generate_report_for_date')) {
                 'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
             ];
         }
-        
+
         return null;
     }
 }
@@ -69,10 +69,10 @@ if (!function_exists('get_recurring_task_report')) {
     {
         $completed_date = new DateTimeImmutable((string)$task->recurring->completed);
         $recur_duration = (int)$task->recurring->duration;
-        
+
         // Calculate the next due date by adding the duration to the last completed date.
         $next_due_date = $completed_date->modify("+$recur_duration days");
-        
+
         return generate_report_for_date(
             (string)$task->name,
             $next_due_date,
@@ -172,7 +172,7 @@ foreach ($files as $file) {
             $report_data = get_normal_task_report($xml);
             break;
     }
-    
+
     // If the task is reportable, add its message to the correct category.
     if ($report_data) {
         switch ($report_data['status']) {
@@ -214,4 +214,3 @@ if (!empty($upcoming_tasks)) {
         echo $task_line;
     }
 }
-

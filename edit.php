@@ -63,7 +63,7 @@ if (!function_exists('show_edit_menu')) {
         foreach ($menu_options as $key => $text) {
             echo "  ($key) $text\n";
         }
-        
+
         while (true) {
             $input = strtolower(prompt_user("Enter your choice: "));
             if (array_key_exists($input, $menu_options)) {
@@ -90,7 +90,9 @@ if (!function_exists('process_edit_choice')) {
                 $newName = '';
                 while (empty(trim($newName))) {
                     $newName = prompt_user("Enter the new task name: ");
-                    if (empty(trim($newName))) echo "Name cannot be empty.\n";
+                    if (empty(trim($newName))) {
+                        echo "Name cannot be empty.\n";
+                    }
                 }
                 $xml->name = htmlspecialchars($newName);
                 break;
@@ -105,9 +107,15 @@ if (!function_exists('process_edit_choice')) {
                 $newType = $validTypes[$type_choice];
 
                 if ($newType !== $currentType) {
-                    if (isset($xml->due)) unset($xml->due);
-                    if (isset($xml->recurring)) unset($xml->recurring);
-                    if (isset($xml->preview)) unset($xml->preview);
+                    if (isset($xml->due)) {
+                        unset($xml->due);
+                    }
+                    if (isset($xml->recurring)) {
+                        unset($xml->recurring);
+                    }
+                    if (isset($xml->preview)) {
+                        unset($xml->preview);
+                    }
 
                     if ($newType === 'due') {
                         collect_due_task_details($xml);
@@ -122,8 +130,11 @@ if (!function_exists('process_edit_choice')) {
                 $dueDate = null;
                 while ($dueDate === null) {
                     $dateStr = prompt_user("Enter new due date (YYYY-MM-DD): ");
-                    if (validate_date($dateStr)) $dueDate = $dateStr;
-                    else echo "Invalid date format.\n";
+                    if (validate_date($dateStr)) {
+                        $dueDate = $dateStr;
+                    } else {
+                        echo "Invalid date format.\n";
+                    }
                 }
                 $xml->due = $dueDate;
                 break;
@@ -131,8 +142,11 @@ if (!function_exists('process_edit_choice')) {
                 $completedDate = null;
                 while ($completedDate === null) {
                     $dateStr = prompt_user("Enter new last completed date (YYYY-MM-DD): ");
-                    if (validate_date($dateStr)) $completedDate = $dateStr;
-                    else echo "Invalid date format.\n";
+                    if (validate_date($dateStr)) {
+                        $completedDate = $dateStr;
+                    } else {
+                        echo "Invalid date format.\n";
+                    }
                 }
                 $xml->recurring->completed = $completedDate;
                 break;
@@ -140,7 +154,9 @@ if (!function_exists('process_edit_choice')) {
                 $duration = '';
                 while (!ctype_digit($duration) || (int)$duration <= 0) {
                     $duration = prompt_user("Recur every X days (e.g., 7): ");
-                    if (!ctype_digit($duration) || (int)$duration <= 0) echo "Please enter a positive number.\n";
+                    if (!ctype_digit($duration) || (int)$duration <= 0) {
+                        echo "Please enter a positive number.\n";
+                    }
                 }
                 $xml->recurring->duration = $duration;
                 break;
@@ -190,9 +206,9 @@ while (true) {
     $choice = show_edit_menu($type);
 
     if ($choice === 's') { // Save
-        break; 
+        break;
     }
-    
+
     $type = process_edit_choice($xml, $choice);
 
     // --- RENAME LOGIC ---
@@ -232,4 +248,3 @@ if (save_xml_file($filepath, $xml)) {
 } else {
     echo "\nError! Could not save the updated task file.\n";
 }
-

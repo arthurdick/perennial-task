@@ -100,7 +100,7 @@ class CommonTest extends TestCase
         // Test with a non-existent file
         $this->assertFalse(validate_task_file(TASKS_DIR . '/non_existent.xml', true));
     }
-    
+
     public function testSaveXmlFile()
     {
         $xml = new SimpleXMLElement('<task><name>Test Save</name></task>');
@@ -113,7 +113,7 @@ class CommonTest extends TestCase
         $saved_content = file_get_contents($filepath);
         $this->assertStringContainsString('xsi:noNamespaceSchemaLocation="' . XSD_PATH . '"', $saved_content);
         $this->assertStringContainsString('<name>Test Save</name>', $saved_content);
-        
+
         // Test validation of the saved file
         $this->assertTrue(validate_task_file($filepath));
     }
@@ -127,4 +127,3 @@ class CommonTest extends TestCase
         $this->assertEquals('a', sanitize_filename('a'));
     }
 }
-

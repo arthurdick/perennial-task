@@ -51,7 +51,7 @@ class DescribeTest extends TestCase
         $xml_future = new SimpleXMLElement('<task><name>Future Due Task</name><due>' . $due_date_future->format('Y-m-d') . '</due><preview>5</preview></task>');
         $filepath_future = TASKS_DIR . '/due_future.xml';
         save_xml_file($filepath_future, $xml_future);
-        
+
         $output_future = $this->runDescribeScript($filepath_future);
         $this->assertStringContainsString('Task: Future Due Task', $output_future);
         $this->assertStringContainsString('Type: Due Date', $output_future);
@@ -70,7 +70,7 @@ class DescribeTest extends TestCase
         $this->assertStringContainsString('Task: Overdue Task', $output_overdue);
         $this->assertStringContainsString('Status: Overdue by 8 days.', $output_overdue);
         $this->assertStringNotContainsString('History:', $output_overdue);
-        
+
         // Due today
         $xml_today = new SimpleXMLElement('<task><name>Due Today Task</name><due>' . $now->format('Y-m-d') . '</due></task>');
         $filepath_today = TASKS_DIR . '/due_today.xml';
@@ -80,7 +80,7 @@ class DescribeTest extends TestCase
         $this->assertStringContainsString('Status: Due today.', $output_today);
         $this->assertStringNotContainsString('History:', $output_today);
     }
-    
+
     public function testDescribeRecurringTask()
     {
         $now = new DateTimeImmutable('today');
@@ -89,16 +89,16 @@ class DescribeTest extends TestCase
         $xml = new SimpleXMLElement('<task><name>Weekly Recurring</name><recurring><completed>' . $completed_date->format('Y-m-d') . '</completed><duration>10</duration></recurring></task>');
         $filepath = TASKS_DIR . '/recurring.xml';
         save_xml_file($filepath, $xml);
-        
+
         $output = $this->runDescribeScript($filepath);
-        
+
         $this->assertStringContainsString('Task: Weekly Recurring', $output);
         $this->assertStringContainsString('Type: Recurring', $output);
         $this->assertStringContainsString('Repeats every 10 days.', $output);
         $this->assertStringContainsString('Status: Last completed on ' . $completed_date->format('Y-m-d') . ' (7 days ago).', $output);
         $this->assertStringNotContainsString('History:', $output);
     }
-    
+
     public function testDescribeTaskWithHistory()
     {
         $xml = new SimpleXMLElement('<task><name>A Task With History</name><history><entry>2025-01-01</entry><entry>2025-01-15</entry></history></task>');
@@ -112,7 +112,7 @@ class DescribeTest extends TestCase
         $this->assertStringContainsString('Status: Completed.', $output);
         $this->assertStringContainsString('History: 2 completions logged.', $output);
     }
-    
+
     public function testDescribeTaskWithoutHistory()
     {
         $xml = new SimpleXMLElement('<task><name>A Task Without History</name></task>');
@@ -125,4 +125,3 @@ class DescribeTest extends TestCase
         $this->assertStringNotContainsString('History:', $output);
     }
 }
-

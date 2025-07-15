@@ -162,7 +162,7 @@ This project includes a comprehensive test suite built with PHPUnit to ensure co
 
 2.  Navigate to the project's root directory in your terminal.
 
-3.  Run the following command to install PHPUnit:
+3.  Run the following command to install PHPUnit and other development dependencies:
 
     ```
     composer install
@@ -180,3 +180,10 @@ From the project's root directory, run the following command to execute the enti
 
 A successful run will show a series of dots followed by an "OK" message, indicating that all tests have passed.
 
+### Code Style
+
+This project uses `php-cs-fixer` to enforce a consistent code style. Before committing any changes, please run the following command from the project's root directory to automatically fix any styling issues:
+
+```
+./vendor/bin/php-cs-fixer fix .
+```

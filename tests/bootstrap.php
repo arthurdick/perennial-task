@@ -30,8 +30,11 @@ if (!is_dir(TASKS_DIR)) {
 }
 
 // Clean up temp directory before tests
-function clean_temp_dir() {
-    if (!is_dir(TASKS_DIR)) return;
+function clean_temp_dir()
+{
+    if (!is_dir(TASKS_DIR)) {
+        return;
+    }
     $files = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator(TASKS_DIR, RecursiveDirectoryIterator::SKIP_DOTS),
         RecursiveIteratorIterator::CHILD_FIRST
