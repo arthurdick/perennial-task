@@ -50,13 +50,15 @@ class CommonTest extends TestCase
         $this->assertFalse(validate_date('2025-02-30'));
     }
 
-    public function testPluralizeDays()
+    public function testPluralize()
     {
-        $this->assertEquals('day', pluralize_days(1));
-        $this->assertEquals('day', pluralize_days(-1));
-        $this->assertEquals('days', pluralize_days(2));
-        $this->assertEquals('days', pluralize_days(0));
-        $this->assertEquals('days', pluralize_days(-5));
+        $this->assertEquals('day', pluralize(1, 'day', 'days'));
+        $this->assertEquals('day', pluralize(-1, 'day', 'days'));
+        $this->assertEquals('days', pluralize(2, 'day', 'days'));
+        $this->assertEquals('days', pluralize(0, 'day', 'days'));
+        $this->assertEquals('days', pluralize(-5, 'day', 'days'));
+        $this->assertEquals('completion', pluralize(1, 'completion', 'completions'));
+        $this->assertEquals('completions', pluralize(2, 'completion', 'completions'));
     }
 
     public function testGetTaskType()

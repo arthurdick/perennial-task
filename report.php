@@ -37,7 +37,7 @@ if (!function_exists('generate_report_for_date')) {
             $days_overdue = $days_until_due;
             return [
                 'status' => 'overdue',
-                'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": $name (was due $days_overdue " . pluralize_days($days_overdue) . " ago)\n"
+                'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": $name (was due $days_overdue " . pluralize($days_overdue, 'day', 'days') . " ago)\n"
             ];
         } elseif ($days_until_due === 0) {
             // Due today.
@@ -49,7 +49,7 @@ if (!function_exists('generate_report_for_date')) {
             // Due within the preview window.
             return [
                 'status' => 'upcoming',
-                'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": $name (due in $days_until_due " . pluralize_days($days_until_due) . ")\n"
+                'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": $name (due in $days_until_due " . pluralize($days_until_due, 'day', 'days') . ")\n"
             ];
         }
 

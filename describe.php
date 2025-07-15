@@ -27,17 +27,17 @@ if (!function_exists('describe_recurring_task')) {
 
         echo "Task: $name\n";
         echo "Type: Recurring\n";
-        echo "Details: Repeats every $recur_duration " . pluralize_days($recur_duration) . ".\n";
+        echo "Details: Repeats every $recur_duration " . pluralize($recur_duration, 'day', 'days') . ".\n";
 
         if ($days_since_completed >= 0) {
-            echo "Status: Last completed on $completed_date_str (" . $days_since_completed . " " . pluralize_days($days_since_completed) . " ago).\n";
+            echo "Status: Last completed on $completed_date_str (" . $days_since_completed . " " . pluralize($days_since_completed, 'day', 'days') . " ago).\n";
         } else {
             echo "Status: Last completed date is in the future ($completed_date_str).\n";
         }
 
         if (isset($task->history)) {
             $completion_count = count($task->history->entry);
-            echo "History: " . $completion_count . " " . ($completion_count === 1 ? "completion" : "completions") . " logged.\n";
+            echo "History: " . $completion_count . " " . pluralize($completion_count, "completion", "completions") . " logged.\n";
         }
     }
 }
@@ -65,11 +65,11 @@ if (!function_exists('describe_due_task')) {
         echo "Details: Due on $due_date_str.\n";
 
         if ($due_interval->invert) {
-            echo "Status: Overdue by $days_until_due " . pluralize_days($days_until_due) . ".\n";
+            echo "Status: Overdue by $days_until_due " . pluralize($days_until_due, 'day', 'days') . ".\n";
         } elseif ($days_until_due === 0) {
             echo "Status: Due today.\n";
         } else {
-            echo "Status: Due in $days_until_due " . pluralize_days($days_until_due) . ".\n";
+            echo "Status: Due in $days_until_due " . pluralize($days_until_due, 'day', 'days') . ".\n";
         }
 
         if ($preview_duration > 0) {
@@ -77,20 +77,20 @@ if (!function_exists('describe_due_task')) {
             $display_interval = $now->diff($display_date);
             $days_until_display = $display_interval->days;
 
-            echo "Preview: Set to display $preview_duration " . pluralize_days($preview_duration) . " in advance (on " . $display_date->format('Y-m-d') . ").\n";
+            echo "Preview: Set to display $preview_duration " . pluralize($preview_duration, 'day', 'days') . " in advance (on " . $display_date->format('Y-m-d') . ").\n";
 
             if ($display_interval->invert) {
-                echo "Display Status: Is currently being displayed (for the last $days_until_display " . pluralize_days($days_until_display) . ").\n";
+                echo "Display Status: Is currently being displayed (for the last $days_until_display " . pluralize($days_until_display, 'day', 'days') . ").\n";
             } elseif ($days_until_display === 0) {
                 echo "Display Status: Starts displaying today.\n";
             } else {
-                echo "Display Status: Will be displayed in $days_until_display " . pluralize_days($days_until_display) . ".\n";
+                echo "Display Status: Will be displayed in $days_until_display " . pluralize($days_until_display, 'day', 'days') . ".\n";
             }
         }
 
         if (isset($task->history)) {
             $completion_count = count($task->history->entry);
-            echo "History: " . $completion_count . " " . ($completion_count === 1 ? "completion" : "completions") . " logged.\n";
+            echo "History: " . $completion_count . " " . pluralize($completion_count, "completion", "completions") . " logged.\n";
         }
     }
 }
@@ -110,7 +110,7 @@ if (!function_exists('describe_normal_task')) {
         if (isset($task->history)) {
             $completion_count = count($task->history->entry);
             echo "Status: Completed. History logged.\n";
-            echo "History: " . $completion_count . " " . ($completion_count === 1 ? "completion" : "completions") . " logged.\n";
+            echo "History: " . $completion_count . " " . pluralize($completion_count, "completion", "completions") . " logged.\n";
         } else {
             echo "Status: Not yet completed.\n";
         }

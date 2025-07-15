@@ -335,12 +335,14 @@ function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
 }
 
 /**
- * Returns 'day' or 'days' based on the number.
+ * Returns the singular or plural form of a word based on a number.
  *
- * @param int $number The number to check.
- * @return string The pluralized string.
+ * @param int    $number   The number to test.
+ * @param string $singular The singular form of the word.
+ * @param string $plural   The plural form of the word.
+ * @return string The correct word form.
  */
-function pluralize_days(int $number): string
+function pluralize(int $number, string $singular, string $plural): string
 {
-    return abs($number) === 1 ? 'day' : 'days';
+    return abs($number) === 1 ? $singular : $plural;
 }
