@@ -11,17 +11,24 @@ BIN_FILE="/usr/local/bin/$EXECUTABLE_NAME"
 
 # --- Pre-flight Checks ---
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root or with sudo." 
+   echo "This script must be run as root or with sudo."
    exit 1
 fi
 
-echo "This script will remove the Perennial Task application."
-read -p "Are you sure you want to continue? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Uninstallation cancelled."
+# --- Initial Confirmation ---
+echo "This script will remove the Perennial Task application files from your system."
+echo "Your personal task data will NOT be deleted at this step."
+echo ""
+echo "To confirm that you want to remove the application, please type 'yes':"
+read -p "> " INITIAL_CONFIRMATION
+
+if [[ "$INITIAL_CONFIRMATION" != "yes" ]]; then
+    echo "Confirmation failed. Uninstallation cancelled."
     exit 0
 fi
+
+echo "Confirmation accepted. Proceeding with application removal..."
+echo ""
 
 # --- Removal Steps ---
 echo "Removing symbolic link at $BIN_FILE..."
@@ -49,9 +56,8 @@ echo ""
 # --- User Data Removal (Optional) ---
 if [ -n "$SUDO_USER" ]; then
     USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-    
+
     # Determine the base config directory according to XDG Base Directory Specification.
-    # This relies on the user running `sudo -E ./uninstall.sh` if they use a custom XDG_CONFIG_HOME.
     if [[ -n "$XDG_CONFIG_HOME" && -d "$XDG_CONFIG_HOME" ]]; then
         CONFIG_BASE="$XDG_CONFIG_HOME"
     else
@@ -61,14 +67,17 @@ if [ -n "$SUDO_USER" ]; then
 
     if [ -d "$USER_CONFIG_DIR" ]; then
         echo "User data (tasks and configuration) was found at $USER_CONFIG_DIR."
-        read -p "Do you want to remove this user data as well? THIS CANNOT BE UNDONE. (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            echo "Removing user data directory..."
+        echo "---"
+        echo "WARNING: This is a destructive action that cannot be undone."
+        echo "To confirm the deletion of all your tasks and settings, please type 'yes':"
+        read -p "> " DATA_CONFIRMATION
+        
+        if [[ "$DATA_CONFIRMATION" == "yes" ]]; then
+            echo "Confirmation accepted. Removing user data directory..."
             rm -rf "$USER_CONFIG_DIR"
             echo "User data removed."
         else
-            echo "User data has been kept."
+            echo "Confirmation failed. Your data has not been touched."
         fi
     fi
 else
