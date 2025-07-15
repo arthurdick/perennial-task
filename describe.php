@@ -4,6 +4,35 @@ require_once 'common.php';
 
 // --- Function Definitions ---
 
+if (!function_exists('display_task_header')) {
+    /**
+     * Displays the common header for a task.
+     *
+     * @param SimpleXMLElement $task The XML object for the task.
+     * @param string $type_label The human-readable label for the task type.
+     */
+    function display_task_header(SimpleXMLElement $task, string $type_label): void
+    {
+        echo "Task: " . (string)$task->name . "\n";
+        echo "Type: " . $type_label . "\n";
+    }
+}
+
+if (!function_exists('display_optional_history')) {
+    /**
+     * Displays the completion history count if it exists.
+     *
+     * @param SimpleXMLElement $task The XML object for the task.
+     */
+    function display_optional_history(SimpleXMLElement $task): void
+    {
+        if (isset($task->history)) {
+            $completion_count = count($task->history->entry);
+            echo "History: " . $completion_count . " " . pluralize($completion_count, "completion", "completions") . " logged.\n";
+        }
+    }
+}
+
 if (!function_exists('describe_recurring_task')) {
     /**
      * Describes a recurring task in detail.
@@ -12,7 +41,8 @@ if (!function_exists('describe_recurring_task')) {
      */
     function describe_recurring_task(SimpleXMLElement $task): void
     {
-        $name = (string)$task->name;
+        display_task_header($task, 'Recurring');
+
         $recur_duration = (int)$task->recurring->duration;
         $completed_date_str = (string)$task->recurring->completed;
 
@@ -25,8 +55,6 @@ if (!function_exists('describe_recurring_task')) {
             $days_since_completed *= -1;
         }
 
-        echo "Task: $name\n";
-        echo "Type: Recurring\n";
         echo "Details: Repeats every $recur_duration " . pluralize($recur_duration, 'day', 'days') . ".\n";
 
         if ($days_since_completed >= 0) {
@@ -35,10 +63,7 @@ if (!function_exists('describe_recurring_task')) {
             echo "Status: Last completed date is in the future ($completed_date_str).\n";
         }
 
-        if (isset($task->history)) {
-            $completion_count = count($task->history->entry);
-            echo "History: " . $completion_count . " " . pluralize($completion_count, "completion", "completions") . " logged.\n";
-        }
+        display_optional_history($task);
     }
 }
 
@@ -50,7 +75,8 @@ if (!function_exists('describe_due_task')) {
      */
     function describe_due_task(SimpleXMLElement $task): void
     {
-        $name = (string)$task->name;
+        display_task_header($task, 'Due Date');
+
         $due_date_str = (string)$task->due;
         $preview_duration = isset($task->preview) ? (int)$task->preview : 0;
 
@@ -60,8 +86,6 @@ if (!function_exists('describe_due_task')) {
 
         $days_until_due = $due_interval->days;
 
-        echo "Task: $name\n";
-        echo "Type: Due Date\n";
         echo "Details: Due on $due_date_str.\n";
 
         if ($due_interval->invert) {
@@ -88,10 +112,7 @@ if (!function_exists('describe_due_task')) {
             }
         }
 
-        if (isset($task->history)) {
-            $completion_count = count($task->history->entry);
-            echo "History: " . $completion_count . " " . pluralize($completion_count, "completion", "completions") . " logged.\n";
-        }
+        display_optional_history($task);
     }
 }
 
@@ -103,9 +124,8 @@ if (!function_exists('describe_normal_task')) {
      */
     function describe_normal_task(SimpleXMLElement $task): void
     {
-        $name = (string)$task->name;
-        echo "Task: $name\n";
-        echo "Type: Normal\n";
+        display_task_header($task, 'Normal');
+
         echo "Details: This is a simple, one-off task.\n";
         if (isset($task->history)) {
             $completion_count = count($task->history->entry);
