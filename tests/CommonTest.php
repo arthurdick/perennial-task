@@ -117,4 +117,14 @@ class CommonTest extends TestCase
         // Test validation of the saved file
         $this->assertTrue(validate_task_file($filepath));
     }
+
+    public function testSanitizeFilename()
+    {
+        $this->assertEquals('a_simple_task', sanitize_filename('A Simple Task'));
+        $this->assertEquals('task_with_numbers_123', sanitize_filename('Task with numbers 123'));
+        $this->assertEquals('special_chars', sanitize_filename('Special-Chars!@#$%^&*()'));
+        $this->assertEquals('extra_spaces', sanitize_filename('Extra   ---   Spaces'));
+        $this->assertEquals('a', sanitize_filename('a'));
+    }
 }
+

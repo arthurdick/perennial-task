@@ -64,9 +64,7 @@ if ($type !== 'normal') {
 }
 
 // 5. Generate a unique filename.
-$base_filename = strtolower(trim($name));
-$base_filename = preg_replace('/[^a-z0-9\s-]/', '', $base_filename);
-$base_filename = preg_replace('/[\s-]+/', '_', $base_filename);
+$base_filename = sanitize_filename($name);
 
 $filepath = TASKS_DIR . '/' . $base_filename . '.xml';
 $counter = 1;

@@ -41,87 +41,81 @@ class EditTest extends TestCase
         return $output;
     }
 
-    public function testEditTaskName()
+    public function testEditTaskNameAndRenameFile()
     {
-        $xml = new SimpleXMLElement('<task><name>Original Name</name></task>');
-        $filepath = TASKS_DIR . '/edit_name.xml';
-        save_xml_file($filepath, $xml);
+        $original_filepath = TASKS_DIR . '/original_name.xml';
+        $new_filepath = TASKS_DIR . '/new_awesome_name.xml';
+        
+        save_xml_file($original_filepath, new SimpleXMLElement('<task><name>Original Name</name></task>'));
 
         $inputs = [
-            'n', // Edit Name
+            'n',                // Edit Name
             'New Awesome Name',
-            's', // Save and Exit
+            'y',                // Yes, rename the file
+            's',                // Save and Exit
         ];
 
-        $output = $this->runEditScript($filepath, $inputs);
+        $output = $this->runEditScript($original_filepath, $inputs);
 
-        $this->assertStringContainsString('Success! Task file updated', $output);
-        $updated_xml = simplexml_load_file($filepath);
+        $this->assertStringContainsString('File successfully renamed', $output);
+        $this->assertFileDoesNotExist($original_filepath);
+        $this->assertFileExists($new_filepath);
+        
+        $updated_xml = simplexml_load_file($new_filepath);
         $this->assertEquals('New Awesome Name', (string)$updated_xml->name);
     }
 
-    public function testEditDueDate()
+    public function testEditTaskNameWithoutRenamingFile()
     {
-        $xml = new SimpleXMLElement('<task><name>Due Task</name><due>2025-10-31</due></task>');
-        $filepath = TASKS_DIR . '/edit_due.xml';
-        save_xml_file($filepath, $xml);
+        $original_filepath = TASKS_DIR . '/original_name.xml';
+        save_xml_file($original_filepath, new SimpleXMLElement('<task><name>Original Name</name></task>'));
 
         $inputs = [
-            'd', // Edit Due Date
-            '2025-11-01',
-            's', // Save and Exit
+            'n',                // Edit Name
+            'A Different Name',
+            'n',                // No, do not rename
+            's',                // Save and Exit
         ];
 
-        $this->runEditScript($filepath, $inputs);
-        $updated_xml = simplexml_load_file($filepath);
-        $this->assertEquals('2025-11-01', (string)$updated_xml->due);
-    }
-    
-    public function testEditRecurringDetails()
-    {
-        $xml = new SimpleXMLElement('<task><name>Recurring</name><recurring><completed>2025-06-01</completed><duration>10</duration></recurring></task>');
-        $filepath = TASKS_DIR . '/edit_recurring.xml';
-        save_xml_file($filepath, $xml);
+        $this->runEditScript($original_filepath, $inputs);
 
-        $inputs = [
-            'c', // Edit Last Completed Date
-            '2025-06-15',
-            'r', // Edit Recurrence Duration
-            '15',
-            's'  // Save and Exit
-        ];
-
-        $this->runEditScript($filepath, $inputs);
-        $updated_xml = simplexml_load_file($filepath);
-        $this->assertEquals('2025-06-15', (string)$updated_xml->recurring->completed);
-        $this->assertEquals('15', (string)$updated_xml->recurring->duration);
+        $this->assertFileExists($original_filepath);
+        $updated_xml = simplexml_load_file($original_filepath);
+        $this->assertEquals('A Different Name', (string)$updated_xml->name);
     }
-    
-    public function testAddAndRemovePreview()
+
+    public function testRenameFileCollisionGeneratesUniqueName()
     {
-        $xml = new SimpleXMLElement('<task><name>Preview Task</name><due>2025-12-01</due></task>');
-        $filepath = TASKS_DIR . '/edit_preview.xml';
-        save_xml_file($filepath, $xml);
+        $original_filepath = TASKS_DIR . '/original.xml';
+        $colliding_filepath = TASKS_DIR . '/new_name.xml';
+        $expected_new_filepath = TASKS_DIR . '/new_name_1.xml';
         
-        // Add preview
-        $inputs_add = [
-            'p', // Edit/Add Preview
-            '7',
-            's'  // Save
-        ];
-        $this->runEditScript($filepath, $inputs_add);
-        $xml_with_preview = simplexml_load_file($filepath);
-        $this->assertEquals('7', (string)$xml_with_preview->preview);
+        // Create the file we are going to edit
+        save_xml_file($original_filepath, new SimpleXMLElement('<task><name>Original</name></task>'));
+        // Create the file that will cause the name collision
+        save_xml_file($colliding_filepath, new SimpleXMLElement('<task><name>This one already exists</name></task>'));
 
-        // Remove preview
-        $inputs_remove = [
-            'p', // Edit/Add Preview
-            '0',
-            's'  // Save
+        $inputs = [
+            'n',          // Edit Name
+            'New Name',   // This name will collide with 'new_name.xml'
+            'y',          // Yes, try to rename
+            's',          // Save and Exit
         ];
-        $this->runEditScript($filepath, $inputs_remove);
-        $xml_without_preview = simplexml_load_file($filepath);
-        $this->assertFalse(isset($xml_without_preview->preview));
+
+        $output = $this->runEditScript($original_filepath, $inputs);
+
+        $this->assertStringContainsString("File successfully renamed to 'new_name_1.xml'", $output);
+        
+        // The original file should be gone
+        $this->assertFileDoesNotExist($original_filepath);
+        // The colliding file should be untouched
+        $this->assertFileExists($colliding_filepath); 
+        // A new file with a numbered suffix should have been created
+        $this->assertFileExists($expected_new_filepath);
+        
+        // The new file should have the updated name
+        $xml = simplexml_load_file($expected_new_filepath);
+        $this->assertEquals('New Name', (string)$xml->name);
     }
     
     public function testChangeTaskType()

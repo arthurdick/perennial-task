@@ -80,6 +80,18 @@ function collect_recurring_task_details(SimpleXMLElement $xml): void
     $recurring->addChild('duration', $duration);
 }
 
+/**
+* Sanitizes a task name into a base filename.
+* @param string $name The name of the task.
+* @return string The sanitized base filename (without .xml extension).
+*/
+function sanitize_filename(string $name): string
+{
+    $base = strtolower(trim($name));
+    $base = preg_replace('/[^a-z0-9\s-]/', '', $base);
+    $base = preg_replace('/[\s-]+/', '_', $base);
+    return $base;
+}
 
 function select_task_file(array $argv, string $prompt_verb, string $initial_filter = 'reportable'): ?string
 {

@@ -182,6 +182,7 @@ if ($filepath === null) {
 // --- Main Edit Process ---
 $xml = simplexml_load_file($filepath);
 $type = get_task_type($xml);
+$original_name = (string)$xml->name; // Store original name before loop
 
 // Enter the editing loop.
 while (true) {
@@ -193,6 +194,36 @@ while (true) {
     }
     
     $type = process_edit_choice($xml, $choice);
+
+    // --- RENAME LOGIC ---
+    $new_name = (string)$xml->name;
+    if ($new_name !== $original_name) {
+        $input = strtolower(prompt_user("Task name has changed. Rename the file on disk? (y/n): "));
+        if ($input === 'y') {
+            $base_filename = sanitize_filename($new_name);
+            $new_filepath = TASKS_DIR . '/' . $base_filename . '.xml';
+            $counter = 1;
+
+            // Find a unique filename if the desired one exists
+            while (file_exists($new_filepath) && realpath($new_filepath) !== realpath($filepath)) {
+                $new_filepath = TASKS_DIR . '/' . $base_filename . '_' . $counter . '.xml';
+                $counter++;
+            }
+
+            if (rename($filepath, $new_filepath)) {
+                echo "File successfully renamed to '" . basename($new_filepath) . "'.\n";
+                $filepath = $new_filepath; // IMPORTANT: Update filepath for saving
+                $original_name = $new_name; // Update original_name to prevent re-prompting
+            } else {
+                echo "Error: Could not rename the file. Please check permissions. Task name has been reverted.\n";
+                $xml->name = htmlspecialchars($original_name); // Revert name in XML
+            }
+        } else {
+            // If user says 'n', update original_name to prevent asking again in this session
+            $original_name = $new_name;
+        }
+    }
+    // --- END RENAME LOGIC ---
 }
 
 // Save the modified XML file using the shared function.
