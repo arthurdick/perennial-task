@@ -28,7 +28,7 @@ if ($type === 'normal') {
 } elseif ($type === 'scheduled') {
     echo "Task '$task_name' was completed on $completion_date.\n";
 
-    $is_reschedulable = isset($xml->reschedule) || isset($xml->recurring) || isset($xml->auto_advance);
+    $is_reschedulable = isset($xml->reschedule) || isset($xml->recurring);
 
     if (!$is_reschedulable) {
         if (get_yes_no_input("This task does not reschedule. Mark as complete and remove due date? (Y/n): ", 'y')) {
@@ -42,13 +42,6 @@ if ($type === 'normal') {
             $xml->reschedule->addChild('from', 'completion_date');
             unset($xml->recurring);
             echo "Notice: Migrated task from old 'recurring' format.\n";
-        }
-        if (isset($xml->auto_advance)) {
-            $xml->addChild('reschedule');
-            $xml->reschedule->addChild('interval', (string)$xml->auto_advance);
-            $xml->reschedule->addChild('from', 'due_date');
-            unset($xml->auto_advance);
-            echo "Notice: Migrated task from old 'auto_advance' format.\n";
         }
 
         // --- New Reschedule Logic ---

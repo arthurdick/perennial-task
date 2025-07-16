@@ -60,8 +60,6 @@ if (!function_exists('describe_scheduled_task')) {
             echo "Basis: Calculated from the " . str_replace('_', ' ', (string)$task->reschedule->from) . ".\n";
         } elseif (isset($task->recurring)) {
             echo "Reschedule: (Legacy Format) Repeats every " . $task->recurring->duration . " days from completion.\n";
-        } elseif (isset($task->auto_advance)) {
-            echo "Reschedule: (Legacy Format) Advances by " . $task->auto_advance . " from the due date.\n";
         }
 
         // --- Status Logic ---
