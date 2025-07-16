@@ -1,18 +1,16 @@
-# Perennial Task (`prn`) v1.1.3
+# Perennial Task (`prn`) v1.2.0
 
-Like the wood lily that graces the prairies each summer, some tasks are perennial. They return, season after season, requiring steady attention. **Perennial Task** is a simple, command-line utility built to help you cultivate these recurring responsibilities, ensuring nothing is ever overlooked.
+Like the wood lily that graces the prairies each summer, some tasks are perennial. They return, season after season, requiring steady attention. **Perennial Task** is a simple, command-line utility built to help you cultivate these responsibilities, ensuring nothing is ever overlooked.
 
 ![Perennial Task Logo](/docs/prn_logo.png)
 
 ## Features
 
-  * **Create Tasks**: Quickly create normal, due-date, or recurring tasks.
-  * **Edit Tasks**: Interactively edit any detail of an existing task.
-  * **Complete Tasks**: Mark tasks as complete, which updates their next due/completion date or archives them with a full history.
+  * **Flexible Task Scheduling**: Perennial Task uses a simple but powerful system. A task is either **Normal** (a simple, one-off to-do) or **Scheduled** (a task with a due date).
+  * **Powerful Rescheduling**: A scheduled task can be configured to automatically reschedule itself after completion. You have full control over the new due date, calculating it from either the previous **due date** (for fixed schedules like paying rent) or the **completion date** (for flexible timelines like watering the houseplants). Intervals can be set in days, weeks, months, or years.
   * **Completion History**: Every completed task retains a full history of when it was completed, allowing you to track consistency and habits over time.
-  * **Describe Tasks**: Get a detailed, human-readable description of any single task.
-  * **Run Reports**: Generate a report of all tasks that are due, overdue, or upcoming.
-  * **Intelligent Filtering**: The task selection menu is filterable, allowing you to view all tasks, only active ones, or just the reportable ones.
+  * **Interactive Editing**: Easily edit any detail of an existing task, including its name, due date, or reschedule settings, from a simple interactive menu.
+  * **Intelligent Filtering**: The task selection menu is filterable, allowing you to view all tasks, only active ones, or just the reportable (due or upcoming) ones.
   * **Command-Line Driven**: Designed for efficient use within a terminal environment.
 
 ## Installation
@@ -39,22 +37,16 @@ chmod +x uninstall.sh
 sudo ./uninstall.sh
 ```
 
-The script will remove all application files and will prompt you if you also wish to remove your personal task data.
-
 ### Method 2: Composer Installation
 
 1.  **Install the Package:** Run the following command to install the package globally:
-
     ```
     composer global require arthurdick/perennial-task
     ```
-
 2.  **Update Your PATH:** You must ensure Composer's global bin directory is in your system's `PATH`. Add the following line to your `~/.bashrc`:
-
     ```
     export PATH="$PATH:$(composer global config bin-dir --absolute -q)"
     ```
-
 3.  **Apply the Changes:** Restart your terminal or run `source ~/.bashrc` to apply the changes.
 
 4.  **Set Up Bash Completions (Optional):** The Composer installation does not run the setup script, so bash completions must be linked manually. First, find your system's completion directory (e.g., `/etc/bash_completion.d/` or `/usr/share/bash-completion/completions/`). Then, create a symbolic link to the `prn-completions.bash` file from the package.
@@ -79,27 +71,27 @@ Once installed, you can use the `prn` command from any directory.
 
 **`prn create`**
 
-  * Interactively prompts you to create a new task.
+  * Interactively prompts you to create a new **Normal** or **Scheduled** task.
 
 **`prn edit`**
 
-  * Interactively edit an existing task. Defaults to showing `active` tasks.
+  * Interactively edit an existing task, including its due date and reschedule settings.
 
 **`prn complete`**
 
-  * Mark a task as complete. Defaults to showing `reportable` (due or upcoming) tasks.
+  * Mark a task as complete. If the task is scheduled to repeat, its next due date will be calculated and set automatically.
 
 **`prn describe`**
 
-  * Shows a detailed description and completion summary of a task. Defaults to showing `all` tasks.
+  * Shows a detailed description, status, and completion summary of any single task.
 
 **`prn history`**
 
-  * Shows the full, detailed completion history for a single task. Defaults to showing `all` tasks.
+  * Shows the full, detailed completion history for a single task.
 
 **`prn report [date]`**
 
-  * Generates a report of all due and upcoming tasks. Optionally run for a specific `[date]`.
+  * Generates a report of all due, overdue, and upcoming tasks. Optionally run for a specific `[date]`.
 
 **`prn help`**
 
@@ -109,80 +101,41 @@ Once installed, you can use the `prn` command from any directory.
 
   * Displays the application's version number.
 
+### Backward Compatibility & Migration
+
+This version of Perennial Task uses a new, more flexible format for scheduling. However, it is **fully backward compatible** with tasks created by older versions.
+
+When you complete a task that uses a legacy format (e.g., "recurring" or "due-date" tasks), it will be **automatically and silently migrated** to the new system. Your data is safe, and your tasks will continue to work as expected.
+
 ## Configuration
 
-Perennial Task stores its configuration in a file named `config.ini`. This file is automatically created the first time you run a command.
-
-The configuration file allows you to customize paths for your tasks, logs, and other settings. The location of this file follows the XDG Base Directory Specification:
-
-  * It will be created in `$XDG_CONFIG_HOME/perennial-task/`.
-  * If the `$XDG_CONFIG_HOME` environment variable is not set, it defaults to `~/.config/perennial-task/`.
-
-Here is an example of the default `config.ini` file:
-
-```ini
-; Perennial Task Configuration File
-; This file was automatically generated.
-; You can edit these paths and settings.
-
-tasks_dir = "/home/user/.config/perennial-task/tasks"
-completions_log = "/home/user/.config/perennial-task/completions.log"
-xsd_path = "/usr/local/lib/perennial-task/task.xsd"
-tasks_per_page = 10
-timezone = "America/Edmonton"
-```
-
-## Files and Directories
-
-The locations of application files and user data depend on the installation method.
-
-### Manual Installation
-
-  * **Application Files**: `/usr/local/lib/perennial-task/`
-  * **Executable**: `/usr/local/bin/prn`
-  * **User Configuration & Tasks**: `$XDG_CONFIG_HOME/perennial-task/` (defaults to `~/.config/perennial-task/`)
-
-### Composer Installation
-
-  * **Application Files**: These are located within your Composer home directory, typically at `~/.config/composer/vendor/arthurdick/perennial-task/`. You can find the exact path by running `composer global config home`.
-  * **Executable**: The `prn` executable is a symbolic link located in Composer's `bin` directory. You can find this directory by running `composer global config bin-dir --absolute -q`.
-  * **User Configuration & Tasks**: `$XDG_CONFIG_HOME/perennial-task/` (defaults to `~/.config/perennial-task/`)
+Perennial Task stores its configuration in a file named `config.ini`, which is automatically created on first run. It allows you to customize paths for your tasks, logs, and other settings. The file is located in `$XDG_CONFIG_HOME/perennial-task/` (defaulting to `~/.config/perennial-task/`).
 
 ## Development and Testing
 
-This project includes a comprehensive test suite built with PHPUnit to ensure code quality and prevent regressions.
+This project includes a comprehensive test suite built with PHPUnit.
 
 ### Prerequisites
 
-  * **Composer**: The test suite dependencies are managed by [Composer](https://getcomposer.org/). Please follow the official instructions to install it if you haven't already.
+  * **Composer**: Install from [getcomposer.org](https://getcomposer.org/).
 
 ### Installing Dependencies
 
-1.  Clone the repository to your local machine.
-
-2.  Navigate to the project's root directory in your terminal.
-
-3.  Run the following command to install PHPUnit and other development dependencies:
-
-    ```
-    composer install
-    ```
-
-    This will download all necessary development dependencies into a `vendor/` directory.
+1.  Clone the repository.
+2.  Navigate to the project's root directory.
+3.  Run `composer install` to download development dependencies.
 
 ### Running the Test Suite
 
-From the project's root directory, run the following command to execute the entire test suite:
+From the project's root directory, run:
 
 ```
 ./vendor/bin/phpunit
 ```
 
-A successful run will show a series of dots followed by an "OK" message, indicating that all tests have passed.
-
 ### Code Style
 
-This project uses `php-cs-fixer` to enforce a consistent code style. Before committing any changes, please run the following command from the project's root directory to automatically fix any styling issues:
+This project uses `php-cs-fixer`. To automatically format your code, run:
 
 ```
 ./vendor/bin/php-cs-fixer fix .

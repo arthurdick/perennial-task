@@ -164,7 +164,7 @@ function get_reschedule_input(SimpleXMLElement $xml): void
 
     $from_options = [
         'd' => 'From its previous due date (for fixed schedules like rent)',
-        'c' => 'From its completion date (for flexible tasks like oil changes)'
+        'c' => 'From its completion date (for flexible tasks like cleaning the gutters)'
     ];
     $from_choice = get_menu_choice("Reschedule from?", $from_options);
     $from_map = ['d' => 'due_date', 'c' => 'completion_date'];
