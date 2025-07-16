@@ -7,6 +7,7 @@ require_once 'config.php';
 
 // --- Shared Functions ---
 
+
 /**
  * A test-friendly wrapper for getting user input from the command line.
  * In a testing environment, this function can be replaced by a mock version
@@ -17,17 +18,11 @@ require_once 'config.php';
  */
 function prompt_user(string $prompt): string
 {
-    // Check if a mock function has been provided by the test environment.
     if (isset($GLOBALS['__MOCK_PROMPT_USER_FUNC']) && is_callable($GLOBALS['__MOCK_PROMPT_USER_FUNC'])) {
         return call_user_func($GLOBALS['__MOCK_PROMPT_USER_FUNC'], $prompt);
     }
-
-    // Otherwise, use the real readline function for the live application.
     $input = readline($prompt);
-    if ($input === false) {
-        return '';
-    }
-    return $input;
+    return ($input === false) ? '' : $input;
 }
 
 /**
@@ -44,7 +39,6 @@ function get_yes_no_input(string $prompt, string $default = ''): bool
         if (empty($input) && !empty($default)) {
             $input = $default;
         }
-
         if (in_array($input, ['y', 'yes'])) {
             return true;
         }
@@ -109,7 +103,6 @@ function get_menu_choice(string $prompt, array $options): string
     foreach ($options as $key => $text) {
         echo "  ($key) $text\n";
     }
-
     while (true) {
         $input = strtolower(prompt_user("Enter your choice: "));
         if (array_key_exists($input, $options)) {
@@ -118,7 +111,6 @@ function get_menu_choice(string $prompt, array $options): string
         echo "Invalid choice. Please try again.\n";
     }
 }
-
 
 /**
  * Prompts the user for a date and validates it.
@@ -129,43 +121,64 @@ function get_menu_choice(string $prompt, array $options): string
  */
 function get_validated_date_input(string $prompt, bool $allow_empty = false): string
 {
-    $date = null;
-    while ($date === null) {
+    while (true) {
         $input = prompt_user($prompt);
         if ($allow_empty && empty($input)) {
             return date('Y-m-d');
         }
         if (validate_date($input)) {
-            $date = $input;
-        } else {
-            echo "Invalid date format. Please use YYYY-MM-DD.\n";
+            return $input;
         }
+        echo "Invalid date format. Please use YYYY-MM-DD.\n";
     }
-    return $date;
 }
 
-/**
- * Interactively collects details for a 'due' task.
- * @param SimpleXMLElement $xml The XML object to modify.
- */
-function collect_due_task_details(SimpleXMLElement $xml): void
+function get_interval_input(string $prompt): ?string
+{
+    while (true) {
+        $input = strtolower(prompt_user($prompt));
+        if (empty($input)) {
+            return null;
+        }
+        if (preg_match('/^(\d+)\s+(day|week|month|year)s?$/', $input, $matches)) {
+            $value = (int)$matches[1];
+            $unit = rtrim($matches[2], 's');
+            if ($value > 0) {
+                return "$value $unit" . ($value > 1 ? 's' : '');
+            }
+        }
+        echo "Invalid format. Use '7 days', '2 weeks', '1 month', etc.\n";
+    }
+}
+
+function get_reschedule_input(SimpleXMLElement $xml): void
+{
+    if (!get_yes_no_input("Does this task reschedule automatically? (y/N): ", 'n')) {
+        return;
+    }
+
+    $interval = get_interval_input("Reschedule interval (e.g., '30 days', '1 month'): ");
+    if (!$interval) {
+        return;
+    }
+
+    $from_options = [
+        'd' => 'From its previous due date (for fixed schedules like rent)',
+        'c' => 'From its completion date (for flexible tasks like oil changes)'
+    ];
+    $from_choice = get_menu_choice("Reschedule from?", $from_options);
+    $from_map = ['d' => 'due_date', 'c' => 'completion_date'];
+
+    $reschedule = $xml->addChild('reschedule');
+    $reschedule->addChild('interval', $interval);
+    $reschedule->addChild('from', $from_map[$from_choice]);
+}
+
+function collect_scheduled_task_details(SimpleXMLElement $xml): void
 {
     $dueDate = get_validated_date_input("Enter due date (YYYY-MM-DD): ");
     $xml->addChild('due', $dueDate);
-}
-
-/**
- * Interactively collects details for a 'recurring' task.
- * @param SimpleXMLElement $xml The XML object to modify.
- */
-function collect_recurring_task_details(SimpleXMLElement $xml): void
-{
-    $completedDate = get_validated_date_input("Enter last completed date (YYYY-MM-DD, press Enter for today): ", true);
-    $duration = get_positive_integer_input("Recur every X days (e.g., 7): ");
-
-    $recurring = $xml->addChild('recurring');
-    $recurring->addChild('completed', $completedDate);
-    $recurring->addChild('duration', $duration);
+    get_reschedule_input($xml);
 }
 
 /**
@@ -302,6 +315,41 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
     }
 }
 
+function get_next_due_date(SimpleXMLElement $task, DateTimeImmutable $now): ?DateTimeImmutable
+{
+    if (get_task_type($task) !== 'scheduled') {
+        return null;
+    }
+
+    // --- New Reschedule Logic ---
+    if (isset($task->reschedule)) {
+        if ($task->reschedule->from == 'completion_date') {
+            if (isset($task->history->entry)) {
+                // Find the latest completion date from history
+                $latest_completion = '1970-01-01';
+                foreach ($task->history->entry as $entry) {
+                    if ((string)$entry > $latest_completion) {
+                        $latest_completion = (string)$entry;
+                    }
+                }
+                return (new DateTimeImmutable($latest_completion))->modify('+' . (string)$task->reschedule->interval);
+            }
+        }
+        // If it reschedules from due_date, or from completion with no history, the <due> tag is the source of truth.
+        return new DateTimeImmutable((string)$task->due);
+    }
+
+    // --- Backward Compatibility Check ---
+    if (isset($task->recurring)) {
+        $completed_date = new DateTimeImmutable((string)$task->recurring->completed);
+        $duration = (int)$task->recurring->duration;
+        return $completed_date->modify("+$duration days");
+    }
+
+    // --- It's a simple one-off scheduled task ---
+    return new DateTimeImmutable((string)$task->due);
+}
+
 /**
  * Checks if a task is "reportable" (overdue, due today, or upcoming).
  *
@@ -312,35 +360,26 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
 function is_task_reportable(SimpleXMLElement $task, DateTimeImmutable $now): bool
 {
     $type = get_task_type($task);
-
-    switch ($type) {
-        case 'recurring':
-            $completed_date = new DateTimeImmutable((string)$task->recurring->completed);
-            $recur_duration = (int)$task->recurring->duration;
-            $preview = isset($task->preview) ? (int)$task->preview : 0;
-            $next_due = $completed_date->modify("+$recur_duration days");
-            $interval = $now->diff($next_due);
-            if ($interval->invert) {
-                return true;
-            } // Overdue
-            return $interval->days <= $preview;
-
-        case 'due':
-            $due_date = new DateTimeImmutable((string)$task->due);
-            $preview = isset($task->preview) ? (int)$task->preview : 0;
-            $interval = $now->diff($due_date);
-            if ($interval->invert) {
-                return true;
-            } // Overdue
-            return $interval->days <= $preview;
-
-        case 'normal':
-            // A normal task is only "reportable" if it has not been completed yet.
-            return !isset($task->history);
-
-        default:
-            return false;
+    if ($type === 'normal') {
+        return !isset($task->history);
     }
+
+    if ($type === 'scheduled') {
+        $next_due_date = get_next_due_date($task, $now);
+        if (!$next_due_date) {
+            return false;
+        }
+
+        $preview = isset($task->preview) ? (int)$task->preview : 0;
+        $interval = $now->diff($next_due_date);
+
+        if ($interval->invert) {
+            return true;
+        } // Overdue
+        return $interval->days <= $preview;
+    }
+
+    return false;
 }
 
 /**
@@ -356,34 +395,30 @@ function validate_task_file(string $filepath, bool $silent = false): bool
         return false;
     }
 
-    // Use DOMDocument for schema validation
     $dom = new DOMDocument();
-    // Suppress warnings from load(), we check the return value.
     if (!@$dom->load($filepath)) {
         if (!$silent) {
-            echo "Error: Failed to load XML file '" . basename($filepath) . "'. It may be malformed.\n";
+            echo "Error: Malformed XML file '" . basename($filepath) . "'.\n";
         }
         return false;
     }
-
-    // Suppress warnings from schemaValidate(), we check the return value.
     if (!@$dom->schemaValidate(XSD_PATH)) {
         if (!$silent) {
-            echo "Error: The task file '" . basename($filepath) . "' does not conform to the required schema.\n";
+            echo "Error: Task file '" . basename($filepath) . "' does not conform to schema.\n";
         }
         return false;
     }
-
     return true;
 }
 
 function get_task_type(SimpleXMLElement $xml): string
 {
     if (isset($xml->due)) {
-        return 'due';
+        return 'scheduled';
     }
+    // Backward compatibility for unconverted recurring tasks
     if (isset($xml->recurring)) {
-        return 'recurring';
+        return 'scheduled';
     }
     return 'normal';
 }
@@ -409,11 +444,7 @@ function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
     $node = dom_import_simplexml($xml);
     $node = $dom->importNode($node, true);
     $dom->appendChild($node);
-
-    // Add a reference to the XSD schema in the saved XML file.
-    // This makes the file self-validating with standard XML tools.
     $dom->documentElement->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:noNamespaceSchemaLocation', XSD_PATH);
-
     return $dom->save($filepath) !== false;
 }
 

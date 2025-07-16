@@ -1,29 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <xs:element name="task">
-    <xs:complexType>
-      <xs:all>
-        <xs:element name="name" type="xs:string"/>
-        <xs:element name="due" type="xs:date" minOccurs="0"/>
-        <xs:element name="preview" type="xs:positiveInteger" minOccurs="0"/>
-        <xs:element name="recurring" minOccurs="0">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="completed" type="xs:date"/>
-              <xs:element name="duration" type="xs:positiveInteger"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="history" minOccurs="0">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="entry" type="xs:date" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-      </xs:all>
-    </xs:complexType>
-  </xs:element>
+    <xs:element name="task">
+        <xs:complexType>
+            <xs:all>
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="due" type="xs:date" minOccurs="0"/>
+
+                <xs:element name="reschedule" minOccurs="0">
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="interval" type="xs:string"/>
+                            <xs:element name="from">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="due_date"/>
+                                        <xs:enumeration value="completion_date"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:all>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="recurring" minOccurs="0">
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="completed" type="xs:date"/>
+                            <xs:element name="duration" type="xs:positiveInteger"/>
+                        </xs:all>
+                    </xs:complexType>
+                </xs:element>
+                
+                <xs:element name="preview" type="xs:nonNegativeInteger" minOccurs="0"/>
+                
+                <xs:element name="history" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="entry" type="xs:date" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:all>
+        </xs:complexType>
+    </xs:element>
 
 </xs:schema>

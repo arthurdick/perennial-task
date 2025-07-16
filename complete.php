@@ -7,7 +7,6 @@ require_once 'common.php';
 echo "--- Complete a Task ---\n";
 
 $filepath = select_task_file($argv, 'complete', 'reportable');
-
 if ($filepath === null) {
     exit(0);
 }
@@ -15,63 +14,64 @@ if ($filepath === null) {
 $xml = simplexml_load_file($filepath);
 $task_name = (string)$xml->name;
 
-// 1. Get the completion date from the user FIRST.
 $completion_date = get_validated_date_input("Enter completion date (YYYY-MM-DD, press Enter for today): ", true);
 
-// 2. Add the correct completion record to the task's history.
 if (!isset($xml->history)) {
     $xml->addChild('history');
 }
 $xml->history->addChild('entry', $completion_date);
 
-// 3. Handle the task based on its type.
 $type = get_task_type($xml);
 
-switch ($type) {
-    case 'normal':
-        echo "Task '$task_name' has been marked as complete on $completion_date.\n";
-        break;
+if ($type === 'normal') {
+    echo "Task '$task_name' has been marked as complete on $completion_date.\n";
+} elseif ($type === 'scheduled') {
+    echo "Task '$task_name' was completed on $completion_date.\n";
 
-    case 'due':
-        echo "Task '$task_name' was completed on $completion_date.\n";
-        while (true) {
-            $input = prompt_user("Enter new due date (YYYY-MM-DD), or 'never' to remove: ");
-            if (strtolower($input) === 'never') {
-                unset($xml->due);
-                echo "Task will no longer have a due date.\n";
-                break;
-            } elseif (validate_date($input)) {
-                $xml->due = $input;
-                echo "Task has been updated with a new due date of $input.\n";
-                break;
-            } else {
-                echo "Invalid input. Please use YYYY-MM-DD format or type 'never'.\n";
-            }
+    $is_reschedulable = isset($xml->reschedule) || isset($xml->recurring) || isset($xml->auto_advance);
+
+    if (!$is_reschedulable) {
+        if (get_yes_no_input("This task does not reschedule. Mark as complete and remove due date? (Y/n): ", 'y')) {
+            unset($xml->due);
         }
-        break;
-
-    case 'recurring':
-        echo "Task '$task_name' was completed on $completion_date.\n";
-        if (get_yes_no_input("Will this task recur? (Y/n): ", 'y')) {
-            // Use the already-provided completion date for the recurring->completed tag
-            $xml->recurring->completed = $completion_date;
-            echo "Task has been updated with a new completion date of $completion_date.\n";
-        } else {
+    } else {
+        // --- Migration from old formats ---
+        if (isset($xml->recurring)) {
+            $xml->addChild('reschedule');
+            $xml->reschedule->addChild('interval', (string)$xml->recurring->duration . ' days');
+            $xml->reschedule->addChild('from', 'completion_date');
             unset($xml->recurring);
-            echo "Task will no longer recur.\n";
+            echo "Notice: Migrated task from old 'recurring' format.\n";
         }
-        break;
+        if (isset($xml->auto_advance)) {
+            $xml->addChild('reschedule');
+            $xml->reschedule->addChild('interval', (string)$xml->auto_advance);
+            $xml->reschedule->addChild('from', 'due_date');
+            unset($xml->auto_advance);
+            echo "Notice: Migrated task from old 'auto_advance' format.\n";
+        }
+
+        // --- New Reschedule Logic ---
+        $reschedule_settings = $xml->reschedule;
+        $base_date_str = ($reschedule_settings->from == 'due_date') ? (string)$xml->due : $completion_date;
+        $interval = (string)$reschedule_settings->interval;
+
+        try {
+            $new_due_date = (new DateTime($base_date_str))->modify('+' . $interval)->format('Y-m-d');
+            $xml->due = $new_due_date;
+            echo "Task has been rescheduled to $new_due_date.\n";
+        } catch (Exception $e) {
+            echo "Error: Could not calculate next due date from invalid interval '$interval'. Task not rescheduled.\n";
+        }
+    }
 }
 
-// 4. Save the modified file.
 if (save_xml_file($filepath, $xml)) {
     echo "Task file for '$task_name' updated successfully.\n";
 } else {
     echo "Error: Could not save the updated task file.\n";
+    exit(1);
 }
 
-// 5. Log to the central completions log.
 $log_entry = date('c') . " | Completed: " . $task_name . " on " . $completion_date . "\n";
 file_put_contents(COMPLETIONS_LOG, $log_entry, FILE_APPEND);
-
-echo "Completion process finished.\n";

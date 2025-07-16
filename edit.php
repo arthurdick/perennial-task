@@ -16,15 +16,14 @@ if (!function_exists('display_current_details')) {
         $type = get_task_type($xml);
         echo "Type: " . ucfirst($type) . "\n";
 
-        switch ($type) {
-            case 'due':
-                echo "Due Date: " . $xml->due . "\n";
-                break;
-            case 'recurring':
-                echo "Last Completed: " . $xml->recurring->completed . "\n";
-                echo "Recurs Every: " . $xml->recurring->duration . " days\n";
-                break;
+        if ($type === 'scheduled') {
+            echo "Due Date: " . $xml->due . "\n";
+            if (isset($xml->reschedule)) {
+                echo "Reschedules: Every " . $xml->reschedule->interval . "\n";
+                echo "Reschedule from: " . ucfirst(str_replace('_', ' ', $xml->reschedule->from)) . "\n";
+            }
         }
+
         if (isset($xml->preview)) {
             echo "Preview: " . $xml->preview . " days in advance\n";
         }
@@ -54,143 +53,98 @@ if (!function_exists('process_edit_choice')) {
                 }
                 $xml->name = htmlspecialchars($newName);
                 break;
-            case 't': // Type
-                $type_options = [
-                    'n' => 'Normal',
-                    'd' => 'Due',
-                    'r' => 'Recurring'
-                ];
-                $type_choice = get_menu_choice("Select new task type:", $type_options);
-                $validTypes = ['n' => 'normal', 'd' => 'due', 'r' => 'recurring'];
-                $newType = $validTypes[$type_choice];
 
-                if ($newType !== $currentType) {
-                    if (isset($xml->due)) {
+            case 't': // Change Task Type
+                if ($currentType === 'normal') {
+                    echo "Converting to a Scheduled task.\n";
+                    collect_scheduled_task_details($xml);
+                } else { // Is scheduled
+                    if (get_yes_no_input("Convert to a Normal task? This will remove due date and reschedule settings. (y/N): ", 'n')) {
                         unset($xml->due);
-                    }
-                    if (isset($xml->recurring)) {
-                        unset($xml->recurring);
-                    }
-                    if (isset($xml->preview)) {
-                        unset($xml->preview);
-                    }
-
-                    if ($newType === 'due') {
-                        collect_due_task_details($xml);
-                    } elseif ($newType === 'recurring') {
-                        collect_recurring_task_details($xml);
-                    }
-                    echo "Task type changed to '" . ucfirst($newType) . "'.\n";
-                    return $newType;
-                }
-                break;
-            case 'd': // Due date
-                $xml->due = get_validated_date_input("Enter new due date (YYYY-MM-DD): ");
-                break;
-            case 'c': // Completed date
-                $xml->recurring->completed = get_validated_date_input("Enter new last completed date (YYYY-MM-DD): ");
-                break;
-            case 'r': // Recurrence duration
-                $xml->recurring->duration = get_positive_integer_input("Recur every X days (e.g., 7): ");
-                break;
-            case 'p': // Preview
-                $preview = get_optional_positive_integer_input("Preview days in advance? (Enter 0 to remove, Enter to skip): ");
-                if ($preview !== null) {
-                    if ($preview > 0) {
-                        if (isset($xml->preview)) {
-                            $xml->preview = $preview;
-                        } else {
-                            $xml->addChild('preview', $preview);
+                        if (isset($xml->reschedule)) {
+                            unset($xml->reschedule);
                         }
-                    } else { // $preview is 0
                         if (isset($xml->preview)) {
                             unset($xml->preview);
                         }
                     }
                 }
                 break;
+
+            case 'd': // Edit Due Date
+                $xml->due = get_validated_date_input("Enter new due date (YYYY-MM-DD): ");
+                break;
+
+            case 'r': // Edit Reschedule settings
+                if (isset($xml->reschedule)) {
+                    if (get_yes_no_input("Do you want to remove the existing reschedule settings? (y/N): ", 'n')) {
+                        unset($xml->reschedule);
+                        break;
+                    }
+                }
+                get_reschedule_input($xml);
+                break;
         }
-        return $currentType; // Return original type if no change occurred
+        return get_task_type($xml);
     }
 }
 
 // --- Main Script Execution ---
 
 echo "--- Edit an Existing Task ---\n";
-
-// Use the shared function to select a task file.
 $filepath = select_task_file($argv, 'edit', 'active');
-
-// If no file was selected or found, exit gracefully.
 if ($filepath === null) {
     exit(0);
 }
 
-// --- Main Edit Process ---
 $xml = simplexml_load_file($filepath);
-$type = get_task_type($xml);
-$original_name = (string)$xml->name; // Store original name before loop
+$original_name = (string)$xml->name;
 
-// Enter the editing loop.
 while (true) {
     display_current_details($xml);
+    $type = get_task_type($xml);
 
     $menu_options = [
         'n' => 'Edit Name',
         't' => 'Change Task Type',
     ];
-    switch ($type) {
-        case 'due':
-            $menu_options['d'] = 'Edit Due Date';
-            $menu_options['p'] = 'Edit/Add Preview Days';
-            break;
-        case 'recurring':
-            $menu_options['c'] = 'Edit Last Completed Date';
-            $menu_options['r'] = 'Edit Recurrence Duration';
-            $menu_options['p'] = 'Edit/Add Preview Days';
-            break;
+    if ($type === 'scheduled') {
+        $menu_options['d'] = 'Edit Due Date';
+        $menu_options['r'] = 'Edit Reschedule Settings';
     }
     $menu_options['s'] = 'Save and Exit';
 
     $choice = get_menu_choice("What would you like to edit?", $menu_options);
-
-    if ($choice === 's') { // Save
+    if ($choice === 's') {
         break;
     }
 
-    $type = process_edit_choice($xml, $choice);
+    process_edit_choice($xml, $choice);
 
-    // --- RENAME LOGIC ---
     $new_name = (string)$xml->name;
     if ($new_name !== $original_name) {
         if (get_yes_no_input("Task name has changed. Rename the file on disk? (Y/n): ", 'y')) {
             $base_filename = sanitize_filename($new_name);
             $new_filepath = TASKS_DIR . '/' . $base_filename . '.xml';
             $counter = 1;
-
-            // Find a unique filename if the desired one exists
             while (file_exists($new_filepath) && realpath($new_filepath) !== realpath($filepath)) {
                 $new_filepath = TASKS_DIR . '/' . $base_filename . '_' . $counter . '.xml';
                 $counter++;
             }
-
             if (rename($filepath, $new_filepath)) {
                 echo "File successfully renamed to '" . basename($new_filepath) . "'.\n";
-                $filepath = $new_filepath; // IMPORTANT: Update filepath for saving
-                $original_name = $new_name; // Update original_name to prevent re-prompting
+                $filepath = $new_filepath;
+                $original_name = $new_name;
             } else {
-                echo "Error: Could not rename the file. Please check permissions. Task name has been reverted.\n";
-                $xml->name = htmlspecialchars($original_name); // Revert name in XML
+                echo "Error: Could not rename the file. Reverting name change.\n";
+                $xml->name = htmlspecialchars($original_name);
             }
         } else {
-            // If user says 'n', update original_name to prevent asking again in this session
             $original_name = $new_name;
         }
     }
-    // --- END RENAME LOGIC ---
 }
 
-// Save the modified XML file using the shared function.
 if (save_xml_file($filepath, $xml)) {
     echo "\nSuccess! Task file updated at: $filepath\n";
 } else {
