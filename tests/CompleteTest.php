@@ -58,35 +58,60 @@ class CompleteTest extends TestCase
         $this->assertEquals('2025-07-15', (string)$updated_xml->history->entry);
     }
 
-    public function testCompleteDueTask_UpdateDate()
+    public function testCompleteScheduledTask_RescheduleFromDueDate()
     {
-        $xml = new SimpleXMLElement('<task><name>Due Task To Update</name><due>2025-07-01</due></task>');
-        $filepath = TASKS_DIR . '/due_update.xml';
+        $xml = new SimpleXMLElement('<task>
+            <name>Pay Rent</name>
+            <due>2025-08-01</due>
+            <reschedule><interval>1 month</interval><from>due_date</from></reschedule>
+        </task>');
+        $filepath = TASKS_DIR . '/rent.xml';
         save_xml_file($filepath, $xml);
 
-        $output = $this->runCompleteScript($filepath, ['2025-07-10', '2026-01-01']);
-
-        $this->assertStringContainsString("Task 'Due Task To Update' was completed on 2025-07-10.", $output);
-        $this->assertStringContainsString("new due date of 2026-01-01", $output);
-
+        $output = $this->runCompleteScript($filepath, ['2025-08-01']);
+        $this->assertStringContainsString("Task has been rescheduled to 2025-09-01", $output);
         $updated_xml = simplexml_load_file($filepath);
-        $this->assertEquals('2026-01-01', (string)$updated_xml->due);
-        $this->assertEquals('2025-07-10', (string)$updated_xml->history->entry);
+        $this->assertEquals('2025-09-01', (string)$updated_xml->due);
+        $this->assertEquals('2025-08-01', (string)$updated_xml->history->entry);
     }
 
-    public function testCompleteRecurringTask_Yes()
+    public function testCompleteScheduledTask_RescheduleFromCompletionDate()
     {
-        $xml = new SimpleXMLElement('<task><name>Recurring Task To Update</name><recurring><completed>2025-07-01</completed><duration>7</duration></recurring></task>');
-        $filepath = TASKS_DIR . '/recurring_update.xml';
+        $xml = new SimpleXMLElement('<task>
+            <name>Water Plants</name>
+            <due>2025-07-18</due>
+            <reschedule><interval>3 days</interval><from>completion_date</from></reschedule>
+        </task>');
+        $filepath = TASKS_DIR . '/plants.xml';
         save_xml_file($filepath, $xml);
 
-        $output = $this->runCompleteScript($filepath, ['2025-07-08', 'y']);
-
-        $this->assertStringContainsString("has been updated with a new completion date of 2025-07-08", $output);
-        $this->assertFileExists($filepath);
-
+        // Complete it 2 days late
+        $output = $this->runCompleteScript($filepath, ['2025-07-20']);
+        // New due date should be 2025-07-23 (completion + 3 days)
+        $this->assertStringContainsString("Task has been rescheduled to 2025-07-23", $output);
         $updated_xml = simplexml_load_file($filepath);
-        $this->assertEquals('2025-07-08', (string)$updated_xml->recurring->completed);
-        $this->assertEquals('2025-07-08', (string)$updated_xml->history->entry);
+        $this->assertEquals('2025-07-23', (string)$updated_xml->due);
+        $this->assertEquals('2025-07-20', (string)$updated_xml->history->entry);
+    }
+
+    public function testMigrationOfLegacyRecurringTask()
+    {
+        // This task format will be migrated on completion
+        $xml = new SimpleXMLElement('<task>
+            <name>Old Recurring Task</name>
+            <recurring><completed>2025-07-01</completed><duration>7</duration></recurring>
+        </task>');
+        $filepath = TASKS_DIR . '/legacy_recurring.xml';
+        save_xml_file($filepath, $xml);
+
+        $output = $this->runCompleteScript($filepath, ['2025-07-08']);
+        $this->assertStringContainsString("Migrated task from old 'recurring' format", $output);
+        $this->assertStringContainsString("Task has been rescheduled to 2025-07-15", $output); // 7 days from completion
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertFalse(isset($updated_xml->recurring)); // Old tag is gone
+        $this->assertTrue(isset($updated_xml->reschedule));  // New tag is present
+        $this->assertEquals('7 days', (string)$updated_xml->reschedule->interval);
+        $this->assertEquals('completion_date', (string)$updated_xml->reschedule->from);
+        $this->assertEquals('2025-07-15', (string)$updated_xml->due);
     }
 }

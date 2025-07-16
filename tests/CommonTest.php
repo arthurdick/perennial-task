@@ -13,6 +13,66 @@ class CommonTest extends TestCase
         }
     }
 
+    public function testGetNextDueDate_NewFormat_FromDueDate()
+    {
+        $now = new DateTimeImmutable('today');
+        $xml = new SimpleXMLElement('<task>
+            <name>Test</name>
+            <due>2025-08-01</due>
+            <reschedule>
+                <interval>1 month</interval>
+                <from>due_date</from>
+            </reschedule>
+        </task>');
+
+        $next_due = get_next_due_date($xml, $now);
+        $this->assertEquals('2025-08-01', $next_due->format('Y-m-d'));
+    }
+
+    public function testGetNextDueDate_NewFormat_FromCompletionDate()
+    {
+        $now = new DateTimeImmutable('today');
+        $xml = new SimpleXMLElement('<task>
+            <name>Test</name>
+            <due>2025-07-10</due>
+            <history><entry>2025-07-15</entry></history>
+            <reschedule>
+                <interval>5 days</interval>
+                <from>completion_date</from>
+            </reschedule>
+        </task>');
+
+        $next_due = get_next_due_date($xml, $now);
+        // 2025-07-15 + 5 days = 2025-07-20
+        $this->assertEquals('2025-07-20', $next_due->format('Y-m-d'));
+    }
+
+    public function testGetNextDueDate_LegacyRecurring()
+    {
+        $now = new DateTimeImmutable('today');
+        $xml = new SimpleXMLElement('<task>
+            <name>Legacy Recurring</name>
+            <recurring>
+                <completed>2025-07-10</completed>
+                <duration>7</duration>
+            </recurring>
+        </task>');
+
+        $next_due = get_next_due_date($xml, $now);
+        $this->assertEquals('2025-07-17', $next_due->format('Y-m-d'));
+    }
+
+    public function testGetNextDueDate_SimpleDue()
+    {
+        $now = new DateTimeImmutable('today');
+        $xml = new SimpleXMLElement('<task>
+            <name>Simple Due</name>
+            <due>2025-12-25</due>
+        </task>');
+        $next_due = get_next_due_date($xml, $now);
+        $this->assertEquals('2025-12-25', $next_due->format('Y-m-d'));
+    }
+
     public function testIsTaskReportable()
     {
         $now = new DateTimeImmutable('today');
@@ -38,6 +98,18 @@ class CommonTest extends TestCase
         $this->assertTrue(is_task_reportable($xml_due_preview, $now));
 
         // Due task, upcoming outside preview -> not reportable
+        $xml_due_future = new SimpleXMLElement('<task><name>Future</name><due>' . $now->modify('+10 days')->format('Y-m-d') . '</due><preview>5</preview></task>');
+        $this->assertFalse(is_task_reportable($xml_due_future, $now));
+
+        // Scheduled task, overdue -> reportable
+        $xml_due_overdue = new SimpleXMLElement('<task><name>Overdue</name><due>' . $now->modify('-1 day')->format('Y-m-d') . '</due></task>');
+        $this->assertTrue(is_task_reportable($xml_due_overdue, $now));
+
+        // Scheduled task, upcoming within preview -> reportable
+        $xml_due_preview = new SimpleXMLElement('<task><name>Preview</name><due>' . $now->modify('+3 days')->format('Y-m-d') . '</due><preview>5</preview></task>');
+        $this->assertTrue(is_task_reportable($xml_due_preview, $now));
+
+        // Scheduled task, upcoming outside preview -> not reportable
         $xml_due_future = new SimpleXMLElement('<task><name>Future</name><due>' . $now->modify('+10 days')->format('Y-m-d') . '</due><preview>5</preview></task>');
         $this->assertFalse(is_task_reportable($xml_due_future, $now));
     }
@@ -69,11 +141,11 @@ class CommonTest extends TestCase
 
         // Due Task
         $xml_due = new SimpleXMLElement('<task><name>Due Task</name><due>2025-12-31</due></task>');
-        $this->assertEquals('due', get_task_type($xml_due));
+        $this->assertEquals('scheduled', get_task_type($xml_due));
 
         // Recurring Task
         $xml_recurring = new SimpleXMLElement('<task><name>Recurring Task</name><recurring><completed>2025-07-01</completed><duration>7</duration></recurring></task>');
-        $this->assertEquals('recurring', get_task_type($xml_recurring));
+        $this->assertEquals('scheduled', get_task_type($xml_recurring));
     }
 
     public function testValidateTaskFile()

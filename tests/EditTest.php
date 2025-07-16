@@ -118,30 +118,51 @@ class EditTest extends TestCase
         $this->assertEquals('New Name', (string)$xml->name);
     }
 
-    public function testChangeTaskType()
+    public function testConvertNormalToScheduled()
     {
-        $xml = new SimpleXMLElement('<task><name>Convert Me</name><due>2025-01-01</due></task>');
-        $filepath = TASKS_DIR . '/convert_type.xml';
-        save_xml_file($filepath, $xml);
+        $filepath = TASKS_DIR . '/convert_me.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Convert Me</name></task>'));
 
         $inputs = [
             't',          // Change Task Type
-            'r',          // Select 'recurring'
-            '2025-07-10', // Enter last completed date
-            '7',          // Recur every 7 days
+            '2025-10-31', // Enter due date
+            'y',          // Yes, reschedule
+            '1 year',     // Interval
+            'd',          // From due_date
             's'           // Save and Exit
         ];
 
         $this->runEditScript($filepath, $inputs);
-
         $updated_xml = simplexml_load_file($filepath);
 
-        // Assert the old structure is gone
-        $this->assertFalse(isset($updated_xml->due));
+        $this->assertEquals('scheduled', get_task_type($updated_xml));
+        $this->assertEquals('2025-10-31', (string)$updated_xml->due);
+        $this->assertTrue(isset($updated_xml->reschedule));
+        $this->assertEquals('1 year', (string)$updated_xml->reschedule->interval);
+        $this->assertEquals('due_date', (string)$updated_xml->reschedule->from);
+    }
 
-        // Assert the new structure is present and correct
-        $this->assertTrue(isset($updated_xml->recurring));
-        $this->assertEquals('2025-07-10', (string)$updated_xml->recurring->completed);
-        $this->assertEquals('7', (string)$updated_xml->recurring->duration);
+    public function testEditRescheduleSettings()
+    {
+        $xml = new SimpleXMLElement('<task>
+            <name>Task To Edit</name>
+            <due>2025-01-01</due>
+            <reschedule><interval>7 days</interval><from>completion_date</from></reschedule>
+        </task>');
+        $filepath = TASKS_DIR . '/edit_reschedule.xml';
+        save_xml_file($filepath, $xml);
+
+        $inputs = [
+            'r',          // Edit Reschedule Settings
+            'n',          // No, don't remove existing
+            '2 weeks',    // New Interval
+            'd',          // New From: due_date
+            's'           // Save and Exit
+        ];
+
+        $this->runEditScript($filepath, $inputs);
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertEquals('2 weeks', (string)$updated_xml->reschedule->interval);
+        $this->assertEquals('due_date', (string)$updated_xml->reschedule->from);
     }
 }

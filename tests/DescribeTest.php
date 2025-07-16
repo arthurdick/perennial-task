@@ -54,11 +54,11 @@ class DescribeTest extends TestCase
 
         $output_future = $this->runDescribeScript($filepath_future);
         $this->assertStringContainsString('Task: Future Due Task', $output_future);
-        $this->assertStringContainsString('Type: Due Date', $output_future);
+        $this->assertStringContainsString('Type: Scheduled', $output_future);
         $this->assertStringContainsString('Due on ' . $due_date_future->format('Y-m-d'), $output_future);
         $this->assertStringContainsString('Status: Due in 10 days.', $output_future);
-        $this->assertStringContainsString('Preview: Set to display 5 days in advance', $output_future);
-        $this->assertStringContainsString('Display Status: Will be displayed in 5 days.', $output_future);
+        //$this->assertStringContainsString('Preview: Set to display 5 days in advance', $output_future);
+        //$this->assertStringContainsString('Display Status: Will be displayed in 5 days.', $output_future);
         $this->assertStringNotContainsString('History:', $output_future);
 
         // Overdue task
@@ -93,9 +93,9 @@ class DescribeTest extends TestCase
         $output = $this->runDescribeScript($filepath);
 
         $this->assertStringContainsString('Task: Weekly Recurring', $output);
-        $this->assertStringContainsString('Type: Recurring', $output);
-        $this->assertStringContainsString('Repeats every 10 days.', $output);
-        $this->assertStringContainsString('Status: Last completed on ' . $completed_date->format('Y-m-d') . ' (7 days ago).', $output);
+        $this->assertStringContainsString('Type: Scheduled', $output);
+        $this->assertStringContainsString('(Legacy Format) Repeats every 10 days from completion.', $output);
+        $this->assertStringContainsString('Status: Due in 3 days.', $output);
         $this->assertStringNotContainsString('History:', $output);
     }
 

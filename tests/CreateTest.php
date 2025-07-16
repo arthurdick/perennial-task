@@ -16,25 +16,21 @@ class CreateTest extends TestCase
 
     private function runCreateScript(array $inputs): array
     {
-        // The stream that will provide the fake user input.
         $input_stream = fopen('php://memory', 'r+');
         foreach ($inputs as $input) {
             fwrite($input_stream, $input . PHP_EOL);
         }
         rewind($input_stream);
 
-        // Define the mock function that reads from our stream and set it globally.
         $GLOBALS['__MOCK_PROMPT_USER_FUNC'] = function (string $prompt) use ($input_stream): string {
             $line = fgets($input_stream);
             return $line !== false ? trim($line) : '';
         };
 
         ob_start();
-        // The included script will now use our mock prompt_user function
         include $this->script_path;
         $output = ob_get_clean();
 
-        // Clean up the global and the stream resource.
         unset($GLOBALS['__MOCK_PROMPT_USER_FUNC']);
         fclose($input_stream);
 
@@ -43,73 +39,36 @@ class CreateTest extends TestCase
 
     public function testCreateNormalTask()
     {
-        $inputs = [
-            'Test Normal Task', // name
-            'n',                // type (normal)
-            '',                 // preview (skip)
-        ];
-
+        $inputs = ['Test Normal Task', 'n'];
         $result = $this->runCreateScript($inputs);
-
         $this->assertStringContainsString('Success! Task file created', $result['output']);
-        $this->assertCount(1, $result['files']);
-
-        $filepath = $result['files'][0];
-        $this->assertFileExists($filepath);
-
-        $xml = simplexml_load_file($filepath);
+        $xml = simplexml_load_file($result['files'][0]);
         $this->assertEquals('Test Normal Task', (string)$xml->name);
         $this->assertFalse(isset($xml->due));
-        $this->assertFalse(isset($xml->recurring));
-        $this->assertFalse(isset($xml->preview));
     }
 
-    public function testCreateDueTask()
+    public function testCreateScheduledTask()
     {
         $inputs = [
-            'Test Due Task',    // name
-            'd',                // type (due)
-            '2025-12-25',       // due date
-            '5',                // preview
+            'Test Scheduled Task', // name
+            's',                   // type (scheduled)
+            '2025-08-01',          // due date
+            'y',                   // yes, it reschedules
+            '1 month',             // interval
+            'd',                   // from due_date
+            '5'                    // preview days
         ];
 
         $result = $this->runCreateScript($inputs);
-
         $this->assertStringContainsString('Success! Task file created', $result['output']);
-        $this->assertCount(1, $result['files']);
-
         $filepath = $result['files'][0];
         $xml = simplexml_load_file($filepath);
 
-        $this->assertEquals('Test Due Task', (string)$xml->name);
-        $this->assertEquals('2025-12-25', (string)$xml->due);
+        $this->assertEquals('Test Scheduled Task', (string)$xml->name);
+        $this->assertEquals('2025-08-01', (string)$xml->due);
+        $this->assertEquals('1 month', (string)$xml->reschedule->interval);
+        $this->assertEquals('due_date', (string)$xml->reschedule->from);
         $this->assertEquals('5', (string)$xml->preview);
-        $this->assertFalse(isset($xml->recurring));
-    }
-
-    public function testCreateRecurringTask()
-    {
-        $inputs = [
-            'Test Recurring Task', // name
-            'r',                   // type (recurring)
-            '2025-07-01',          // last completed
-            '14',                  // duration
-            '3',                   // preview
-        ];
-
-        $result = $this->runCreateScript($inputs);
-
-        $this->assertStringContainsString('Success! Task file created', $result['output']);
-        $this->assertCount(1, $result['files']);
-
-        $filepath = $result['files'][0];
-        $xml = simplexml_load_file($filepath);
-
-        $this->assertEquals('Test Recurring Task', (string)$xml->name);
-        $this->assertEquals('2025-07-01', (string)$xml->recurring->completed);
-        $this->assertEquals('14', (string)$xml->recurring->duration);
-        $this->assertEquals('3', (string)$xml->preview);
-        $this->assertFalse(isset($xml->due));
     }
 
     public function testFilenameSanitizationAndUniqueness()

@@ -79,10 +79,30 @@ if (!function_exists('process_edit_choice')) {
                 if (isset($xml->reschedule)) {
                     if (get_yes_no_input("Do you want to remove the existing reschedule settings? (y/N): ", 'n')) {
                         unset($xml->reschedule);
+                        echo "Reschedule settings have been removed.\n";
                         break;
                     }
                 }
-                get_reschedule_input($xml);
+
+                echo "Editing reschedule settings...\n";
+                $interval = get_interval_input("New interval (e.g., '30 days', Enter to keep current): ");
+
+                $from_options = [
+                    'd' => 'From its previous due date',
+                    'c' => 'From its completion date'
+                ];
+                $from_choice = get_menu_choice("Reschedule from?", $from_options);
+                $from_map = ['d' => 'due_date', 'c' => 'completion_date'];
+                $from = $from_map[$from_choice];
+
+                if (!isset($xml->reschedule)) {
+                    $xml->addChild('reschedule');
+                }
+
+                if ($interval) {
+                    $xml->reschedule->interval = $interval;
+                }
+                $xml->reschedule->from = $from;
                 break;
         }
         return get_task_type($xml);
