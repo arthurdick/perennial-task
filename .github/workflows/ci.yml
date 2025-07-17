@@ -70,7 +70,7 @@ jobs:
       # Step 5: Install project dependencies using Composer.
       # The flags are optimized for a non-interactive CI environment.
       - name: Install Composer dependencies
-        run: composer install --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --ignore-platform-req=php
 
       # Step 6: Run the PHP-CS-Fixer to check for code style violations.
       # The "--dry-run" flag is critical: it reports errors without changing files and fails the build if violations are found.
