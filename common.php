@@ -432,8 +432,7 @@ function validate_date(string $date, string $format = 'Y-m-d'): bool
 }
 
 /**
- * Saves a SimpleXMLElement object to a file.
- * This function no longer needs to manually handle the DOCTYPE.
+ * Saves a SimpleXMLElement object to a file with proper formatting.
  *
  * @param string $filepath The path to save the file to.
  * @param SimpleXMLElement $xml The XML object to save.
@@ -442,10 +441,17 @@ function validate_date(string $date, string $format = 'Y-m-d'): bool
 function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
 {
     $dom = new DOMDocument('1.0', 'UTF-8');
+    // We must disable preserveWhiteSpace before enabling formatOutput
+    // for the formatting to be applied correctly.
+    $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
-    $node = dom_import_simplexml($xml);
-    $node = $dom->importNode($node, true);
-    $dom->appendChild($node);
+
+    // Loading the XML string from the SimpleXMLElement into DOMDocument
+    // is a more reliable way to ensure consistent formatting.
+    if ($dom->loadXML($xml->asXML()) === false) {
+        return false;
+    }
+
     $dom->documentElement->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:noNamespaceSchemaLocation', XSD_PATH);
     return $dom->save($filepath) !== false;
 }
