@@ -169,9 +169,11 @@ function get_reschedule_input(SimpleXMLElement $xml): void
     $from_choice = get_menu_choice("Reschedule from?", $from_options);
     $from_map = ['d' => 'due_date', 'c' => 'completion_date'];
 
-    $reschedule = $xml->addChild('reschedule');
-    $reschedule->addChild('interval', $interval);
-    $reschedule->addChild('from', $from_map[$from_choice]);
+    if (!isset($xml->reschedule)) {
+        $xml->addChild('reschedule');
+    }
+    $xml->reschedule->interval = $interval;
+    $xml->reschedule->from = $from_map[$from_choice];
 }
 
 function collect_scheduled_task_details(SimpleXMLElement $xml): void
@@ -413,7 +415,7 @@ function validate_task_file(string $filepath, bool $silent = false): bool
 
 function get_task_type(SimpleXMLElement $xml): string
 {
-    if (isset($xml->due)) {
+    if (isset($xml->due) || isset($xml->reschedule)) {
         return 'scheduled';
     }
     // Backward compatibility for unconverted recurring tasks
@@ -459,4 +461,35 @@ function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
 function pluralize(int $number, string $singular, string $plural): string
 {
     return abs($number) === 1 ? $singular : $plural;
+}
+
+/**
+ * Checks for and migrates a task from the legacy <recurring> format to the new <reschedule> format.
+ *
+ * @param SimpleXMLElement $xml The task's XML object, passed by reference.
+ * @return bool True if a migration was performed, false otherwise.
+ */
+function migrate_legacy_task_if_needed(SimpleXMLElement &$xml): bool
+{
+    if (isset($xml->recurring)) {
+        $xml->addChild('reschedule');
+        $xml->reschedule->addChild('interval', (string)$xml->recurring->duration . ' days');
+        $xml->reschedule->addChild('from', 'completion_date');
+
+        // If the legacy task has a completion date and no current due date,
+        // calculate and set the initial due date.
+        if (isset($xml->recurring->completed) && !isset($xml->due)) {
+            try {
+                $completed_date = new DateTime((string)$xml->recurring->completed);
+                $duration = (int)$xml->recurring->duration;
+                $xml->addChild('due', $completed_date->modify("+$duration days")->format('Y-m-d'));
+            } catch (Exception $e) {
+                // Ignore if date is invalid, it can be fixed by the user.
+            }
+        }
+
+        unset($xml->recurring);
+        return true;
+    }
+    return false;
 }

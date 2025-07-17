@@ -28,22 +28,18 @@ if ($type === 'normal') {
 } elseif ($type === 'scheduled') {
     echo "Task '$task_name' was completed on $completion_date.\n";
 
-    $is_reschedulable = isset($xml->reschedule) || isset($xml->recurring);
+    // --- Migration from old formats ---
+    if (migrate_legacy_task_if_needed($xml)) {
+        echo "Notice: Migrated task from old 'recurring' format.\n";
+    }
+
+    $is_reschedulable = isset($xml->reschedule);
 
     if (!$is_reschedulable) {
         if (get_yes_no_input("This task does not reschedule. Mark as complete and remove due date? (Y/n): ", 'y')) {
             unset($xml->due);
         }
     } else {
-        // --- Migration from old formats ---
-        if (isset($xml->recurring)) {
-            $xml->addChild('reschedule');
-            $xml->reschedule->addChild('interval', (string)$xml->recurring->duration . ' days');
-            $xml->reschedule->addChild('from', 'completion_date');
-            unset($xml->recurring);
-            echo "Notice: Migrated task from old 'recurring' format.\n";
-        }
-
         // --- New Reschedule Logic ---
         $reschedule_settings = $xml->reschedule;
         $base_date_str = ($reschedule_settings->from == 'due_date') ? (string)$xml->due : $completion_date;

@@ -155,6 +155,7 @@ class EditTest extends TestCase
         $inputs = [
             'r',          // Edit Reschedule Settings
             'n',          // No, don't remove existing
+            'y',          // Yes, it reschedules
             '2 weeks',    // New Interval
             'd',          // New From: due_date
             's'           // Save and Exit
@@ -164,5 +165,36 @@ class EditTest extends TestCase
         $updated_xml = simplexml_load_file($filepath);
         $this->assertEquals('2 weeks', (string)$updated_xml->reschedule->interval);
         $this->assertEquals('due_date', (string)$updated_xml->reschedule->from);
+    }
+
+    public function testMigrationOfLegacyRecurringTaskOnEdit()
+    {
+        $xml = new SimpleXMLElement('<task>
+            <name>Legacy Task</name>
+            <recurring><completed>2025-07-01</completed><duration>14</duration></recurring>
+        </task>');
+        $filepath = TASKS_DIR . '/legacy_for_edit.xml';
+        save_xml_file($filepath, $xml);
+
+        // Just open and save to trigger the migration
+        $inputs = ['s'];
+
+        $output = $this->runEditScript($filepath, $inputs);
+
+        $this->assertStringContainsString('Notice: This task used a legacy format and has been automatically updated.', $output);
+
+        $updated_xml = simplexml_load_file($filepath);
+
+        // Verify old tag is gone
+        $this->assertFalse(isset($updated_xml->recurring));
+
+        // Verify new tags are present and correct
+        $this->assertTrue(isset($updated_xml->reschedule));
+        $this->assertEquals('14 days', (string)$updated_xml->reschedule->interval);
+        $this->assertEquals('completion_date', (string)$updated_xml->reschedule->from);
+
+        // Verify due date was calculated and added
+        $this->assertTrue(isset($updated_xml->due));
+        $this->assertEquals('2025-07-15', (string)$updated_xml->due); // 2025-07-01 + 14 days
     }
 }

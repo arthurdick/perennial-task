@@ -17,7 +17,11 @@ if (!function_exists('display_current_details')) {
         echo "Type: " . ucfirst($type) . "\n";
 
         if ($type === 'scheduled') {
-            echo "Due Date: " . $xml->due . "\n";
+            // This check ensures a due date is present, which might not be the case
+            // for a legacy task that hasn't been completed yet.
+            if (isset($xml->due)) {
+                echo "Due Date: " . $xml->due . "\n";
+            }
             if (isset($xml->reschedule)) {
                 echo "Reschedules: Every " . $xml->reschedule->interval . "\n";
                 echo "Reschedule from: " . ucfirst(str_replace('_', ' ', $xml->reschedule->from)) . "\n";
@@ -85,24 +89,7 @@ if (!function_exists('process_edit_choice')) {
                 }
 
                 echo "Editing reschedule settings...\n";
-                $interval = get_interval_input("New interval (e.g., '30 days', Enter to keep current): ");
-
-                $from_options = [
-                    'd' => 'From its previous due date',
-                    'c' => 'From its completion date'
-                ];
-                $from_choice = get_menu_choice("Reschedule from?", $from_options);
-                $from_map = ['d' => 'due_date', 'c' => 'completion_date'];
-                $from = $from_map[$from_choice];
-
-                if (!isset($xml->reschedule)) {
-                    $xml->addChild('reschedule');
-                }
-
-                if ($interval) {
-                    $xml->reschedule->interval = $interval;
-                }
-                $xml->reschedule->from = $from;
+                get_reschedule_input($xml);
                 break;
         }
         return get_task_type($xml);
@@ -120,6 +107,12 @@ if ($filepath === null) {
 $xml = simplexml_load_file($filepath);
 $original_name = (string)$xml->name;
 
+// --- Automatic Migration from Legacy Format ---
+if (migrate_legacy_task_if_needed($xml)) {
+    echo "Notice: This task used a legacy format and has been automatically updated.\n";
+}
+
+
 while (true) {
     display_current_details($xml);
     $type = get_task_type($xml);
@@ -129,8 +122,10 @@ while (true) {
         't' => 'Change Task Type',
     ];
     if ($type === 'scheduled') {
-        $menu_options['d'] = 'Edit Due Date';
-        $menu_options['r'] = 'Edit Reschedule Settings';
+        if (isset($xml->due)) {
+            $menu_options['d'] = 'Edit Due Date';
+        }
+        $menu_options['r'] = 'Edit/Add Reschedule Settings';
     }
     $menu_options['s'] = 'Save and Exit';
 
