@@ -79,6 +79,19 @@ if (!function_exists('process_edit_choice')) {
                 $xml->due = get_validated_date_input("Enter new due date (YYYY-MM-DD): ");
                 break;
 
+            case 'p': // Edit Preview
+                $preview_days = get_optional_positive_integer_input("Enter new preview days (or press Enter to remove): ");
+                if ($preview_days === null) {
+                    if (isset($xml->preview)) {
+                        unset($xml->preview);
+                        echo "Preview setting removed.\n";
+                    }
+                } else {
+                    $xml->preview = $preview_days;
+                    echo "Preview set to $preview_days days.\n";
+                }
+                break;
+
             case 'r': // Edit Reschedule settings
                 if (isset($xml->reschedule)) {
                     if (get_yes_no_input("Do you want to remove the existing reschedule settings? (y/N): ", 'n')) {
@@ -126,6 +139,7 @@ while (true) {
             $menu_options['d'] = 'Edit Due Date';
         }
         $menu_options['r'] = 'Edit/Add Reschedule Settings';
+        $menu_options['p'] = 'Edit Preview Days';
     }
     $menu_options['s'] = 'Save and Exit';
 

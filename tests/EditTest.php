@@ -167,6 +167,29 @@ class EditTest extends TestCase
         $this->assertEquals('due_date', (string)$updated_xml->reschedule->from);
     }
 
+    public function testEditPreviewDays()
+    {
+        $xml = new SimpleXMLElement('<task><name>Preview Task</name><due>2025-12-25</due></task>');
+        $filepath = TASKS_DIR . '/preview_task.xml';
+        save_xml_file($filepath, $xml);
+
+        // 1. Add preview
+        $this->runEditScript($filepath, ['p', '5', 's']);
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertTrue(isset($updated_xml->preview));
+        $this->assertEquals('5', (string)$updated_xml->preview);
+
+        // 2. Change preview
+        $this->runEditScript($filepath, ['p', '10', 's']);
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertEquals('10', (string)$updated_xml->preview);
+
+        // 3. Remove preview
+        $this->runEditScript($filepath, ['p', '', 's']);
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertFalse(isset($updated_xml->preview));
+    }
+
     public function testMigrationOfLegacyRecurringTaskOnEdit()
     {
         $xml = new SimpleXMLElement('<task>
