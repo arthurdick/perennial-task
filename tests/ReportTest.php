@@ -91,4 +91,25 @@ class ReportTest extends TestCase
 
         $this->assertStringContainsString('Recurring With Preview (due in 2 days)', $output);
     }
+
+    public function testReportWarnsAboutInvalidFiles()
+    {
+        // Create a malformed XML file
+        file_put_contents(TASKS_DIR . '/malformed.xml', '<task><name>Malformed Task</name>');
+
+        // Create an XML file that does not conform to the schema
+        file_put_contents(TASKS_DIR . '/non-conforming.xml', '<?xml version="1.0"?><badroot></badroot>');
+
+        $output = $this->runReportScript($this->now->format('Y-m-d'));
+
+        // Check for the warning message
+        $this->assertStringContainsString('The following task files are invalid or corrupt and were skipped', $output);
+
+        // Check that the invalid files are listed
+        $this->assertStringContainsString('- malformed.xml', $output);
+        $this->assertStringContainsString('- non-conforming.xml', $output);
+
+        // Check that the task from the malformed file was not included in the report
+        $this->assertStringNotContainsString('Malformed Task', $output);
+    }
 }

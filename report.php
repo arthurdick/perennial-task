@@ -98,8 +98,10 @@ if (empty($files)) {
 }
 
 $report_lines = [];
+$invalid_files = [];
 foreach ($files as $file) {
     if (!validate_task_file($file, true)) {
+        $invalid_files[] = basename($file);
         continue;
     }
 
@@ -132,4 +134,12 @@ foreach ($status_order as $status) {
 
 if (!$output_generated) {
     echo "No tasks to report on at this time.\n";
+}
+
+// Display warnings for any invalid files that were skipped.
+if (!empty($invalid_files)) {
+    echo "\n" . COLOR_YELLOW . "Warning:" . COLOR_RESET . " The following task files are invalid or corrupt and were skipped:\n";
+    foreach ($invalid_files as $invalid_file) {
+        echo "  - $invalid_file\n";
+    }
 }
