@@ -58,6 +58,27 @@ class CompleteTest extends TestCase
         $this->assertEquals('2025-07-15', (string)$updated_xml->history->entry);
     }
 
+    public function testCompleteOneOffScheduledTaskCleansUpTags()
+    {
+        $xml = new SimpleXMLElement('<task>
+            <name>One-off Project</name>
+            <due>2025-08-15</due>
+            <preview>10</preview>
+        </task>');
+        $filepath = TASKS_DIR . '/one_off.xml';
+        save_xml_file($filepath, $xml);
+
+        // Inputs: completion date, 'y' to remove due date
+        $this->runCompleteScript($filepath, ['2025-08-10', 'y']);
+
+        $updated_xml = simplexml_load_file($filepath);
+
+        // Assert that both due and preview tags are removed
+        $this->assertFalse(isset($updated_xml->due));
+        $this->assertFalse(isset($updated_xml->preview));
+        $this->assertTrue(isset($updated_xml->history));
+    }
+
     public function testCompleteScheduledTask_RescheduleFromDueDate()
     {
         $xml = new SimpleXMLElement('<task>

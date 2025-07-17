@@ -38,6 +38,9 @@ if ($type === 'normal') {
     if (!$is_reschedulable) {
         if (get_yes_no_input("This task does not reschedule. Mark as complete and remove due date? (Y/n): ", 'y')) {
             unset($xml->due);
+            if (isset($xml->preview)) {
+                unset($xml->preview);
+            }
         }
     } else {
         // --- New Reschedule Logic ---
