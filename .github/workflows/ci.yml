@@ -61,7 +61,7 @@ jobs:
           # The primary cache key. A cache hit occurs only if this key is an exact match.
           # It includes the OS, PHP version, and a hash of the composer.lock file.
           # This ensures the cache is unique and is invalidated whenever dependencies change.
-          key: ${{ runner.os }}-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.json') }}
           # Fallback keys. If the primary key doesn't match, the action will restore the most recent
           # cache that matches this less-specific prefix.
           restore-keys: |
@@ -70,7 +70,7 @@ jobs:
       # Step 5: Install project dependencies using Composer.
       # The flags are optimized for a non-interactive CI environment.
       - name: Install Composer dependencies
-        run: composer install --no-progress --no-interaction --prefer-dist --ignore-platform-req=php
+        run: composer update --no-progress --no-interaction --prefer-dist
 
       # Step 6: Run the PHP-CS-Fixer to check for code style violations.
       # The "--dry-run" flag is critical: it reports errors without changing files and fails the build if violations are found.
