@@ -14,30 +14,28 @@ class CompleteTest extends TestCase
         }
     }
 
-    private function runCompleteScript(string $task_filepath, array $inputs = []): string
+    /**
+     * Final corrected helper. Builds the command using the robust key=value format.
+     *
+     * @param string $task_filepath The path to the task file.
+     * @param array $options An associative array of options, e.g., ['--date' => 'YYYY-MM-DD'].
+     * @return string The script's output.
+     */
+    private function runCompleteScript(string $task_filepath, array $options = []): string
     {
-        global $argv;
-        $argv = ['complete.php', $task_filepath];
-
-        $input_stream = fopen('php://memory', 'r+');
-        foreach ($inputs as $input) {
-            fwrite($input_stream, $input . PHP_EOL);
+        $script_args = [];
+        foreach ($options as $key => $value) {
+            // Use the key='value' format, which is very robust.
+            if ($value !== null) {
+                $script_args[] = $key . "=" . escapeshellarg($value);
+            }
         }
-        rewind($input_stream);
+        // Add the filepath as the final argument.
+        $script_args[] = escapeshellarg($task_filepath);
 
-        $GLOBALS['__MOCK_PROMPT_USER_FUNC'] = function (string $prompt) use ($input_stream): string {
-            $line = fgets($input_stream);
-            return $line !== false ? trim($line) : '';
-        };
-
-        ob_start();
-        include $this->script_path;
-        $output = ob_get_clean();
-
-        unset($GLOBALS['__MOCK_PROMPT_USER_FUNC']);
-        fclose($input_stream);
-
-        return $output;
+        $command = "php " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
+        
+        return shell_exec($command);
     }
 
     public function testCompleteNormalTask()
@@ -48,7 +46,7 @@ class CompleteTest extends TestCase
 
         $this->assertFileExists($filepath);
 
-        $output = $this->runCompleteScript($filepath, ['2025-07-15']);
+        $output = $this->runCompleteScript($filepath, ['--date' => '2025-07-15']);
 
         $this->assertStringContainsString("Task 'Normal Task To Complete' has been marked as complete on 2025-07-15.", $output);
         $this->assertFileExists($filepath);
@@ -68,12 +66,10 @@ class CompleteTest extends TestCase
         $filepath = TASKS_DIR . '/one_off.xml';
         save_xml_file($filepath, $xml);
 
-        // Inputs: completion date, 'y' to remove due date
-        $this->runCompleteScript($filepath, ['2025-08-10', 'y']);
+        $this->runCompleteScript($filepath, ['--date' => '2025-08-10']);
 
         $updated_xml = simplexml_load_file($filepath);
 
-        // Assert that both due and preview tags are removed
         $this->assertFalse(isset($updated_xml->due));
         $this->assertFalse(isset($updated_xml->preview));
         $this->assertTrue(isset($updated_xml->history));
@@ -89,7 +85,7 @@ class CompleteTest extends TestCase
         $filepath = TASKS_DIR . '/rent.xml';
         save_xml_file($filepath, $xml);
 
-        $output = $this->runCompleteScript($filepath, ['2025-08-01']);
+        $output = $this->runCompleteScript($filepath, ['--date' => '2025-08-01']);
         $this->assertStringContainsString("Task has been rescheduled to 2025-09-01", $output);
         $updated_xml = simplexml_load_file($filepath);
         $this->assertEquals('2025-09-01', (string)$updated_xml->due);
@@ -106,9 +102,7 @@ class CompleteTest extends TestCase
         $filepath = TASKS_DIR . '/plants.xml';
         save_xml_file($filepath, $xml);
 
-        // Complete it 2 days late
-        $output = $this->runCompleteScript($filepath, ['2025-07-20']);
-        // New due date should be 2025-07-23 (completion + 3 days)
+        $output = $this->runCompleteScript($filepath, ['--date' => '2025-07-20']);
         $this->assertStringContainsString("Task has been rescheduled to 2025-07-23", $output);
         $updated_xml = simplexml_load_file($filepath);
         $this->assertEquals('2025-07-23', (string)$updated_xml->due);
@@ -117,7 +111,6 @@ class CompleteTest extends TestCase
 
     public function testMigrationOfLegacyRecurringTask()
     {
-        // This task format will be migrated on completion
         $xml = new SimpleXMLElement('<task>
             <name>Old Recurring Task</name>
             <recurring><completed>2025-07-01</completed><duration>7</duration></recurring>
@@ -125,12 +118,12 @@ class CompleteTest extends TestCase
         $filepath = TASKS_DIR . '/legacy_recurring.xml';
         save_xml_file($filepath, $xml);
 
-        $output = $this->runCompleteScript($filepath, ['2025-07-08']);
+        $output = $this->runCompleteScript($filepath, ['--date' => '2025-07-08']);
         $this->assertStringContainsString("Migrated task from old 'recurring' format", $output);
-        $this->assertStringContainsString("Task has been rescheduled to 2025-07-15", $output); // 7 days from completion
+        $this->assertStringContainsString("Task has been rescheduled to 2025-07-15", $output);
         $updated_xml = simplexml_load_file($filepath);
-        $this->assertFalse(isset($updated_xml->recurring)); // Old tag is gone
-        $this->assertTrue(isset($updated_xml->reschedule));  // New tag is present
+        $this->assertFalse(isset($updated_xml->recurring));
+        $this->assertTrue(isset($updated_xml->reschedule));
         $this->assertEquals('7 days', (string)$updated_xml->reschedule->interval);
         $this->assertEquals('completion_date', (string)$updated_xml->reschedule->from);
         $this->assertEquals('2025-07-15', (string)$updated_xml->due);

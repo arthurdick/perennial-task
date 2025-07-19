@@ -3,7 +3,6 @@
 
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
-
 const VERSION = '1.2.2';
 const MIN_PHP_VERSION = '7.4';
 
@@ -42,7 +41,7 @@ function display_help(): void
     echo "  edit [task_file]   Edit a task. Select from a list or specify a file.\n";
     echo "  complete [task_file] Mark a task as complete.\n";
     echo "  describe [task_file] Show a detailed description of a task.\n";
-    echo "  history [task_file] Show the full completion history of a single task.\n";
+    echo "  history [task_file]  Show the full completion history of a single task.\n";
     echo "  report [date]      Show a report of all due and upcoming tasks.\n";
     echo "  help               Show this help message.\n";
     echo "  version            Display the application version.\n";
@@ -54,12 +53,9 @@ function display_help(): void
 function main(array $argv): void
 {
     run_preflight_checks();
-
-    // Determine the application's true directory
     $app_dir = dirname(realpath(__FILE__));
     
     $command = $argv[1] ?? null;
-
     switch ($command) {
         case 'create':
         case 'edit':
@@ -67,14 +63,39 @@ function main(array $argv): void
         case 'describe':
         case 'history':
         case 'report':
-            // The sub-scripts expect their own, clean $argv array.
-            global $argv;
             $script_name = "$command.php";
+            $script_path = "{$app_dir}/{$script_name}";
             $arguments = array_slice($argv, 2);
-            $argv = array_merge([$script_name], $arguments);
 
-            require "{$app_dir}/{$script_name}";
-            break;
+            $filepath_arg = null;
+            $filepath_key = null;
+            
+            // Find the first non-option argument and treat it as the filepath.
+            foreach ($arguments as $key => $arg) {
+                if (!str_starts_with($arg, '-')) {
+                    $filepath_arg = $arg;
+                    $filepath_key = $key;
+                    break;
+                }
+            }
+            
+            // All other arguments are options.
+            $options_args = $arguments;
+            if ($filepath_key !== null) {
+                unset($options_args[$filepath_key]);
+            }
+            
+            // Rebuild the final arguments list: options first, then the filepath.
+            $final_args = array_values($options_args);
+            if ($filepath_arg !== null) {
+                $final_args[] = $filepath_arg;
+            }
+            
+            $escaped_arguments = array_map('escapeshellarg', $final_args);
+            $exec_command = "php " . escapeshellarg($script_path) . " " . implode(' ', $escaped_arguments);
+            
+            passthru($exec_command, $return_var);
+            exit($return_var);
 
         case 'help':
         case '--help':
@@ -101,4 +122,3 @@ function main(array $argv): void
 
 // Run the application.
 main($argv);
-

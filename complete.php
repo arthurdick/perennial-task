@@ -2,6 +2,10 @@
 
 require_once 'common.php';
 
+// --- Argument Parsing ---
+
+$options = getopt('', ["date:"]);
+
 // --- Main Script Execution ---
 
 echo "--- Complete a Task ---\n";
@@ -14,7 +18,17 @@ if ($filepath === null) {
 $xml = simplexml_load_file($filepath);
 $task_name = (string)$xml->name;
 
-$completion_date = get_validated_date_input("Enter completion date (YYYY-MM-DD, press Enter for today): ", true);
+// Determine completion date: Use --date flag
+$completion_date = date('Y-m-d'); // Default to today
+if (isset($options['date'])) {
+    if (validate_date($options['date'])) {
+        $completion_date = $options['date'];
+    } else {
+        file_put_contents('php://stderr', "Error: Invalid format for --date. Use YYYY-MM-DD.\n");
+        exit(1);
+    }
+}
+
 
 if (!isset($xml->history)) {
     $xml->addChild('history');
@@ -28,7 +42,6 @@ if ($type === 'normal') {
 } elseif ($type === 'scheduled') {
     echo "Task '$task_name' was completed on $completion_date.\n";
 
-    // --- Migration from old formats ---
     if (migrate_legacy_task_if_needed($xml)) {
         echo "Notice: Migrated task from old 'recurring' format.\n";
     }
@@ -36,14 +49,12 @@ if ($type === 'normal') {
     $is_reschedulable = isset($xml->reschedule);
 
     if (!$is_reschedulable) {
-        if (get_yes_no_input("This task does not reschedule. Mark as complete and remove due date? (Y/n): ", 'y')) {
-            unset($xml->due);
-            if (isset($xml->preview)) {
-                unset($xml->preview);
-            }
+        echo "This task does not reschedule. Removing due date.\n";
+        unset($xml->due);
+        if (isset($xml->preview)) {
+            unset($xml->preview);
         }
     } else {
-        // --- New Reschedule Logic ---
         $reschedule_settings = $xml->reschedule;
         $base_date_str = ($reschedule_settings->from == 'due_date') ? (string)$xml->due : $completion_date;
         $interval = (string)$reschedule_settings->interval;

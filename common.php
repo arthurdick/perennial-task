@@ -198,18 +198,30 @@ function sanitize_filename(string $name): string
 
 function select_task_file(array $argv, string $prompt_verb, string $initial_filter = 'reportable'): ?string
 {
-    if (isset($argv[1])) {
-        $filepath_arg = $argv[1];
+    // The `prn` script ensures the filepath is the LAST argument.
+    $filepath_arg = null;
+    if (count($argv) > 1) {
+        $last_arg = end($argv);
+        // Check if the last argument is a non-option; if so, assume it's the filepath.
+        if ($last_arg && !str_starts_with($last_arg, '-')) {
+            $filepath_arg = $last_arg;
+        }
+    }
+
+    if ($filepath_arg !== null) {
         if (!is_file($filepath_arg)) {
             echo "Error: The file '$filepath_arg' does not exist or is not a file.\n";
-            exit(1);
+            // Fall through to interactive selection.
+        } else {
+            if (!validate_task_file($filepath_arg)) {
+                exit(1);
+            }
+            // Do not echo here, to keep non-interactive mode clean.
+            // echo "Task selected from argument: " . basename($filepath_arg) . "\n";
+            return $filepath_arg;
         }
-        if (!validate_task_file($filepath_arg)) {
-            exit(1);
-        }
-        echo "Task selected from argument: " . basename($filepath_arg) . "\n";
-        return $filepath_arg;
     }
+
 
     if (!is_dir(TASKS_DIR)) {
         echo "Tasks directory not found at " . TASKS_DIR . ". Please check your configuration.\n";
@@ -235,11 +247,10 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
 
             $xml = simplexml_load_file($file);
 
-            // Apply the current filter
             if ($current_filter === 'active') {
                 if (get_task_type($xml) === 'normal' && isset($xml->history)) {
-                    continue;
-                } // Skip completed normal tasks
+                    continue; 
+                }
             } elseif ($current_filter === 'reportable') {
                 if (!is_task_reportable($xml, $now)) {
                     continue;
@@ -290,7 +301,7 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
             $new_filter = prompt_user("Choose filter (all, active, reportable): ");
             if (in_array($new_filter, ['all', 'active', 'reportable'])) {
                 $current_filter = $new_filter;
-                $current_page = 1; // Reset to first page
+                $current_page = 1; 
             } else {
                 echo "Invalid filter.\n";
             }
@@ -323,11 +334,9 @@ function get_next_due_date(SimpleXMLElement $task, DateTimeImmutable $now): ?Dat
         return null;
     }
 
-    // --- New Reschedule Logic ---
     if (isset($task->reschedule)) {
         if ($task->reschedule->from == 'completion_date') {
             if (isset($task->history->entry)) {
-                // Find the latest completion date from history
                 $latest_completion = '1970-01-01';
                 foreach ($task->history->entry as $entry) {
                     if ((string)$entry > $latest_completion) {
@@ -337,18 +346,15 @@ function get_next_due_date(SimpleXMLElement $task, DateTimeImmutable $now): ?Dat
                 return (new DateTimeImmutable($latest_completion))->modify('+' . (string)$task->reschedule->interval);
             }
         }
-        // If it reschedules from due_date, or from completion with no history, the <due> tag is the source of truth.
         return new DateTimeImmutable((string)$task->due);
     }
 
-    // --- Backward Compatibility Check ---
     if (isset($task->recurring)) {
         $completed_date = new DateTimeImmutable((string)$task->recurring->completed);
         $duration = (int)$task->recurring->duration;
         return $completed_date->modify("+$duration days");
     }
 
-    // --- It's a simple one-off scheduled task ---
     return new DateTimeImmutable((string)$task->due);
 }
 
@@ -377,7 +383,7 @@ function is_task_reportable(SimpleXMLElement $task, DateTimeImmutable $now): boo
 
         if ($interval->invert) {
             return true;
-        } // Overdue
+        } 
         return $interval->days <= $preview;
     }
 
@@ -418,7 +424,6 @@ function get_task_type(SimpleXMLElement $xml): string
     if (isset($xml->due) || isset($xml->reschedule)) {
         return 'scheduled';
     }
-    // Backward compatibility for unconverted recurring tasks
     if (isset($xml->recurring)) {
         return 'scheduled';
     }
@@ -441,13 +446,9 @@ function validate_date(string $date, string $format = 'Y-m-d'): bool
 function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
 {
     $dom = new DOMDocument('1.0', 'UTF-8');
-    // We must disable preserveWhiteSpace before enabling formatOutput
-    // for the formatting to be applied correctly.
     $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
 
-    // Loading the XML string from the SimpleXMLElement into DOMDocument
-    // is a more reliable way to ensure consistent formatting.
     if ($dom->loadXML($xml->asXML()) === false) {
         return false;
     }
@@ -482,15 +483,12 @@ function migrate_legacy_task_if_needed(SimpleXMLElement &$xml): bool
         $xml->reschedule->addChild('interval', (string)$xml->recurring->duration . ' days');
         $xml->reschedule->addChild('from', 'completion_date');
 
-        // If the legacy task has a completion date and no current due date,
-        // calculate and set the initial due date.
         if (isset($xml->recurring->completed) && !isset($xml->due)) {
             try {
                 $completed_date = new DateTime((string)$xml->recurring->completed);
                 $duration = (int)$xml->recurring->duration;
                 $xml->addChild('due', $completed_date->modify("+$duration days")->format('Y-m-d'));
             } catch (Exception $e) {
-                // Ignore if date is invalid, it can be fixed by the user.
             }
         }
 
