@@ -5,16 +5,38 @@ _prn_completions()
     local cur prev words cword
     _get_comp_words_by_ref -n : cur prev words cword
 
+    # --- Command and Flag Definitions ---
     local commands="create edit complete describe history report help version"
     local file_commands="edit complete describe history"
 
-    # Completion for the main command
+    # Non-interactive flags for each command
+    local create_opts="--name --due --preview --reschedule-interval --reschedule-from"
+    local edit_opts="--set-name --set-due --set-preview --remove-preview --set-reschedule-interval --set-reschedule-from --remove-reschedule --rename-file"
+    local complete_opts="--date"
+    local all_opts="${create_opts} ${edit_opts} ${complete_opts}"
+
+    # --- Main Completion Logic ---
+
+    # If the current word is a flag, complete from the list of all possible flags.
+    if [[ "$cur" == -* ]]; then
+        local applicable_opts
+        case "$prev" in
+            create) applicable_opts=$create_opts ;;
+            edit)   applicable_opts=$edit_opts ;;
+            complete) applicable_opts=$complete_opts ;;
+            *)      applicable_opts=$all_opts ;;
+        esac
+        COMPREPLY=( $(compgen -W "${applicable_opts}" -- "${cur}") )
+        return 0
+    fi
+
+    # Completion for the main command itself (the word after 'prn')
     if [[ "$prev" == "prn" ]]; then
         COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
         return 0
     fi
 
-    # Completion for commands that take a task file
+    # Completion for commands that can take a task file as an argument
     if [[ " ${file_commands} " =~ " ${prev} " ]]; then
         local config_dir tasks_dir config_file
         
@@ -36,11 +58,11 @@ _prn_completions()
         if [[ -n "$tasks_dir" && -d "$tasks_dir" ]]; then
             local task_files
             task_files=$(find "$tasks_dir" -maxdepth 1 -type f -name "*.xml")
-            COMPREPLY=( $(compgen -W "$(echo ${task_files} | tr '\n' ' ')" -- ${cur}) )
+            COMPREPLY=( $(compgen -f -X "!*.[Xx][Mm][Ll]" -- "${cur}") )
             return 0
         fi
 
-        # Fallback to standard file completion if config is not found
+        # Fallback to standard file completion for .xml files if config is not found
         _filedir "xml"
         return 0
     fi
