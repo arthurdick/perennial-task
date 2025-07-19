@@ -41,6 +41,38 @@ class EditTest extends TestCase
         return $output;
     }
 
+    private function runEditScript_nonInteractive(string $task_filepath, array $options): array
+    {
+        $script_args = [];
+        foreach ($options as $key => $value) {
+            $script_args[] = $key;
+            if ($value !== null) {
+                $script_args[] = escapeshellarg($value);
+            }
+        }
+        $script_args[] = escapeshellarg($task_filepath);
+
+        $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
+
+        $output = shell_exec($command);
+
+        // After running the script, the filepath might have changed. We need to find it.
+        $new_filepath = $task_filepath; // Assume it hasn't changed
+        if (array_key_exists('--rename-file', $options) && array_key_exists('--set-name', $options)) {
+            $sanitized_name = sanitize_filename($options['--set-name']);
+            // This logic has to account for the _1, _2 etc. uniqueness suffix
+            $files = glob(TASKS_DIR . '/' . $sanitized_name . '*.xml');
+            if (!empty($files)) {
+                $new_filepath = $files[0];
+            } else {
+                $new_filepath = TASKS_DIR . '/' . $sanitized_name . '.xml';
+            }
+        }
+
+        return ['output' => $output, 'new_filepath' => $new_filepath];
+    }
+
     public function testEditTaskNameAndRenameFile()
     {
         $original_filepath = TASKS_DIR . '/original_name.xml';
@@ -219,5 +251,77 @@ class EditTest extends TestCase
         // Verify due date was calculated and added
         $this->assertTrue(isset($updated_xml->due));
         $this->assertEquals('2025-07-15', (string)$updated_xml->due); // 2025-07-01 + 14 days
+    }
+
+    public function testEditSingleField_NonInteractive()
+    {
+        $filepath = TASKS_DIR . '/edit_single.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Edit Me</name><due>2025-01-01</due></task>'));
+
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-due' => '2099-12-31']);
+
+        $xml = simplexml_load_file($result['new_filepath']);
+        $this->assertEquals('2099-12-31', (string)$xml->due);
+    }
+
+    public function testEditMultipleFields_NonInteractive()
+    {
+        $filepath = TASKS_DIR . '/edit_multiple.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Original Name</name></task>'));
+
+        $options = [
+            '--set-name' => 'New Name',
+            '--set-due' => '2025-02-02',
+            '--set-preview' => '7',
+            '--set-reschedule-interval' => '1 month',
+            '--set-reschedule-from' => 'due_date',
+        ];
+        $result = $this->runEditScript_nonInteractive($filepath, $options);
+
+        $xml = simplexml_load_file($result['new_filepath']);
+        $this->assertEquals('New Name', (string)$xml->name);
+        $this->assertEquals('2025-02-02', (string)$xml->due);
+        $this->assertEquals('7', (string)$xml->preview);
+        $this->assertEquals('1 month', (string)$xml->reschedule->interval);
+        $this->assertEquals('due_date', (string)$xml->reschedule->from);
+    }
+
+    public function testRemoveFields_NonInteractive()
+    {
+        $xml_content = '<task><name>Remove From Me</name><preview>10</preview><reschedule><interval>1 day</interval><from>due_date</from></reschedule></task>';
+        $filepath = TASKS_DIR . '/remove_fields.xml';
+        save_xml_file($filepath, new SimpleXMLElement($xml_content));
+
+        $options = [
+            '--remove-preview' => null,
+            '--remove-reschedule' => null,
+        ];
+        $result = $this->runEditScript_nonInteractive($filepath, $options);
+
+        $xml = simplexml_load_file($result['new_filepath']);
+        $this->assertFalse(isset($xml->preview));
+        $this->assertFalse(isset($xml->reschedule));
+    }
+
+    public function testEditTaskNameAndRenameFile_NonInteractive()
+    {
+        $original_filepath = TASKS_DIR . '/original_interactive.xml';
+        save_xml_file($original_filepath, new SimpleXMLElement('<task><name>Original Name</name></task>'));
+
+        $options = [
+            '--set-name' => 'New Non-Interactive',
+            '--rename-file' => null,
+        ];
+
+        $result = $this->runEditScript_nonInteractive($original_filepath, $options);
+        $new_filepath = $result['new_filepath'];
+
+
+        $this->assertStringContainsString("File successfully renamed to 'new_non_interactive.xml'", $result['output']);
+        $this->assertFileDoesNotExist($original_filepath);
+        $this->assertFileExists($new_filepath);
+
+        $updated_xml = simplexml_load_file($new_filepath);
+        $this->assertEquals('New Non-Interactive', (string)$updated_xml->name);
     }
 }

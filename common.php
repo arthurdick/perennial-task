@@ -249,7 +249,7 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
 
             if ($current_filter === 'active') {
                 if (get_task_type($xml) === 'normal' && isset($xml->history)) {
-                    continue; 
+                    continue;
                 }
             } elseif ($current_filter === 'reportable') {
                 if (!is_task_reportable($xml, $now)) {
@@ -301,7 +301,7 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
             $new_filter = prompt_user("Choose filter (all, active, reportable): ");
             if (in_array($new_filter, ['all', 'active', 'reportable'])) {
                 $current_filter = $new_filter;
-                $current_page = 1; 
+                $current_page = 1;
             } else {
                 echo "Invalid filter.\n";
             }
@@ -383,7 +383,7 @@ function is_task_reportable(SimpleXMLElement $task, DateTimeImmutable $now): boo
 
         if ($interval->invert) {
             return true;
-        } 
+        }
         return $interval->days <= $preview;
     }
 

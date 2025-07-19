@@ -25,16 +25,17 @@ class CompleteTest extends TestCase
     {
         $script_args = [];
         foreach ($options as $key => $value) {
-            // Use the key='value' format, which is very robust.
+            $script_args[] = $key;
             if ($value !== null) {
-                $script_args[] = $key . "=" . escapeshellarg($value);
+                $script_args[] = escapeshellarg($value);
             }
         }
-        // Add the filepath as the final argument.
+        // Add the filepath as the final, non-option argument.
         $script_args[] = escapeshellarg($task_filepath);
 
-        $command = "php " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
-        
+        $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
+
         return shell_exec($command);
     }
 

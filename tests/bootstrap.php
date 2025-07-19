@@ -56,8 +56,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Include the common functions file, which now contains our mockable `prompt_user` function.
 require_once __DIR__ . '/../common.php';
 
-// Clean up before running tests
-clean_temp_dir();
+// The unconditional cleanup call has been removed from here.
+// Test classes will now handle cleanup in their setUp() methods.
 
 // Clean up after tests are done
 register_shutdown_function(function () {

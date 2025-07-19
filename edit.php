@@ -6,22 +6,29 @@ require_once 'common.php';
 
 $options = getopt('', [
     "set-name:",
-    "set-due::",
-    "set-preview::",
+    "set-due:",
+    "set-preview:",
     "remove-preview",
-    "set-reschedule-interval::",
-    "set-reschedule-from::",
+    "set-reschedule-interval:",
+    "set-reschedule-from:",
     "remove-reschedule",
     "rename-file"
 ]);
 
-// Remove the script name and potential filepath from argv to check for flags
+// A more robust check for non-interactive mode.
+// It checks if any arguments other than the script name and the final filepath exist.
+$is_non_interactive = false;
 $potential_flags = $argv;
-array_shift($potential_flags);
-if (isset($potential_flags[0]) && !str_starts_with($potential_flags[0], '-')) {
-    array_shift($potential_flags);
+array_shift($potential_flags); // Remove script name
+if (!empty($potential_flags)) {
+    $last_arg = end($potential_flags);
+    if (!str_starts_with($last_arg, '-')) {
+        array_pop($potential_flags); // Remove assumed filepath
+    }
 }
-$is_non_interactive = !empty($potential_flags);
+if (!empty($potential_flags)) {
+    $is_non_interactive = true;
+}
 
 
 // --- Helper Functions ---

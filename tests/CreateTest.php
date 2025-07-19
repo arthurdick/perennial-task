@@ -37,6 +37,25 @@ class CreateTest extends TestCase
         return ['output' => $output, 'files' => glob(TASKS_DIR . '/*.xml')];
     }
 
+    private function runCreateScript_nonInteractive(array $options): array
+    {
+        $script_args = [];
+        foreach ($options as $key => $value) {
+            $script_args[] = $key;
+            if ($value !== null) {
+                $script_args[] = escapeshellarg($value);
+            }
+        }
+
+        $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
+
+        $output = shell_exec($command);
+
+        return ['output' => $output, 'files' => glob(TASKS_DIR . '/*.xml')];
+    }
+
+
     public function testCreateNormalTask()
     {
         $inputs = ['Test Normal Task', 'n'];
@@ -84,5 +103,41 @@ class CreateTest extends TestCase
         // Third task
         $this->runCreateScript(['Test @Task!', 'n', '']);
         $this->assertFileExists(TASKS_DIR . '/test_task_2.xml');
+    }
+
+    public function testCreateNormalTask_NonInteractive()
+    {
+        $options = ['--name' => 'Non-interactive Normal'];
+        $result = $this->runCreateScript_nonInteractive($options);
+
+        $this->assertStringContainsString('Creating New Task (Non-Interactive)', $result['output']);
+        $this->assertStringContainsString('Success! Task file created', $result['output']);
+        $this->assertCount(1, $result['files']);
+
+        $xml = simplexml_load_file($result['files'][0]);
+        $this->assertEquals('Non-interactive Normal', (string)$xml->name);
+        $this->assertFalse(isset($xml->due));
+    }
+
+    public function testCreateScheduledTask_NonInteractive()
+    {
+        $options = [
+            '--name' => 'Non-interactive Scheduled',
+            '--due' => '2025-12-01',
+            '--preview' => '10',
+            '--reschedule-interval' => '2 weeks',
+            '--reschedule-from' => 'completion_date'
+        ];
+        $result = $this->runCreateScript_nonInteractive($options);
+
+        $this->assertStringContainsString('Success! Task file created', $result['output']);
+        $this->assertCount(1, $result['files']);
+
+        $xml = simplexml_load_file($result['files'][0]);
+        $this->assertEquals('Non-interactive Scheduled', (string)$xml->name);
+        $this->assertEquals('2025-12-01', (string)$xml->due);
+        $this->assertEquals('10', (string)$xml->preview);
+        $this->assertEquals('2 weeks', (string)$xml->reschedule->interval);
+        $this->assertEquals('completion_date', (string)$xml->reschedule->from);
     }
 }

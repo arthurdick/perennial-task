@@ -7,10 +7,10 @@ require_once 'common.php';
 // Use getopt to parse command-line flags. This is more robust than manual parsing.
 $options = getopt('', [
     "name:",              // Required: Task name
-    "due::",              // Optional: Due date (YYYY-MM-DD)
-    "preview::",          // Optional: Preview days (integer)
-    "reschedule-interval::", // Optional: e.g., "1 month", "14 days"
-    "reschedule-from::"   // Optional: "due_date" or "completion_date"
+    "due:",               // Optional: Due date (YYYY-MM-DD)
+    "preview:",           // Optional: Preview days (integer)
+    "reschedule-interval:", // Optional: e.g., "1 month", "14 days"
+    "reschedule-from:"    // Optional: "due_date" or "completion_date"
 ]);
 
 // --- Main Script Execution ---
