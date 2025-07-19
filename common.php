@@ -450,9 +450,18 @@ function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
     $dom->formatOutput = true;
 
     if ($dom->loadXML($xml->asXML()) === false) {
+        // This handles malformed XML created during script execution.
         return false;
     }
 
+    // Validate the in-memory DOM object against the schema before saving.
+    if (!@$dom->schemaValidate(XSD_PATH)) {
+        // Suppress warnings from schemaValidate and handle the error manually.
+        error_log("Attempted to save a task file that failed schema validation: " . $filepath);
+        return false;
+    }
+
+    // Only set the attribute and save if validation passes.
     $dom->documentElement->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:noNamespaceSchemaLocation', XSD_PATH);
     return $dom->save($filepath) !== false;
 }
