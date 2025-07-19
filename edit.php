@@ -151,10 +151,18 @@ if ($is_non_interactive) {
         echo "Name set to: " . $options['set-name'] . "\n";
     }
     if (isset($options['set-due'])) {
+        if (!validate_date($options['set-due'])) {
+            file_put_contents('php://stderr', "Error: Invalid format for --set-due. Use YYYY-MM-DD.\n");
+            exit(1);
+        }
         $xml->due = $options['set-due'];
         echo "Due date set to: " . $options['set-due'] . "\n";
     }
     if (isset($options['set-preview'])) {
+        if (!ctype_digit($options['set-preview']) || $options['set-preview'] < 0) {
+            file_put_contents('php://stderr', "Error: --set-preview must be a non-negative integer.\n");
+            exit(1);
+        }
         $xml->preview = $options['set-preview'];
         echo "Preview set to: " . $options['set-preview'] . " days\n";
     }
@@ -162,26 +170,33 @@ if ($is_non_interactive) {
         unset($xml->preview);
         echo "Preview removed.\n";
     }
-    if (isset($options['set-reschedule-interval'])) {
+    if (isset($options['set-reschedule-interval']) || isset($options['set-reschedule-from'])) {
         if (!isset($xml->reschedule)) {
             $xml->addChild('reschedule');
         }
-        $xml->reschedule->interval = $options['set-reschedule-interval'];
-        echo "Reschedule interval set to: " . $options['set-reschedule-interval'] . "\n";
-    }
-    if (isset($options['set-reschedule-from'])) {
-        if (!isset($xml->reschedule)) {
-            $xml->addChild('reschedule');
+        if (isset($options['set-reschedule-interval'])) {
+            $xml->reschedule->interval = $options['set-reschedule-interval'];
+            echo "Reschedule interval set to: " . $options['set-reschedule-interval'] . "\n";
         }
-        $xml->reschedule->from = $options['set-reschedule-from'];
-        echo "Reschedule basis set to: " . $options['set-reschedule-from'] . "\n";
+        if (isset($options['set-reschedule-from'])) {
+            if (!in_array($options['set-reschedule-from'], ['due_date', 'completion_date'])) {
+                file_put_contents('php://stderr', "Error: --set-reschedule-from must be 'due_date' or 'completion_date'.\n");
+                exit(1);
+            }
+            $xml->reschedule->from = $options['set-reschedule-from'];
+            echo "Reschedule basis set to: " . $options['set-reschedule-from'] . "\n";
+        }
     }
     if (isset($options['remove-reschedule'])) {
         unset($xml->reschedule);
         echo "Reschedule settings removed.\n";
     }
 
-    if (isset($options['rename-file']) && isset($options['set-name'])) {
+    if (isset($options['rename-file'])) {
+        if (!isset($options['set-name'])) {
+            file_put_contents('php://stderr', "Error: --rename-file can only be used when also using --set-name.\n");
+            exit(1);
+        }
         $new_name = (string)$xml->name;
         $base_filename = sanitize_filename($new_name);
         $new_filepath = TASKS_DIR . '/' . $base_filename . '.xml';

@@ -17,6 +17,7 @@ $options = getopt('', [
 
 // Non-Interactive Mode: Triggered if the --name flag is present.
 if (isset($options['name'])) {
+    echo "--- Creating New Task (Non-Interactive) ---\n";
     $name = trim($options['name']);
     if (empty($name)) {
         file_put_contents('php://stderr', "Error: --name cannot be empty.\n");
@@ -35,7 +36,11 @@ if (isset($options['name'])) {
         $xml->addChild('due', $options['due']);
 
         // Add reschedule logic if specified
-        if (isset($options['reschedule-interval']) && isset($options['reschedule-from'])) {
+        if (isset($options['reschedule-interval']) || isset($options['reschedule-from'])) {
+            if (!isset($options['reschedule-interval'], $options['reschedule-from'])) {
+                file_put_contents('php://stderr', "Error: Both --reschedule-interval and --reschedule-from must be provided to create a rescheduling task.\n");
+                exit(1);
+            }
             $from = $options['reschedule-from'];
             if (!in_array($from, ['due_date', 'completion_date'])) {
                 file_put_contents('php://stderr', "Error: --reschedule-from must be 'due_date' or 'completion_date'.\n");
@@ -47,12 +52,17 @@ if (isset($options['name'])) {
         }
 
         // Add preview days if specified
-        if (isset($options['preview']) && ctype_digit($options['preview'])) {
+        if (isset($options['preview'])) {
+            if (!ctype_digit($options['preview']) || $options['preview'] < 0) {
+                file_put_contents('php://stderr', "Error: --preview must be a non-negative integer.\n");
+                exit(1);
+            }
             $xml->addChild('preview', $options['preview']);
         }
+    } elseif (isset($options['reschedule-interval']) || isset($options['reschedule-from']) || isset($options['preview'])) {
+        file_put_contents('php://stderr', "Error: --due is required when using any other scheduling options like --reschedule-interval, --reschedule-from, or --preview.\n");
+        exit(1);
     }
-
-    echo "--- Creating New Task (Non-Interactive) ---\n";
 } else {
     // Interactive Mode: Fallback to original behavior if --name is not used.
     echo "--- Create a New Task ---\n";
