@@ -3,7 +3,7 @@
 
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
-const VERSION = '1.2.2';
+const VERSION = '1.3.0';
 const MIN_PHP_VERSION = '7.4';
 
 /**
@@ -37,15 +37,55 @@ function display_help(): void
     echo "Usage: prn [command] [argument]\n";
     echo "\n";
     echo "Commands:\n";
-    echo "  create             Interactively create a new task.\n";
+    echo "  create             Interactively or non-interactively create a new task.\n";
     echo "  edit [task_file]   Edit a task. Select from a list or specify a file.\n";
     echo "  complete [task_file] Mark a task as complete.\n";
     echo "  describe [task_file] Show a detailed description of a task.\n";
     echo "  history [task_file]  Show the full completion history of a single task.\n";
     echo "  report [date]      Show a report of all due and upcoming tasks.\n";
-    echo "  help               Show this help message.\n";
+    echo "  help [command]     Show this help message, or help for a specific command.\n";
     echo "  version            Display the application version.\n";
 }
+
+function display_create_help(): void
+{
+    echo "Usage: prn create [--name <name>] [--due <YYYY-MM-DD>] [--preview <days>] [--reschedule-interval <interval>] [--reschedule-from <basis>]\n\n";
+    echo "Options for 'create':\n";
+    echo "  --name <name>                  The name of the task (required for non-interactive use).\n";
+    echo "  --due <YYYY-MM-DD>             The date the task is due.\n";
+    echo "  --preview <days>               The number of days in advance to show the task in reports.\n";
+    echo "  --reschedule-interval <interval> The interval to reschedule the task (e.g., '7 days', '1 month').\n";
+    echo "  --reschedule-from <basis>      The basis for rescheduling ('due_date' or 'completion_date').\n";
+}
+
+function display_edit_help(): void
+{
+    echo "Usage: prn edit <task_file> [--set-name <name>] [--set-due <YYYY-MM-DD>] ...\n\n";
+    echo "Options for 'edit':\n";
+    echo "  --set-name <name>              Set a new name for the task.\n";
+    echo "  --rename-file                  Rename the task file to match the new name (only with --set-name).\n";
+    echo "  --set-due <YYYY-MM-DD>         Set a new due date for the task.\n";
+    echo "  --set-preview <days>           Set the number of preview days.\n";
+    echo "  --remove-preview               Remove the preview setting from the task.\n";
+    echo "  --set-reschedule-interval <interval> Set the reschedule interval.\n";
+    echo "  --set-reschedule-from <basis>  Set the reschedule basis ('due_date' or 'completion_date').\n";
+    echo "  --remove-reschedule            Remove all reschedule settings from the task.\n";
+}
+
+function display_complete_help(): void
+{
+    echo "Usage: prn complete <task_file> [--date <YYYY-MM-DD>]\n\n";
+    echo "Options for 'complete':\n";
+    echo "  --date <YYYY-MM-DD>            The date the task was completed (defaults to today).\n";
+}
+
+function display_report_help(): void
+{
+    echo "Usage: prn report [date]\n\n";
+    echo "Arguments for 'report':\n";
+    echo "  [date]                         An optional date to run the report for (defaults to today).\n";
+}
+
 
 /**
  * --- Main Application Logic ---
@@ -54,8 +94,29 @@ function main(array $argv): void
 {
     run_preflight_checks();
     $app_dir = dirname(realpath(__FILE__));
-    
     $command = $argv[1] ?? null;
+    $sub_command = $argv[2] ?? null;
+
+    if ($command === 'help' || $command === '--help' || $command === '-h') {
+        switch ($sub_command) {
+            case 'create':
+                display_create_help();
+                break;
+            case 'edit':
+                display_edit_help();
+                break;
+            case 'complete':
+                display_complete_help();
+                break;
+            case 'report':
+                display_report_help();
+                break;
+            default:
+                display_help();
+        }
+        exit(0);
+    }
+
     switch ($command) {
         case 'create':
         case 'edit':
@@ -69,7 +130,6 @@ function main(array $argv): void
 
             $filepath_arg = null;
             $filepath_key = null;
-            
             // Find the first non-option argument and treat it as the filepath.
             foreach ($arguments as $key => $arg) {
                 if (!str_starts_with($arg, '-')) {
@@ -96,13 +156,6 @@ function main(array $argv): void
             
             passthru($exec_command, $return_var);
             exit($return_var);
-
-        case 'help':
-        case '--help':
-        case '-h':
-            display_help();
-            break;
-
         case 'version':
         case '--version':
         case '-v':
