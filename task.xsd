@@ -24,6 +24,11 @@
                 </xs:element>
 
                 <xs:element name="recurring" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>
+                            DEPRECATED: This element is for backward compatibility only. Use the 'reschedule' element for new tasks. Tasks using this format will be auto-migrated on completion or edit.
+                        </xs:documentation>
+                    </xs:annotation>
                     <xs:complexType>
                         <xs:all>
                             <xs:element name="completed" type="xs:date"/>
