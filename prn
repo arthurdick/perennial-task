@@ -9,7 +9,7 @@ const MIN_PHP_VERSION = '7.4';
 /**
  * --- Pre-flight Checks ---
  * Ensures the environment meets the application's requirements.
- */
+*/
 function run_preflight_checks(): void
 {
     // Check for minimum PHP version.
@@ -29,7 +29,7 @@ function run_preflight_checks(): void
 /**
  * --- Help Message ---
  * Displays the help text for the application.
- */
+*/
 function display_help(): void
 {
     echo "Perennial Task - A simple command-line task manager.\n";
@@ -96,7 +96,6 @@ function main(array $argv): void
     $app_dir = dirname(realpath(__FILE__));
     $command = $argv[1] ?? null;
     $sub_command = $argv[2] ?? null;
-
     if ($command === 'help' || $command === '--help' || $command === '-h') {
         switch ($sub_command) {
             case 'create':
@@ -127,33 +126,9 @@ function main(array $argv): void
             $script_name = "$command.php";
             $script_path = "{$app_dir}/{$script_name}";
             $arguments = array_slice($argv, 2);
-
-            $filepath_arg = null;
-            $filepath_key = null;
-            // Find the first non-option argument and treat it as the filepath.
-            foreach ($arguments as $key => $arg) {
-                if (!str_starts_with($arg, '-')) {
-                    $filepath_arg = $arg;
-                    $filepath_key = $key;
-                    break;
-                }
-            }
-            
-            // All other arguments are options.
-            $options_args = $arguments;
-            if ($filepath_key !== null) {
-                unset($options_args[$filepath_key]);
-            }
-            
-            // Rebuild the final arguments list: options first, then the filepath.
-            $final_args = array_values($options_args);
-            if ($filepath_arg !== null) {
-                $final_args[] = $filepath_arg;
-            }
-            
-            $escaped_arguments = array_map('escapeshellarg', $final_args);
+            $escaped_arguments = array_map('escapeshellarg', $arguments);
             $exec_command = "php " . escapeshellarg($script_path) . " " . implode(' ', $escaped_arguments);
-            
+
             passthru($exec_command, $return_var);
             exit($return_var);
         case 'version':

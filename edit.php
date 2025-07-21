@@ -15,20 +15,7 @@ $options = getopt('', [
     "rename-file"
 ]);
 
-// A more robust check for non-interactive mode.
-// It checks if any arguments other than the script name and the final filepath exist.
-$is_non_interactive = false;
-$potential_flags = $argv;
-array_shift($potential_flags); // Remove script name
-if (!empty($potential_flags)) {
-    $last_arg = end($potential_flags);
-    if (!str_starts_with($last_arg, '-')) {
-        array_pop($potential_flags); // Remove assumed filepath
-    }
-}
-if (!empty($potential_flags)) {
-    $is_non_interactive = true;
-}
+$is_non_interactive = count($options) > 0;
 
 
 // --- Helper Functions ---
