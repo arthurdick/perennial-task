@@ -10,7 +10,7 @@ const MIN_PHP_VERSION = '7.4';
 /**
  * --- Pre-flight Checks ---
  * Ensures the environment meets the application's requirements.
-*/
+ */
 function run_preflight_checks(): void
 {
     // Check for minimum PHP version.
@@ -30,7 +30,7 @@ function run_preflight_checks(): void
 /**
  * --- Help Message ---
  * Displays the help text for the application.
-*/
+ */
 function display_help(): void
 {
     echo "Perennial Task - A simple command-line task manager.\n";
@@ -87,6 +87,34 @@ function display_report_help(): void
     echo "  [date]                         An optional date to run the report for (defaults to today).\n";
 }
 
+function display_describe_help(): void
+{
+    echo "Usage: prn describe <task_file>\n\n";
+    echo "Arguments for 'describe':\n";
+    echo "  <task_file>      The path to the task file you want to describe.\n";
+    echo "                   If not provided, a list of tasks will be shown to choose from.\n";
+}
+
+function display_history_help(): void
+{
+    echo "Usage: prn history <task_file>\n\n";
+    echo "Arguments for 'history':\n";
+    echo "  <task_file>      The path to the task file to view the history of.\n";
+    echo "                   If not provided, a list of tasks will be shown to choose from.\n";
+}
+
+function display_version_help(): void
+{
+    echo "Usage: prn version\n\n";
+    echo "Displays the application's current version number.\n";
+}
+
+function display_help_help(): void
+{
+    echo "Usage: prn help [command]\n\n";
+    echo "Displays the main help message, or detailed help for a specific command.\n";
+}
+
 
 /**
  * --- Main Application Logic ---
@@ -110,6 +138,18 @@ function main(array $argv): void
                 break;
             case 'report':
                 display_report_help();
+                break;
+            case 'describe':
+                display_describe_help();
+                break;
+            case 'history':
+                display_history_help();
+                break;
+            case 'version':
+                display_version_help();
+                break;
+            case 'help':
+                display_help_help();
                 break;
             default:
                 display_help();
