@@ -6,10 +6,13 @@ require_once 'common.php';
 
 echo "--- Task Completion History ---\n";
 
-// Use the shared function to select a task file, either by argument or interactively.
-$filepath = select_task_file($argv, 'history', 'all');
+// 1. This script has no specific options to define.
+$long_options = [];
 
-// If no file was selected or found, exit gracefully.
+// 2. Use the common function to select a task file.
+$filepath = select_task_file($argv, $long_options, 'history', 'all');
+
+// 3. If no file was selected, exit gracefully.
 if ($filepath === null) {
     exit(0);
 }

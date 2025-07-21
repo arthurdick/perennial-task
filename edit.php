@@ -2,22 +2,6 @@
 
 require_once 'common.php';
 
-// --- Argument Parsing ---
-
-$options = getopt('', [
-    "set-name:",
-    "set-due:",
-    "set-preview:",
-    "remove-preview",
-    "set-reschedule-interval:",
-    "set-reschedule-from:",
-    "remove-reschedule",
-    "rename-file"
-]);
-
-$is_non_interactive = count($options) > 0;
-
-
 // --- Helper Functions ---
 
 if (!function_exists('display_current_details')) {
@@ -114,7 +98,26 @@ if (!function_exists('process_edit_choice')) {
 
 // --- Main Script Execution ---
 
-$filepath = select_task_file($argv, 'edit', 'active');
+// 1. Define all possible long options for the 'edit' command.
+$long_options = [
+    "set-name:",
+    "set-due:",
+    "set-preview:",
+    "remove-preview",
+    "set-reschedule-interval:",
+    "set-reschedule-from:",
+    "remove-reschedule",
+    "rename-file",
+];
+
+// 2. Pass the definition to getopt() to parse for this script's logic.
+$parsed_options = getopt('', $long_options);
+$is_non_interactive = !empty($parsed_options);
+
+// 3. Pass the same definition to our common function to get the filepath.
+$filepath = select_task_file($argv, $long_options, 'edit', 'active');
+
+// 4. Exit if no valid file was found or selected.
 if ($filepath === null) {
     exit(0);
 }

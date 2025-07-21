@@ -99,7 +99,13 @@ if (!function_exists('describe_normal_task')) {
 
 echo "--- Describe a Task ---\n";
 
-$filepath = select_task_file($argv, 'describe', 'all');
+// 1. This script has no specific options to define.
+$long_options = [];
+
+// 2. Call the common function to find the correct file.
+$filepath = select_task_file($argv, $long_options, 'describe', 'all');
+
+// 3. Exit if no file was found or selected.
 if ($filepath === null) {
     exit(0);
 }

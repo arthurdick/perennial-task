@@ -2,15 +2,16 @@
 
 require_once 'common.php';
 
-// --- Argument Parsing ---
-
-$options = getopt('', ["date:"]);
-
-// --- Main Script Execution ---
-
 echo "--- Complete a Task ---\n";
 
-$filepath = select_task_file($argv, 'complete', 'reportable');
+$long_options = [
+    "date:", // The colon indicates it requires a value.
+];
+
+$parsed_options = getopt('', $long_options);
+
+$filepath = select_task_file($argv, $long_options, 'complete', 'reportable');
+
 if ($filepath === null) {
     exit(0);
 }

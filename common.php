@@ -196,31 +196,43 @@ function sanitize_filename(string $name): string
     return $base;
 }
 
-function select_task_file(array $argv, string $prompt_verb, string $initial_filter = 'reportable'): ?string
+function select_task_file(array $argv, array $long_options, string $prompt_verb, string $initial_filter = 'reportable'): ?string
 {
-    // Find the first command-line argument that is an actual file.
-    $filepath_arg = null;
-    foreach (array_slice($argv, 1) as $arg) { // Skip the script name itself.
-        if (!str_starts_with($arg, '-') && is_file($arg)) {
-            $filepath_arg = $arg;
-            break; // Use the first valid file found.
+    $potential_filenames = [];
+    $options_requiring_values = [];
+
+    // Create a simple list of options that require values (e.g., 'date' from 'date:')
+    foreach ($long_options as $opt) {
+        if (str_ends_with($opt, ':')) {
+            $options_requiring_values[] = rtrim($opt, ':');
         }
     }
 
+    // Iterate through all arguments to find potential filenames.
+    for ($i = 1; $i < count($argv); $i++) {
+        $arg = $argv[$i];
 
-    if ($filepath_arg !== null) {
-        if (!validate_task_file($filepath_arg)) {
-            // The file is invalid, but we'll let the calling script handle the exit.
-            // This function's job is just to find the file path.
-            // We'll fall through to interactive selection if validation fails,
-            // as the user might have made a typo.
-            echo "Error: The file '$filepath_arg' is not a valid task file.\n";
-        } else {
-            // Filepath is valid, return it.
-            return $filepath_arg;
+        // Check if the argument is an option.
+        if (str_starts_with($arg, '--')) {
+            $opt_name = substr($arg, 2);
+            // If this option requires a value, we know the next argument is not a filename,
+            // so we skip it by advancing the loop counter.
+            if (in_array($opt_name, $options_requiring_values)) {
+                $i++;
+            }
+            continue; // Move to the next argument
         }
+
+        // If the argument is not an option, it's a potential filename.
+        $potential_filenames[] = $arg;
     }
 
+    // Now, check the potential filenames to find the first valid one.
+    foreach ($potential_filenames as $filename) {
+        if (is_file($filename) && validate_task_file($filename, true)) {
+            return $filename; // Success! We found it.
+        }
+    }
 
     if (!is_dir(TASKS_DIR)) {
         echo "Tasks directory not found at " . TASKS_DIR . ". Please check your configuration.\n";
