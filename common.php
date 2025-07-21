@@ -214,7 +214,7 @@ function select_task_file(array $argv, string $prompt_verb, string $initial_filt
             // This function's job is just to find the file path.
             // We'll fall through to interactive selection if validation fails,
             // as the user might have made a typo.
-             echo "Error: The file '$filepath_arg' is not a valid task file.\n";
+            echo "Error: The file '$filepath_arg' is not a valid task file.\n";
         } else {
             // Filepath is valid, return it.
             return $filepath_arg;
