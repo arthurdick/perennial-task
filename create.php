@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 require_once 'common.php';
 
@@ -95,7 +96,7 @@ if (isset($options['name'])) {
         collect_scheduled_task_details($xml);
         $preview = get_optional_positive_integer_input("Preview days in advance? (optional, press Enter to skip): ");
         if ($preview !== null && $preview > 0) {
-            $xml->addChild('preview', $preview);
+            $xml->addChild('preview', strval($preview));
         }
     }
 }

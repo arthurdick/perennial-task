@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 // The first step is to load the application configuration.
 // This defines TASKS_DIR, COMPLETIONS_LOG, XSD_PATH, and TASKS_PER_PAGE.

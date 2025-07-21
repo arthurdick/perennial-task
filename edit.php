@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 require_once 'common.php';
 
@@ -18,7 +19,7 @@ if (!function_exists('display_current_details')) {
             }
             if (isset($xml->reschedule)) {
                 echo "Reschedules: Every " . $xml->reschedule->interval . "\n";
-                echo "Reschedule from: " . ucfirst(str_replace('_', ' ', $xml->reschedule->from)) . "\n";
+                echo "Reschedule from: " . ucfirst(str_replace('_', ' ', strval($xml->reschedule->from))) . "\n";
             }
         }
 
