@@ -198,26 +198,25 @@ function sanitize_filename(string $name): string
 
 function select_task_file(array $argv, string $prompt_verb, string $initial_filter = 'reportable'): ?string
 {
-    // The `prn` script ensures the filepath is the LAST argument.
+    // Find the first command-line argument that is an actual file.
     $filepath_arg = null;
-    if (count($argv) > 1) {
-        $last_arg = end($argv);
-        // Check if the last argument is a non-option; if so, assume it's the filepath.
-        if ($last_arg && !str_starts_with($last_arg, '-')) {
-            $filepath_arg = $last_arg;
+    foreach (array_slice($argv, 1) as $arg) { // Skip the script name itself.
+        if (!str_starts_with($arg, '-') && is_file($arg)) {
+            $filepath_arg = $arg;
+            break; // Use the first valid file found.
         }
     }
 
+
     if ($filepath_arg !== null) {
-        if (!is_file($filepath_arg)) {
-            echo "Error: The file '$filepath_arg' does not exist or is not a file.\n";
-            // Fall through to interactive selection.
+        if (!validate_task_file($filepath_arg)) {
+            // The file is invalid, but we'll let the calling script handle the exit.
+            // This function's job is just to find the file path.
+            // We'll fall through to interactive selection if validation fails,
+            // as the user might have made a typo.
+             echo "Error: The file '$filepath_arg' is not a valid task file.\n";
         } else {
-            if (!validate_task_file($filepath_arg)) {
-                exit(1);
-            }
-            // Do not echo here, to keep non-interactive mode clean.
-            // echo "Task selected from argument: " . basename($filepath_arg) . "\n";
+            // Filepath is valid, return it.
             return $filepath_arg;
         }
     }
