@@ -39,6 +39,12 @@ class CreateTest extends TestCase
         return ['output' => $output, 'files' => glob(TASKS_DIR . '/*.xml')];
     }
 
+    /**
+     * Updated helper to run the create script non-interactively and capture stderr.
+     *
+     * @param array $options An associative array of command-line options.
+     * @return array An array containing stdout, stderr, and a list of created files.
+     */
     private function runCreateScript_nonInteractive(array $options): array
     {
         $script_args = [];
@@ -50,7 +56,7 @@ class CreateTest extends TestCase
         }
 
         $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
-        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args) . " 2>&1"; // Redirect stderr to stdout
 
         $output = shell_exec($command);
 
@@ -141,5 +147,44 @@ class CreateTest extends TestCase
         $this->assertEquals('10', (string)$xml->preview);
         $this->assertEquals('2 weeks', (string)$xml->reschedule->interval);
         $this->assertEquals('completion_date', (string)$xml->reschedule->from);
+    }
+
+    /**
+     * @test
+     * Verifies that the script exits with an error if the --name flag is empty.
+     */
+    public function testCreateFailsWithEmptyName_NonInteractive()
+    {
+        $options = ['--name' => ''];
+        $result = $this->runCreateScript_nonInteractive($options);
+
+        $this->assertStringContainsString('Error: --name cannot be empty.', $result['output']);
+        $this->assertCount(0, $result['files']); // No file should be created.
+    }
+
+    /**
+     * @test
+     * Verifies that the script exits with an error if an invalid date is provided.
+     */
+    public function testCreateFailsWithInvalidDate_NonInteractive()
+    {
+        $options = ['--name' => 'Invalid Date Task', '--due' => 'not-a-real-date'];
+        $result = $this->runCreateScript_nonInteractive($options);
+
+        $this->assertStringContainsString('Error: Invalid format for --due. Use YYYY-MM-DD.', $result['output']);
+        $this->assertCount(0, $result['files']);
+    }
+
+    /**
+     * @test
+     * Verifies that using scheduling options without a due date is an error.
+     */
+    public function testCreateFailsWithRescheduleButNoDueDate_NonInteractive()
+    {
+        $options = ['--name' => 'Bad Schedule', '--reschedule-interval' => '1 week'];
+        $result = $this->runCreateScript_nonInteractive($options);
+
+        $this->assertStringContainsString('Error: --due is required when using any other scheduling options', $result['output']);
+        $this->assertCount(0, $result['files']);
     }
 }

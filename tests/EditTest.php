@@ -43,6 +43,13 @@ class EditTest extends TestCase
         return $output;
     }
 
+    /**
+     * Updated helper to run the edit script non-interactively and capture stderr.
+     *
+     * @param string $task_filepath The path to the task file to edit.
+     * @param array $options An associative array of command-line options.
+     * @return array An array containing stdout, stderr, and the final path of the file.
+     */
     private function runEditScript_nonInteractive(string $task_filepath, array $options): array
     {
         $script_args = [];
@@ -55,7 +62,7 @@ class EditTest extends TestCase
         $script_args[] = escapeshellarg($task_filepath);
 
         $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
-        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args) . " 2>&1"; // Redirect stderr
 
         $output = shell_exec($command);
 
@@ -325,5 +332,44 @@ class EditTest extends TestCase
 
         $updated_xml = simplexml_load_file($new_filepath);
         $this->assertEquals('New Non-Interactive', (string)$updated_xml->name);
+    }
+
+    /**
+     * @test
+     */
+    public function testEditFailsWithInvalidDate_NonInteractive()
+    {
+        $filepath = TASKS_DIR . '/fail_date.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Fail Date</name></task>'));
+
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-due' => '2025-99-99']);
+
+        $this->assertStringContainsString('Error: Invalid format for --set-due. Use YYYY-MM-DD.', $result['output']);
+    }
+
+    /**
+     * @test
+     */
+    public function testEditFailsWithRenameWithoutSetName_NonInteractive()
+    {
+        $filepath = TASKS_DIR . '/fail_rename.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Fail Rename</name></task>'));
+
+        $result = $this->runEditScript_nonInteractive($filepath, ['--rename-file' => null]);
+
+        $this->assertStringContainsString('Error: --rename-file can only be used when also using --set-name.', $result['output']);
+    }
+
+    /**
+     * @test
+     */
+    public function testEditFailsWithInvalidRescheduleFrom_NonInteractive()
+    {
+        $filepath = TASKS_DIR . '/fail_reschedule.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Fail Reschedule</name></task>'));
+
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-reschedule-from' => 'bad_value']);
+
+        $this->assertStringContainsString("Error: --set-reschedule-from must be 'due_date' or 'completion_date'.", $result['output']);
     }
 }

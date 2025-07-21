@@ -17,11 +17,11 @@ class CompleteTest extends TestCase
     }
 
     /**
-     * Final corrected helper. Builds the command using the robust key=value format.
+     * Updated helper to run the complete script and capture stderr.
      *
      * @param string $task_filepath The path to the task file.
      * @param array $options An associative array of options, e.g., ['--date' => 'YYYY-MM-DD'].
-     * @return string The script's output.
+     * @return string The script's combined stdout and stderr.
      */
     private function runCompleteScript(string $task_filepath, array $options = []): string
     {
@@ -36,7 +36,7 @@ class CompleteTest extends TestCase
         $script_args[] = escapeshellarg($task_filepath);
 
         $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
-        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args);
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args) . " 2>&1"; // Redirect stderr
 
         return shell_exec($command);
     }
@@ -130,5 +130,24 @@ class CompleteTest extends TestCase
         $this->assertEquals('7 days', (string)$updated_xml->reschedule->interval);
         $this->assertEquals('completion_date', (string)$updated_xml->reschedule->from);
         $this->assertEquals('2025-07-15', (string)$updated_xml->due);
+    }
+
+    /**
+     * @test
+     * Verifies that the script exits with an error if an invalid date is provided.
+     */
+    public function testCompleteFailsWithInvalidDate()
+    {
+        $xml = new SimpleXMLElement('<task><name>Fail Date Completion</name></task>');
+        $filepath = TASKS_DIR . '/fail_complete.xml';
+        save_xml_file($filepath, $xml);
+
+        $output = $this->runCompleteScript($filepath, ['--date' => 'this-is-not-a-date']);
+
+        $this->assertStringContainsString('Error: Invalid format for --date. Use YYYY-MM-DD.', $output);
+
+        // Verify the original file was not modified
+        $original_xml = simplexml_load_file($filepath);
+        $this->assertFalse(isset($original_xml->history));
     }
 }
