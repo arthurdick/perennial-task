@@ -58,7 +58,7 @@ _prn_completions()
         if [[ -n "$tasks_dir" && -d "$tasks_dir" ]]; then
             local task_files
             task_files=$(find "$tasks_dir" -maxdepth 1 -type f -name "*.xml")
-            COMPREPLY=( $(compgen -f -X "!*.[Xx][Mm][Ll]" -- "${cur}") )
+            COMPREPLY=( $(compgen -W "${task_files}" -- "${cur}") )
             return 0
         fi
 
