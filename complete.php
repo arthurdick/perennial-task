@@ -19,11 +19,11 @@ if ($filepath === null) {
 $xml = simplexml_load_file($filepath);
 $task_name = (string)$xml->name;
 
-// Determine completion date: Use --date flag
+// Determine completion date
 $completion_date = date('Y-m-d'); // Default to today
-if (isset($options['date'])) {
-    if (validate_date($options['date'])) {
-        $completion_date = $options['date'];
+if (isset($parsed_options['date'])) {
+    if (validate_date($parsed_options['date'])) {
+        $completion_date = $parsed_options['date'];
     } else {
         file_put_contents('php://stderr', "Error: Invalid format for --date. Use YYYY-MM-DD.\n");
         exit(1);

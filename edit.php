@@ -114,7 +114,7 @@ $long_options = [
 $parsed_options = getopt('', $long_options);
 $is_non_interactive = !empty($parsed_options);
 
-// 3. Pass the same definition to our common function to get the filepath.
+// 3. Pass the options definition to our common function to get the filepath.
 $filepath = select_task_file($argv, $long_options, 'edit', 'active');
 
 // 4. Exit if no valid file was found or selected.
@@ -136,54 +136,54 @@ if ($is_non_interactive) {
     // Non-Interactive Mode
     echo "--- Editing Task (Non-Interactive) ---\n";
 
-    if (isset($options['set-name'])) {
-        $xml->name = htmlspecialchars($options['set-name']);
-        echo "Name set to: " . $options['set-name'] . "\n";
+    if (isset($parsed_options['set-name'])) {
+        $xml->name = htmlspecialchars($parsed_options['set-name']);
+        echo "Name set to: " . $parsed_options['set-name'] . "\n";
     }
-    if (isset($options['set-due'])) {
-        if (!validate_date($options['set-due'])) {
+    if (isset($parsed_options['set-due'])) {
+        if (!validate_date($parsed_options['set-due'])) {
             file_put_contents('php://stderr', "Error: Invalid format for --set-due. Use YYYY-MM-DD.\n");
             exit(1);
         }
-        $xml->due = $options['set-due'];
-        echo "Due date set to: " . $options['set-due'] . "\n";
+        $xml->due = $parsed_options['set-due'];
+        echo "Due date set to: " . $parsed_options['set-due'] . "\n";
     }
-    if (isset($options['set-preview'])) {
-        if (!ctype_digit($options['set-preview']) || $options['set-preview'] < 0) {
+    if (isset($parsed_options['set-preview'])) {
+        if (!ctype_digit($parsed_options['set-preview']) || $parsed_options['set-preview'] < 0) {
             file_put_contents('php://stderr', "Error: --set-preview must be a non-negative integer.\n");
             exit(1);
         }
-        $xml->preview = $options['set-preview'];
-        echo "Preview set to: " . $options['set-preview'] . " days\n";
+        $xml->preview = $parsed_options['set-preview'];
+        echo "Preview set to: " . $parsed_options['set-preview'] . " days\n";
     }
-    if (isset($options['remove-preview'])) {
+    if (isset($parsed_options['remove-preview'])) {
         unset($xml->preview);
         echo "Preview removed.\n";
     }
-    if (isset($options['set-reschedule-interval']) || isset($options['set-reschedule-from'])) {
+    if (isset($parsed_options['set-reschedule-interval']) || isset($parsed_options['set-reschedule-from'])) {
         if (!isset($xml->reschedule)) {
             $xml->addChild('reschedule');
         }
-        if (isset($options['set-reschedule-interval'])) {
-            $xml->reschedule->interval = $options['set-reschedule-interval'];
-            echo "Reschedule interval set to: " . $options['set-reschedule-interval'] . "\n";
+        if (isset($parsed_options['set-reschedule-interval'])) {
+            $xml->reschedule->interval = $parsed_options['set-reschedule-interval'];
+            echo "Reschedule interval set to: " . $parsed_options['set-reschedule-interval'] . "\n";
         }
-        if (isset($options['set-reschedule-from'])) {
-            if (!in_array($options['set-reschedule-from'], ['due_date', 'completion_date'])) {
+        if (isset($parsed_options['set-reschedule-from'])) {
+            if (!in_array($parsed_options['set-reschedule-from'], ['due_date', 'completion_date'])) {
                 file_put_contents('php://stderr', "Error: --set-reschedule-from must be 'due_date' or 'completion_date'.\n");
                 exit(1);
             }
-            $xml->reschedule->from = $options['set-reschedule-from'];
-            echo "Reschedule basis set to: " . $options['set-reschedule-from'] . "\n";
+            $xml->reschedule->from = $parsed_options['set-reschedule-from'];
+            echo "Reschedule basis set to: " . $parsed_options['set-reschedule-from'] . "\n";
         }
     }
-    if (isset($options['remove-reschedule'])) {
+    if (isset($parsed_options['remove-reschedule'])) {
         unset($xml->reschedule);
         echo "Reschedule settings removed.\n";
     }
 
-    if (isset($options['rename-file'])) {
-        if (!isset($options['set-name'])) {
+    if (isset($parsed_options['rename-file'])) {
+        if (!isset($parsed_options['set-name'])) {
             file_put_contents('php://stderr', "Error: --rename-file can only be used when also using --set-name.\n");
             exit(1);
         }
