@@ -57,8 +57,8 @@ class DescribeTest extends TestCase
         $this->assertStringContainsString('Type: Scheduled', $output_future);
         $this->assertStringContainsString('Due on ' . $due_date_future->format('Y-m-d'), $output_future);
         $this->assertStringContainsString('Status: Due in 10 days.', $output_future);
-        //$this->assertStringContainsString('Preview: Set to display 5 days in advance', $output_future);
-        //$this->assertStringContainsString('Display Status: Will be displayed in 5 days.', $output_future);
+        $this->assertStringContainsString('Preview: Set to display 5 days in advance', $output_future);
+        $this->assertStringContainsString('Display Status: Will be displayed in 5 days.', $output_future);
         $this->assertStringNotContainsString('History:', $output_future);
 
         // Overdue task

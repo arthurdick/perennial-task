@@ -72,6 +72,18 @@ if (!function_exists('describe_scheduled_task')) {
             echo "Status: Due in " . $interval->days . " " . pluralize($interval->days, 'day', 'days') . ".\n";
         }
 
+        // --- Display Preview & Display Status Logic ---
+        if (isset($task->preview)) {
+            $preview_days = (int)$task->preview;
+            echo "Preview: Set to display " . $preview_days . " " . pluralize($preview_days, 'day', 'days') . " in advance.\n";
+            
+            // Check if the task is upcoming but not yet within its preview window
+            if (!$interval->invert && $interval->days > $preview_days) {
+                $days_until_display = $interval->days - $preview_days;
+                echo "Display Status: Will be displayed in " . $days_until_display . " " . pluralize($days_until_display, 'day', 'days') . ".\n";
+            }
+        }
+
         display_optional_history($task);
     }
 }
