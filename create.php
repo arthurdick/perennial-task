@@ -4,27 +4,29 @@ declare(strict_types=1);
 
 require_once 'common.php';
 
-// --- Argument Parsing ---
+// 1. Define all possible long options for the 'create' command.
+$long_options = [
+    "name:",
+    "due:",
+    "preview:",
+    "reschedule-interval:",
+    "reschedule-from:",
+];
 
-// Use getopt to parse command-line flags. This is more robust than manual parsing.
-$options = getopt('', [
-    "name:",              // Required: Task name
-    "due:",               // Optional: Due date (YYYY-MM-DD)
-    "preview:",           // Optional: Preview days (integer)
-    "reschedule-interval:", // Optional: e.g., "1 month", "14 days"
-    "reschedule-from:"    // Optional: "due_date" or "completion_date"
-]);
+// 2. Use the new manual parser.
+$cli_args = parse_argv_manual($argv, $long_options);
+$options = $cli_args['options'];
 
-// --- Main Script Execution ---
-
-// Non-Interactive Mode: Triggered if the --name flag is present.
-if (isset($options['name'])) {
+// Non-Interactive Mode: Triggered if any options are present.
+if (!empty($options)) {
     echo "--- Creating New Task (Non-Interactive) ---\n";
-    $name = trim($options['name']);
-    if (empty($name)) {
-        file_put_contents('php://stderr', "Error: --name cannot be empty.\n");
+
+    // The --name flag is required for non-interactive use.
+    if (!isset($options['name']) || empty(trim($options['name']))) {
+        file_put_contents('php://stderr', "Error: --name is required for non-interactive creation and cannot be empty.\n");
         exit(1);
     }
+    $name = trim($options['name']);
 
     $xml = new SimpleXMLElement('<task></task>');
     $xml->addChild('name', htmlspecialchars($name));
@@ -66,7 +68,7 @@ if (isset($options['name'])) {
         exit(1);
     }
 } else {
-    // Interactive Mode: Fallback to original behavior if --name is not used.
+    // Interactive Mode: Fallback if no options are used.
     echo "--- Create a New Task ---\n";
 
     if (!is_dir(TASKS_DIR)) {
