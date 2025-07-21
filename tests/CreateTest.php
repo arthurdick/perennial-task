@@ -18,6 +18,11 @@ class CreateTest extends TestCase
 
     private function runCreateScript(array $inputs): array
     {
+        global $argv;
+        // Mock the argv variable for the script being included.
+        // The first element is always the script name itself.
+        $argv = ['create.php'];
+
         $input_stream = fopen('php://memory', 'r+');
         foreach ($inputs as $input) {
             fwrite($input_stream, $input . PHP_EOL);
@@ -158,7 +163,10 @@ class CreateTest extends TestCase
         $options = ['--name' => ''];
         $result = $this->runCreateScript_nonInteractive($options);
 
-        $this->assertStringContainsString('Error: --name cannot be empty.', $result['output']);
+        $this->assertStringContainsString(
+            'Error: --name is required for non-interactive creation and cannot be empty.',
+            $result['output']
+        );
         $this->assertCount(0, $result['files']); // No file should be created.
     }
 
