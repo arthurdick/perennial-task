@@ -519,3 +519,53 @@ function migrate_legacy_task_if_needed(SimpleXMLElement &$xml): bool
     }
     return false;
 }
+
+/**
+ * Manually parses the $argv array to extract options and a filepath.
+ *
+ * This function robustly handles arguments in any order, solving the
+ * limitation of getopt() stopping at the first non-option argument.
+ *
+ * @param array $argv The command-line arguments.
+ * @param array $long_options The list of expected long options.
+ * @return array An associative array with 'options' and 'filepath'.
+ */
+function parse_argv_manual(array $argv, array $long_options): array
+{
+    $options = [];
+    $filepath = null;
+
+    // Define which options require a value (e.g., "name:")
+    $opts_with_values = [];
+    foreach ($long_options as $opt) {
+        if (str_ends_with($opt, ':')) {
+            $opts_with_values[] = rtrim($opt, ':');
+        }
+    }
+
+    // Start parsing from the first actual argument
+    for ($i = 1; $i < count($argv); $i++) {
+        $arg = $argv[$i];
+
+        if (str_starts_with($arg, '--')) {
+            $opt_name = substr($arg, 2);
+
+            // Check if this option expects a value
+            if (in_array($opt_name, $opts_with_values)) {
+                // If it does, the next element is its value
+                if (isset($argv[$i + 1])) {
+                    $options[$opt_name] = $argv[$i + 1];
+                    $i++; // Important: skip the next element since we've consumed it
+                }
+            } else {
+                // It's a flag without a value (e.g., --rename-file)
+                $options[$opt_name] = false; // Using false is getopt's convention
+            }
+        } elseif (is_file($arg) && validate_task_file($arg, true)) {
+            // If it's not an option, check if it's our task file
+            $filepath = realpath($arg);
+        }
+    }
+
+    return ['options' => $options, 'filepath' => $filepath];
+}

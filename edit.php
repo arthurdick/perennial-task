@@ -112,17 +112,23 @@ $long_options = [
     "rename-file",
 ];
 
-// 2. Pass the definition to getopt() to parse for this script's logic.
-$parsed_options = getopt('', $long_options);
-$is_non_interactive = !empty($parsed_options);
+// 2. Use the new manual parser. It's clean and predictable.
+$cli_args = parse_argv_manual($argv, $long_options);
+$parsed_options = $cli_args['options'];
+$filepath = $cli_args['filepath'];
 
-// 3. Pass the options definition to our common function to get the filepath.
-$filepath = select_task_file($argv, $long_options, 'edit', 'active');
+// 3. If no filepath was provided on the command line, fall back to the interactive selector.
+if ($filepath === null) {
+    // Note: We pass $long_options here so the selector knows which arguments to ignore.
+    $filepath = select_task_file($argv, $long_options, 'edit', 'active');
+}
 
 // 4. Exit if no valid file was found or selected.
 if ($filepath === null) {
     exit(0);
 }
+
+$is_non_interactive = !empty($parsed_options);
 
 $xml = simplexml_load_file($filepath);
 $original_name = (string)$xml->name;

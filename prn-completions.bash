@@ -8,8 +8,6 @@ _prn_completions()
     # --- Command and Flag Definitions ---
     local commands="create edit complete describe history report help version"
     local file_commands="edit complete describe history"
-
-    # Non-interactive flags for each command
     local create_opts="--name --due --preview --reschedule-interval --reschedule-from"
     local edit_opts="--set-name --set-due --set-preview --remove-preview --set-reschedule-interval --set-reschedule-from --remove-reschedule --rename-file"
     local complete_opts="--date"
@@ -17,27 +15,36 @@ _prn_completions()
 
     # --- Main Completion Logic ---
 
-    # If the current word is a flag, complete from the list of all possible flags.
+    # 1. Complete non-interactive flags (e.g., --name, --due)
     if [[ "$cur" == -* ]]; then
         local applicable_opts
-        case "$prev" in
-            create) applicable_opts=$create_opts ;;
-            edit)   applicable_opts=$edit_opts ;;
+        case "${words[1]}" in
+            create)   applicable_opts=$create_opts ;;
+            edit)     applicable_opts=$edit_opts ;;
             complete) applicable_opts=$complete_opts ;;
-            *)      applicable_opts=$all_opts ;;
+            *)        applicable_opts=$all_opts ;;
         esac
         COMPREPLY=( $(compgen -W "${applicable_opts}" -- "${cur}") )
         return 0
     fi
 
-    # Completion for the main command itself (the word after 'prn')
+    # 2. Complete the main command (e.g., create, edit)
     if [[ "$prev" == "prn" ]]; then
         COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
         return 0
     fi
 
-    # Completion for commands that can take a task file as an argument
-    if [[ " ${file_commands} " =~ " ${prev} " ]]; then
+    # 3. Complete task file paths
+    if [[ " ${file_commands} " =~ " ${words[1]} " ]]; then
+        # --- Single Completion Check ---
+        # If a .xml file is already on the command line, don't offer more file suggestions.
+        for word in "${words[@]}"; do
+            if [[ "$word" == *.xml ]]; then
+                return 0
+            fi
+        done
+        # --- End Single Completion Check ---
+
         local config_dir tasks_dir config_file
         
         # Determine config directory based on XDG spec
@@ -49,12 +56,13 @@ _prn_completions()
         
         config_file="$config_dir/config.ini"
 
-        # Read tasks_dir from config.ini
+        # Read tasks_dir from config.ini if it exists
         if [[ -f "$config_file" ]]; then
             tasks_dir=$(grep -oP 'tasks_dir\s*=\s*"\K[^"]+' "$config_file")
+            tasks_dir="${tasks_dir/#\~/$HOME}"
         fi
 
-        # If we have a valid tasks directory, provide completions from it
+        # If we have a valid tasks directory, find the .xml files within it
         if [[ -n "$tasks_dir" && -d "$tasks_dir" ]]; then
             local task_files
             task_files=$(find "$tasks_dir" -maxdepth 1 -type f -name "*.xml")
@@ -62,10 +70,11 @@ _prn_completions()
             return 0
         fi
 
-        # Fallback to standard file completion for .xml files if config is not found
+        # Fallback to standard .xml file completion in the current directory if config is not found
         _filedir "xml"
         return 0
     fi
 }
 
+# Register the completion function for the 'prn' command
 complete -F _prn_completions prn

@@ -6,14 +6,22 @@ require_once 'common.php';
 
 echo "--- Complete a Task ---\n";
 
+// 1. Define all possible long options for the 'complete' command.
 $long_options = [
     "date:", // The colon indicates it requires a value.
 ];
 
-$parsed_options = getopt('', $long_options);
+// 2. Use the new manual parser to get options and a potential filepath.
+$cli_args = parse_argv_manual($argv, $long_options);
+$parsed_options = $cli_args['options'];
+$filepath = $cli_args['filepath'];
 
-$filepath = select_task_file($argv, $long_options, 'complete', 'reportable');
+// 3. If no filepath was provided on the command line, fall back to the interactive selector.
+if ($filepath === null) {
+    $filepath = select_task_file($argv, $long_options, 'complete', 'reportable');
+}
 
+// 4. Exit if no valid file was found or selected.
 if ($filepath === null) {
     exit(0);
 }

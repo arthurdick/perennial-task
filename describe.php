@@ -116,10 +116,16 @@ echo "--- Describe a Task ---\n";
 // 1. This script has no specific options to define.
 $long_options = [];
 
-// 2. Call the common function to find the correct file.
-$filepath = select_task_file($argv, $long_options, 'describe', 'all');
+// 2. Use the manual parser to find a potential filepath.
+$cli_args = parse_argv_manual($argv, $long_options);
+$filepath = $cli_args['filepath'];
 
-// 3. Exit if no file was found or selected.
+// 3. If no filepath was provided on the command line, fall back to the interactive selector.
+if ($filepath === null) {
+    $filepath = select_task_file($argv, $long_options, 'describe', 'all');
+}
+
+// 4. Exit if no file was found or selected.
 if ($filepath === null) {
     exit(0);
 }
