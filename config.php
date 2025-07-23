@@ -84,6 +84,25 @@ INI;
     echo "Notice: A new configuration file has been created at '$config_path'.\n";
 }
 
+/**
+ * Gets a configuration value by first checking an environment variable,
+ * then falling back to the .ini file.
+ *
+ * @param string $env_var_name The name of the environment variable.
+ * @param array  $config The parsed .ini configuration array.
+ * @param string $config_key The key to look for in the .ini array.
+ * @param mixed  $default The default value if neither is found.
+ * @return mixed The determined configuration value.
+ */
+function get_config_value(string $env_var_name, array $config, string $config_key, $default)
+{
+    $env_value = getenv($env_var_name);
+    if ($env_value !== false) {
+        return $env_value;
+    }
+    return $config[$config_key] ?? $default;
+}
+
 
 /**
  * Initializes the application configuration.
@@ -106,19 +125,21 @@ function initialize_perennial_task_config(): void
             throw new Exception("Error: Could not parse configuration file at '$config_path'.");
         }
 
-        // Set timezone from config, if it is a valid option.
-        if (!empty($config['timezone']) && in_array($config['timezone'], timezone_identifiers_list())) {
-            date_default_timezone_set($config['timezone']);
+        // Determine timezone, prioritizing environment variable.
+        $timezone = get_config_value('PERENNIAL_TIMEZONE', $config, 'timezone', date_default_timezone_get());
+        if (!empty($timezone) && in_array($timezone, timezone_identifiers_list())) {
+            date_default_timezone_set($timezone);
         }
 
-        // Define global constants for the application to use.
-        define('TASKS_DIR', $config['tasks_dir']);
-        define('COMPLETIONS_LOG', $config['completions_log']);
-        define('XSD_PATH', $config['xsd_path']);
+        // Define global constants, prioritizing environment variables.
+        define('TASKS_DIR', get_config_value('PERENNIAL_TASKS_DIR', $config, 'tasks_dir', $config_dir . '/tasks'));
+        define('COMPLETIONS_LOG', get_config_value('PERENNIAL_COMPLETIONS_LOG', $config, 'completions_log', $config_dir . '/completions.log'));
+        define('XSD_PATH', get_config_value('PERENNIAL_XSD_PATH', $config, 'xsd_path', __DIR__ . '/task.xsd'));
 
+        $tasks_per_page_raw = get_config_value('PERENNIAL_TASKS_PER_PAGE', $config, 'tasks_per_page', 10);
         $tasks_per_page = 10;
-        if (isset($config['tasks_per_page']) && ctype_digit((string)$config['tasks_per_page']) && $config['tasks_per_page'] > 0) {
-            $tasks_per_page = (int)$config['tasks_per_page'];
+        if (ctype_digit((string)$tasks_per_page_raw) && $tasks_per_page_raw > 0) {
+            $tasks_per_page = (int)$tasks_per_page_raw;
         }
         define('TASKS_PER_PAGE', $tasks_per_page);
 
