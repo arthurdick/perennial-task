@@ -7,9 +7,9 @@ declare(strict_types=1);
 /**
  * Determines the configuration directory path based on the XDG Base Directory Specification.
  *
- * @return string The path to the perennial-task configuration directory.
+ * @return string|null The path to the perennial-task configuration directory, or null if it cannot be determined.
  */
-function get_perennial_task_config_dir(): string
+function get_perennial_task_config_dir(): ?string
 {
     // Check for XDG_CONFIG_HOME environment variable.
     $xdg_config_home = getenv('XDG_CONFIG_HOME');
@@ -28,9 +28,7 @@ function get_perennial_task_config_dir(): string
     }
 
     if (!$home_dir) {
-        // This is a fatal error as we cannot locate the configuration.
-        file_put_contents('php://stderr', "Error: Could not determine user's home directory. Cannot find configuration.\n");
-        exit(1);
+        return null;
     }
 
     return $home_dir . '/.config/perennial-task';
@@ -111,18 +109,30 @@ function get_config_value(string $env_var_name, array $config, string $config_ke
 function initialize_perennial_task_config(): void
 {
     try {
-        $config_dir = get_perennial_task_config_dir();
-        $config_path = $config_dir . '/config.ini';
+        $config = [];
+        $config_dir = null;
 
-        if (!is_file($config_path)) {
-            // If config doesn't exist, create a default one.
-            create_default_config($config_path);
-        }
+        // Only try to load config files if environment variables are not sufficient.
+        // We use PERENNIAL_TASKS_DIR as the key indicator.
+        if (getenv('PERENNIAL_TASKS_DIR') === false) {
+            $config_dir = get_perennial_task_config_dir();
 
-        $config = parse_ini_file($config_path);
+            if ($config_dir !== null) {
+                $config_path = $config_dir . '/config.ini';
 
-        if ($config === false) {
-            throw new Exception("Error: Could not parse configuration file at '$config_path'.");
+                if (!is_file($config_path)) {
+                    create_default_config($config_path);
+                }
+
+                $parsed_config = parse_ini_file($config_path);
+                if ($parsed_config === false) {
+                    throw new Exception("Error: Could not parse configuration file at '$config_path'.");
+                }
+                $config = $parsed_config;
+            }
+            // If config_dir is null, it means we couldn't find a home directory.
+            // In this case, we proceed, assuming all necessary config will be
+            // provided by environment variables or fall back to hardcoded defaults.
         }
 
         // Determine timezone, prioritizing environment variable.
@@ -132,9 +142,15 @@ function initialize_perennial_task_config(): void
         }
 
         // Define global constants, prioritizing environment variables.
-        define('TASKS_DIR', get_config_value('PERENNIAL_TASKS_DIR', $config, 'tasks_dir', $config_dir . '/tasks'));
-        define('COMPLETIONS_LOG', get_config_value('PERENNIAL_COMPLETIONS_LOG', $config, 'completions_log', $config_dir . '/completions.log'));
-        define('XSD_PATH', get_config_value('PERENNIAL_XSD_PATH', $config, 'xsd_path', __DIR__ . '/task.xsd'));
+        // The default values for paths now need to be more robust in case config.ini was not loaded.
+        $tasks_dir_default = ($config_dir !== null) ? $config_dir . '/tasks' : '';
+        define('TASKS_DIR', get_config_value('PERENNIAL_TASKS_DIR', $config, 'tasks_dir', $tasks_dir_default));
+
+        $completions_log_default = ($config_dir !== null) ? $config_dir . '/completions.log' : '/tmp/completions.log';
+        define('COMPLETIONS_LOG', get_config_value('PERENNIAL_COMPLETIONS_LOG', $config, 'completions_log', $completions_log_default));
+
+        $xsd_path_default = __DIR__ . '/task.xsd';
+        define('XSD_PATH', get_config_value('PERENNIAL_XSD_PATH', $config, 'xsd_path', $xsd_path_default));
 
         $tasks_per_page_raw = get_config_value('PERENNIAL_TASKS_PER_PAGE', $config, 'tasks_per_page', 10);
         $tasks_per_page = 10;
@@ -142,6 +158,12 @@ function initialize_perennial_task_config(): void
             $tasks_per_page = (int)$tasks_per_page_raw;
         }
         define('TASKS_PER_PAGE', $tasks_per_page);
+
+        // Final sanity check for the most critical path
+        if (empty(TASKS_DIR)) {
+             throw new Exception("Error: Tasks directory is not defined. Please set PERENNIAL_TASKS_DIR or configure it via config.ini.");
+        }
+
 
     } catch (Exception $e) {
         file_put_contents('php://stderr', $e->getMessage() . "\n");
