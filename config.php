@@ -161,7 +161,7 @@ function initialize_perennial_task_config(): void
 
         // Final sanity check for the most critical path
         if (empty(TASKS_DIR)) {
-             throw new Exception("Error: Tasks directory is not defined. Please set PERENNIAL_TASKS_DIR or configure it via config.ini.");
+            throw new Exception("Error: Tasks directory is not defined. Please set PERENNIAL_TASKS_DIR or configure it via config.ini.");
         }
 
 
