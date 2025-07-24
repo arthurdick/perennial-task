@@ -231,6 +231,28 @@ class EditTest extends TestCase
         $this->assertFalse(isset($updated_xml->preview));
     }
 
+    public function testEditPriorityInteractive()
+    {
+        $filepath = TASKS_DIR . '/interactive_prio.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Prio Task</name></task>'));
+
+        // Set initial priority
+        $this->runEditScript($filepath, ['i', '8', 's']);
+        $xml = simplexml_load_file($filepath);
+        $this->assertEquals(8, (int)$xml->priority);
+
+        // Change priority to negative
+        $this->runEditScript($filepath, ['i', '-3', 's']);
+        $xml = simplexml_load_file($filepath);
+        $this->assertEquals(-3, (int)$xml->priority);
+
+        // Reset priority by entering nothing
+        $this->runEditScript($filepath, ['i', '', 's']);
+        $xml = simplexml_load_file($filepath);
+        $this->assertFalse(isset($xml->priority), "Priority should be unset, not 0.");
+    }
+
+
     public function testMigrationOfLegacyRecurringTaskOnEdit()
     {
         $xml = new SimpleXMLElement('<task>
@@ -334,6 +356,17 @@ class EditTest extends TestCase
         $this->assertEquals('New Non-Interactive', (string)$updated_xml->name);
     }
 
+    public function testSetPriority_NonInteractive()
+    {
+        $filepath = TASKS_DIR . '/edit_prio_non_interactive.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Edit Me</name><priority>1</priority></task>'));
+
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-priority' => '-5']);
+
+        $xml = simplexml_load_file($result['new_filepath']);
+        $this->assertEquals(-5, (int)$xml->priority);
+    }
+
     /**
      * @test
      */
@@ -346,6 +379,20 @@ class EditTest extends TestCase
 
         $this->assertStringContainsString('Error: Invalid format for --set-due. Use YYYY-MM-DD.', $result['output']);
     }
+
+    /**
+     * @test
+     */
+    public function testEditFailsWithInvalidPriority_NonInteractive()
+    {
+        $filepath = TASKS_DIR . '/fail_prio.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Fail Prio</name></task>'));
+
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-priority' => 'high']);
+
+        $this->assertStringContainsString('Error: --set-priority must be an integer.', $result['output']);
+    }
+
 
     /**
      * @test

@@ -39,10 +39,32 @@ class DescribeTest extends TestCase
 
         $this->assertStringContainsString('Task: A Normal Task', $output);
         $this->assertStringContainsString('Type: Normal', $output);
+        $this->assertStringContainsString('Priority: 0', $output);
         $this->assertStringContainsString('Details: This is a simple, one-off task.', $output);
         $this->assertStringContainsString('Status: Not yet completed.', $output);
         $this->assertStringNotContainsString('History:', $output);
     }
+
+    public function testDescribeTaskWithCustomPriority()
+    {
+        $xml = new SimpleXMLElement('<task><name>High Prio</name><priority>10</priority></task>');
+        $filepath = TASKS_DIR . '/high_prio.xml';
+        save_xml_file($filepath, $xml);
+
+        $output = $this->runDescribeScript($filepath);
+        $this->assertStringContainsString('Priority: 10', $output);
+    }
+
+    public function testDescribeTaskWithNegativePriority()
+    {
+        $xml = new SimpleXMLElement('<task><name>Low Prio</name><priority>-5</priority></task>');
+        $filepath = TASKS_DIR . '/low_prio.xml';
+        save_xml_file($filepath, $xml);
+
+        $output = $this->runDescribeScript($filepath);
+        $this->assertStringContainsString('Priority: -5', $output);
+    }
+
 
     public function testDescribeDueTask()
     {

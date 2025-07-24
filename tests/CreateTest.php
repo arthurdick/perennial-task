@@ -71,12 +71,13 @@ class CreateTest extends TestCase
 
     public function testCreateNormalTask()
     {
-        $inputs = ['Test Normal Task', 'n'];
+        $inputs = ['Test Normal Task', 'n', ''];
         $result = $this->runCreateScript($inputs);
         $this->assertStringContainsString('Success! Task file created', $result['output']);
         $xml = simplexml_load_file($result['files'][0]);
         $this->assertEquals('Test Normal Task', (string)$xml->name);
         $this->assertFalse(isset($xml->due));
+        $this->assertFalse(isset($xml->priority)); // Should default to 0, not be set
     }
 
     public function testCreateScheduledTask()
@@ -88,7 +89,8 @@ class CreateTest extends TestCase
             'y',                   // yes, it reschedules
             '1 month',             // interval
             'd',                   // from due_date
-            '5'                    // preview days
+            '5',                   // preview days
+            ''                     // priority (default)
         ];
 
         $result = $this->runCreateScript($inputs);
@@ -101,7 +103,27 @@ class CreateTest extends TestCase
         $this->assertEquals('1 month', (string)$xml->reschedule->interval);
         $this->assertEquals('due_date', (string)$xml->reschedule->from);
         $this->assertEquals('5', (string)$xml->preview);
+        $this->assertFalse(isset($xml->priority));
     }
+
+    public function testCreateTaskWithCustomPriority()
+    {
+        $inputs = ['High Prio Task', 'n', '10'];
+        $result = $this->runCreateScript($inputs);
+        $this->assertCount(1, $result['files']);
+        $xml = simplexml_load_file($result['files'][0]);
+        $this->assertEquals(10, (int)$xml->priority);
+    }
+
+    public function testCreateTaskWithNegativePriority()
+    {
+        $inputs = ['Low Prio Task', 'n', '-5'];
+        $result = $this->runCreateScript($inputs);
+        $this->assertCount(1, $result['files']);
+        $xml = simplexml_load_file($result['files'][0]);
+        $this->assertEquals(-5, (int)$xml->priority);
+    }
+
 
     public function testFilenameSanitizationAndUniqueness()
     {
@@ -154,6 +176,18 @@ class CreateTest extends TestCase
         $this->assertEquals('completion_date', (string)$xml->reschedule->from);
     }
 
+    public function testCreateTaskWithPriority_NonInteractive()
+    {
+        $options = [
+            '--name' => 'CLI Prio Task',
+            '--priority' => '7'
+        ];
+        $result = $this->runCreateScript_nonInteractive($options);
+        $this->assertCount(1, $result['files']);
+        $xml = simplexml_load_file($result['files'][0]);
+        $this->assertEquals(7, (int)$xml->priority);
+    }
+
     /**
      * @test
      * Verifies that the script exits with an error if the --name flag is empty.
@@ -182,6 +216,18 @@ class CreateTest extends TestCase
         $this->assertStringContainsString('Error: Invalid format for --due. Use YYYY-MM-DD.', $result['output']);
         $this->assertCount(0, $result['files']);
     }
+
+    /**
+     * @test
+     */
+    public function testCreateFailsWithInvalidPriority_NonInteractive()
+    {
+        $options = ['--name' => 'Invalid Prio', '--priority' => 'five'];
+        $result = $this->runCreateScript_nonInteractive($options);
+        $this->assertStringContainsString('Error: --priority must be an integer.', $result['output']);
+        $this->assertCount(0, $result['files']);
+    }
+
 
     /**
      * @test
