@@ -110,35 +110,34 @@ function initialize_perennial_task_config(): void
 {
     try {
         $config = [];
-        $config_dir = null;
+        $config_dir = get_perennial_task_config_dir(); // Always get the config dir path
 
-        // Only try to load config files if environment variables are not sufficient.
-        // We use PERENNIAL_TASKS_DIR as the key indicator.
-        if (getenv('PERENNIAL_TASKS_DIR') === false) {
-            $config_dir = get_perennial_task_config_dir();
+        if ($config_dir !== null) {
+            $config_path = $config_dir . '/config.ini';
 
-            if ($config_dir !== null) {
-                $config_path = $config_dir . '/config.ini';
-
-                if (!is_file($config_path)) {
-                    create_default_config($config_path);
-                }
-
+            // If the config file exists, parse it. If not, create it.
+            if (is_file($config_path)) {
                 $parsed_config = parse_ini_file($config_path);
                 if ($parsed_config === false) {
                     throw new Exception("Error: Could not parse configuration file at '$config_path'.", 30);
                 }
                 $config = $parsed_config;
+            } elseif (getenv('PERENNIAL_TASKS_DIR') === false) {
+                // Only create a default config if the main env var isn't set,
+                // to avoid creating files unnecessarily in some environments.
+                create_default_config($config_path);
+                // After creation, parse it.
+                $config = parse_ini_file($config_path) ?: [];
             }
         }
 
-        // Determine timezone, prioritizing environment variable.
+        // Determine timezone, prioritizing environment variable over config file.
         $timezone = get_config_value('PERENNIAL_TIMEZONE', $config, 'timezone', date_default_timezone_get());
         if (!empty($timezone) && in_array($timezone, timezone_identifiers_list())) {
             date_default_timezone_set($timezone);
         }
 
-        // Define global constants, prioritizing environment variables.
+        // Define global constants, prioritizing environment variables over config file values.
         $tasks_dir_default = ($config_dir !== null) ? $config_dir . '/tasks' : '';
         define('TASKS_DIR', get_config_value('PERENNIAL_TASKS_DIR', $config, 'tasks_dir', $tasks_dir_default));
 
