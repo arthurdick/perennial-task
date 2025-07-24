@@ -93,6 +93,26 @@ function get_optional_positive_integer_input(string $prompt): ?int
 }
 
 /**
+ * Prompts the user for an optional integer (positive, negative, or zero).
+ *
+ * @param string $prompt The prompt to display to the user.
+ * @return ?int The validated integer, or null if the input is empty.
+ */
+function get_optional_integer_input(string $prompt): ?int
+{
+    while (true) {
+        $input = prompt_user($prompt);
+        if ($input === '' || $input === null) {
+            return null;
+        }
+        if (filter_var($input, FILTER_VALIDATE_INT) !== false) {
+            return (int)$input;
+        }
+        echo "Invalid input. Please enter a whole number (e.g., -1, 0, 1) or press Enter to skip.\n";
+    }
+}
+
+/**
  * Prompts the user to select an option from a menu.
  *
  * @param string $prompt The prompt to display to the user.

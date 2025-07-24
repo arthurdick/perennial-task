@@ -11,6 +11,7 @@ $long_options = [
     "preview:",
     "reschedule-interval:",
     "reschedule-from:",
+    "priority:",
 ];
 
 // 2. Use the new manual parser.
@@ -67,6 +68,16 @@ if (!empty($options)) {
         file_put_contents('php://stderr', "Error: --due is required when using any other scheduling options like --reschedule-interval, --reschedule-from, or --preview.\n");
         exit(1);
     }
+
+    // Add priority if specified
+    if (isset($options['priority'])) {
+        if (filter_var($options['priority'], FILTER_VALIDATE_INT) === false) {
+            file_put_contents('php://stderr', "Error: --priority must be an integer.\n");
+            exit(1);
+        }
+        $xml->addChild('priority', $options['priority']);
+    }
+
 } else {
     // Interactive Mode: Fallback if no options are used.
     echo "--- Create a New Task ---\n";
@@ -101,6 +112,11 @@ if (!empty($options)) {
         if ($preview !== null && $preview > 0) {
             $xml->addChild('preview', strval($preview));
         }
+    }
+
+    $priority = get_optional_integer_input("Enter priority (e.g., -1, 0, 1), press Enter for default (0): ");
+    if ($priority !== null) {
+        $xml->addChild('priority', strval($priority));
     }
 }
 

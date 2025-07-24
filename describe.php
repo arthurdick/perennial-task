@@ -17,6 +17,7 @@ if (!function_exists('display_task_header')) {
     {
         echo "Task: " . (string)$task->name . "\n";
         echo "Type: " . $type_label . "\n";
+        echo "Priority: " . (isset($task->priority) ? (int)$task->priority : 0) . "\n";
     }
 }
 

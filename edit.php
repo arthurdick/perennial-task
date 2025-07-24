@@ -13,6 +13,7 @@ if (!function_exists('display_current_details')) {
         echo "Name: " . $xml->name . "\n";
         $type = get_task_type($xml);
         echo "Type: " . ucfirst($type) . "\n";
+        echo "Priority: " . (isset($xml->priority) ? (int)$xml->priority : 0) . "\n";
 
         if ($type === 'scheduled') {
             if (isset($xml->due)) {
@@ -45,6 +46,19 @@ if (!function_exists('process_edit_choice')) {
                     }
                 }
                 $xml->name = htmlspecialchars($newName);
+                break;
+
+            case 'i': // Priority
+                $priority = get_optional_integer_input("Enter new priority (or press Enter to reset to 0): ");
+                if ($priority === null) {
+                    if (isset($xml->priority)) {
+                        unset($xml->priority);
+                        echo "Priority reset to default (0).\n";
+                    }
+                } else {
+                    $xml->priority = $priority;
+                    echo "Priority set to $priority.\n";
+                }
                 break;
 
             case 't': // Change Task Type
@@ -110,6 +124,7 @@ $long_options = [
     "set-reschedule-from:",
     "remove-reschedule",
     "rename-file",
+    "set-priority:",
 ];
 
 // 2. Use the new manual parser. It's clean and predictable.
@@ -147,6 +162,14 @@ if ($is_non_interactive) {
     if (isset($parsed_options['set-name'])) {
         $xml->name = htmlspecialchars($parsed_options['set-name']);
         echo "Name set to: " . $parsed_options['set-name'] . "\n";
+    }
+    if (isset($parsed_options['set-priority'])) {
+        if (filter_var($parsed_options['set-priority'], FILTER_VALIDATE_INT) === false) {
+            file_put_contents('php://stderr', "Error: --set-priority must be an integer.\n");
+            exit(1);
+        }
+        $xml->priority = $parsed_options['set-priority'];
+        echo "Priority set to: " . $parsed_options['set-priority'] . "\n";
     }
     if (isset($parsed_options['set-due'])) {
         if (!validate_date($parsed_options['set-due'])) {
@@ -219,6 +242,7 @@ if ($is_non_interactive) {
 
         $menu_options = [
             'n' => 'Edit Name',
+            'i' => 'Edit Priority',
             't' => 'Change Task Type',
         ];
         if ($type === 'scheduled') {

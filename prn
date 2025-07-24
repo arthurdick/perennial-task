@@ -51,10 +51,11 @@ function display_help(): void
 
 function display_create_help(): void
 {
-    echo "Usage: prn create [--name <name>] [--due <YYYY-MM-DD>] [--preview <days>] [--reschedule-interval <interval>] [--reschedule-from <basis>]\n\n";
+    echo "Usage: prn create [--name <name>] [--due <YYYY-MM-DD>] [--priority <int>] [--preview <days>] [--reschedule-interval <interval>] [--reschedule-from <basis>]\n\n";
     echo "Options for 'create':\n";
     echo "  --name <name>                  The name of the task (required for non-interactive use).\n";
     echo "  --due <YYYY-MM-DD>             The date the task is due.\n";
+    echo "  --priority <int>               Set the task's priority (e.g., -1, 0, 1). Defaults to 0.\n";
     echo "  --preview <days>               The number of days in advance to show the task in reports.\n";
     echo "  --reschedule-interval <interval> The interval to reschedule the task (e.g., '7 days', '1 month').\n";
     echo "  --reschedule-from <basis>      The basis for rescheduling ('due_date' or 'completion_date').\n";
@@ -67,6 +68,7 @@ function display_edit_help(): void
     echo "  --set-name <name>              Set a new name for the task.\n";
     echo "  --rename-file                  Rename the task file to match the new name (only with --set-name).\n";
     echo "  --set-due <YYYY-MM-DD>         Set a new due date for the task.\n";
+    echo "  --set-priority <int>           Set a new priority for the task.\n";
     echo "  --set-preview <days>           Set the number of preview days.\n";
     echo "  --remove-preview               Remove the preview setting from the task.\n";
     echo "  --set-reschedule-interval <interval> Set the reschedule interval.\n";
@@ -126,7 +128,6 @@ function main(array $argv): void
     $app_dir = dirname(realpath(__FILE__));
     $command = $argv[1] ?? null;
     $sub_command = $argv[2] ?? null;
-
     if ($command === 'help' || $command === '--help' || $command === '-h') {
         switch ($sub_command) {
             case 'create':
@@ -182,7 +183,6 @@ function main(array $argv): void
                 [PHP_BINARY, $script_path],
                 array_slice($argv, 2)
             );
-
             // Define the file descriptors for the new process.
             // This ensures the sub-script inherits the terminal I/O from the parent.
             $descriptorspec = [
@@ -190,10 +190,8 @@ function main(array $argv): void
                 1 => STDOUT, // inherit stdout from parent
                 2 => STDERR, // inherit stderr from parent
             ];
-
             // Use proc_open to execute the command with our precise specifications.
             $process = proc_open($command_as_array, $descriptorspec, $pipes);
-
             // If the process was created successfully, wait for it to finish and exit with its code.
             if (is_resource($process)) {
                 $return_value = proc_close($process);

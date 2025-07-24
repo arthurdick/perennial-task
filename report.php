@@ -32,6 +32,7 @@ if (!function_exists('get_scheduled_task_report')) {
             return null; // Should not happen for a scheduled task, but a good safeguard.
         }
 
+        $priority = isset($task->priority) ? (int)$task->priority : 0;
         $preview_duration = isset($task->preview) ? (int)$task->preview : 0;
         $interval = $now->diff($next_due_date);
         $days_diff = $interval->days;
@@ -40,18 +41,21 @@ if (!function_exists('get_scheduled_task_report')) {
             // Due date is in the past.
             return [
                 'status' => 'overdue',
+                'priority' => $priority,
                 'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": " . (string)$task->name . " (was due $days_diff " . pluralize($days_diff, 'day', 'days') . " ago)\n"
             ];
         } elseif ($days_diff === 0) {
             // Due today.
             return [
                 'status' => 'due_today',
+                'priority' => $priority,
                 'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": " . (string)$task->name . "\n"
             ];
         } elseif ($days_diff <= $preview_duration) {
             // Due within the preview window.
             return [
                 'status' => 'upcoming',
+                'priority' => $priority,
                 'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": " . (string)$task->name . " (due in $days_diff " . pluralize($days_diff, 'day', 'days') . ")\n"
             ];
         }
@@ -70,8 +74,10 @@ if (!function_exists('get_normal_task_report')) {
         if (isset($task->history)) {
             return null;
         }
+        $priority = isset($task->priority) ? (int)$task->priority : 0;
         return [
             'status' => 'due_today',
+            'priority' => $priority,
             'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": " . (string)$task->name . "\n"
         ];
     }
@@ -118,7 +124,7 @@ foreach ($files as $file) {
     }
 
     if ($report_data) {
-        $report_lines[$report_data['status']][] = $report_data['message'];
+        $report_lines[$report_data['status']][] = $report_data;
     }
 }
 
@@ -127,8 +133,13 @@ $output_generated = false;
 
 foreach ($status_order as $status) {
     if (!empty($report_lines[$status])) {
+        // Sort the tasks within this status group by priority (descending)
+        usort($report_lines[$status], function ($a, $b) {
+            return $b['priority'] <=> $a['priority'];
+        });
+
         foreach ($report_lines[$status] as $line) {
-            echo $line;
+            echo $line['message'];
         }
         $output_generated = true;
     }

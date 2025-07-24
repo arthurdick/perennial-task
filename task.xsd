@@ -6,6 +6,7 @@
             <xs:all>
                 <xs:element name="name" type="xs:string"/>
                 <xs:element name="due" type="xs:date" minOccurs="0"/>
+                <xs:element name="priority" type="xs:integer" minOccurs="0" default="0"/>
 
                 <xs:element name="reschedule" minOccurs="0">
                     <xs:complexType>
@@ -36,9 +37,9 @@
                         </xs:all>
                     </xs:complexType>
                 </xs:element>
-                
+
                 <xs:element name="preview" type="xs:nonNegativeInteger" minOccurs="0"/>
-                
+
                 <xs:element name="history" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
