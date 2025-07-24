@@ -490,12 +490,14 @@ function save_xml_file(string $filepath, SimpleXMLElement $xml): bool
     // Validate the in-memory DOM object against the schema before saving.
     if (!@$dom->schemaValidate(XSD_PATH)) {
         // Suppress warnings from schemaValidate and handle the error manually.
-        error_log("Attempted to save a task file that failed schema validation: " . $filepath);
+        file_put_contents('php://stderr', "Error: The changes resulted in an invalid task structure. File not saved.\n");
         return false;
     }
 
-    // Only set the attribute and save if validation passes.
-    $dom->documentElement->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:noNamespaceSchemaLocation', XSD_PATH);
+    // Only set the attribute and save if validation passes and the attribute doesn't already exist.
+    if (!$dom->documentElement->hasAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'noNamespaceSchemaLocation')) {
+        $dom->documentElement->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:noNamespaceSchemaLocation', XSD_PATH);
+    }
     return $dom->save($filepath) !== false;
 }
 
