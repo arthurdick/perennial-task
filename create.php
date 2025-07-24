@@ -25,7 +25,7 @@ if (!empty($options)) {
     // The --name flag is required for non-interactive use.
     if (!isset($options['name']) || empty(trim($options['name']))) {
         file_put_contents('php://stderr', "Error: --name is required for non-interactive creation and cannot be empty.\n");
-        exit(1);
+        exit(10);
     }
     $name = trim($options['name']);
 
@@ -36,7 +36,7 @@ if (!empty($options)) {
     if (isset($options['due'])) {
         if (!validate_date($options['due'])) {
             file_put_contents('php://stderr', "Error: Invalid format for --due. Use YYYY-MM-DD.\n");
-            exit(1);
+            exit(10);
         }
         $xml->addChild('due', $options['due']);
 
@@ -44,12 +44,12 @@ if (!empty($options)) {
         if (isset($options['reschedule-interval']) || isset($options['reschedule-from'])) {
             if (!isset($options['reschedule-interval'], $options['reschedule-from'])) {
                 file_put_contents('php://stderr', "Error: Both --reschedule-interval and --reschedule-from must be provided to create a rescheduling task.\n");
-                exit(1);
+                exit(10);
             }
             $from = $options['reschedule-from'];
             if (!in_array($from, ['due_date', 'completion_date'])) {
                 file_put_contents('php://stderr', "Error: --reschedule-from must be 'due_date' or 'completion_date'.\n");
-                exit(1);
+                exit(10);
             }
             $xml->addChild('reschedule');
             $xml->reschedule->addChild('interval', $options['reschedule-interval']);
@@ -60,20 +60,20 @@ if (!empty($options)) {
         if (isset($options['preview'])) {
             if (!ctype_digit($options['preview']) || $options['preview'] < 0) {
                 file_put_contents('php://stderr', "Error: --preview must be a non-negative integer.\n");
-                exit(1);
+                exit(10);
             }
             $xml->addChild('preview', $options['preview']);
         }
     } elseif (isset($options['reschedule-interval']) || isset($options['reschedule-from']) || isset($options['preview'])) {
         file_put_contents('php://stderr', "Error: --due is required when using any other scheduling options like --reschedule-interval, --reschedule-from, or --preview.\n");
-        exit(1);
+        exit(10);
     }
 
     // Add priority if specified
     if (isset($options['priority'])) {
         if (filter_var($options['priority'], FILTER_VALIDATE_INT) === false) {
             file_put_contents('php://stderr', "Error: --priority must be an integer.\n");
-            exit(1);
+            exit(10);
         }
         $xml->addChild('priority', $options['priority']);
     }
@@ -84,8 +84,8 @@ if (!empty($options)) {
 
     if (!is_dir(TASKS_DIR)) {
         if (!mkdir(TASKS_DIR, 0755, true)) {
-            echo "Error: Could not create tasks directory.\n";
-            exit(1);
+            file_put_contents('php://stderr', "Error: Could not create tasks directory.\n");
+            exit(20);
         }
     }
 
@@ -132,7 +132,8 @@ while (file_exists($filepath)) {
 
 if (save_xml_file($filepath, $xml)) {
     echo "\nSuccess! Task file created at: $filepath\n";
+    exit(0);
 } else {
-    echo "\nError! Could not save the task file.\n";
-    exit(1);
+    file_put_contents('php://stderr', "\nError! Could not save the task file.\n");
+    exit(20);
 }

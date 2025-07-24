@@ -166,7 +166,7 @@ if ($is_non_interactive) {
     if (isset($parsed_options['set-priority'])) {
         if (filter_var($parsed_options['set-priority'], FILTER_VALIDATE_INT) === false) {
             file_put_contents('php://stderr', "Error: --set-priority must be an integer.\n");
-            exit(1);
+            exit(10);
         }
         $xml->priority = $parsed_options['set-priority'];
         echo "Priority set to: " . $parsed_options['set-priority'] . "\n";
@@ -174,7 +174,7 @@ if ($is_non_interactive) {
     if (isset($parsed_options['set-due'])) {
         if (!validate_date($parsed_options['set-due'])) {
             file_put_contents('php://stderr', "Error: Invalid format for --set-due. Use YYYY-MM-DD.\n");
-            exit(1);
+            exit(10);
         }
         $xml->due = $parsed_options['set-due'];
         echo "Due date set to: " . $parsed_options['set-due'] . "\n";
@@ -182,7 +182,7 @@ if ($is_non_interactive) {
     if (isset($parsed_options['set-preview'])) {
         if (!ctype_digit($parsed_options['set-preview']) || $parsed_options['set-preview'] < 0) {
             file_put_contents('php://stderr', "Error: --set-preview must be a non-negative integer.\n");
-            exit(1);
+            exit(10);
         }
         $xml->preview = $parsed_options['set-preview'];
         echo "Preview set to: " . $parsed_options['set-preview'] . " days\n";
@@ -202,7 +202,7 @@ if ($is_non_interactive) {
         if (isset($parsed_options['set-reschedule-from'])) {
             if (!in_array($parsed_options['set-reschedule-from'], ['due_date', 'completion_date'])) {
                 file_put_contents('php://stderr', "Error: --set-reschedule-from must be 'due_date' or 'completion_date'.\n");
-                exit(1);
+                exit(10);
             }
             $xml->reschedule->from = $parsed_options['set-reschedule-from'];
             echo "Reschedule basis set to: " . $parsed_options['set-reschedule-from'] . "\n";
@@ -216,7 +216,7 @@ if ($is_non_interactive) {
     if (isset($parsed_options['rename-file'])) {
         if (!isset($parsed_options['set-name'])) {
             file_put_contents('php://stderr', "Error: --rename-file can only be used when also using --set-name.\n");
-            exit(1);
+            exit(10);
         }
         $new_name = (string)$xml->name;
         $base_filename = sanitize_filename($new_name);
@@ -230,7 +230,7 @@ if ($is_non_interactive) {
             echo "File successfully renamed to '" . basename($new_filepath) . "'.\n";
             $filepath = $new_filepath;
         } else {
-            echo "Error: Could not rename the file. Name changed in XML, but file not renamed.\n";
+            file_put_contents('php://stderr', "Error: Could not rename the file. Name changed in XML, but file not renamed.\n");
         }
     }
 } else {
@@ -276,7 +276,7 @@ if ($is_non_interactive) {
                     $filepath = $new_filepath;
                     $original_name = $new_name;
                 } else {
-                    echo "Error: Could not rename the file. Reverting name change.\n";
+                    file_put_contents('php://stderr', "Error: Could not rename the file. Reverting name change.\n");
                     $xml->name = htmlspecialchars($original_name);
                 }
             } else {
@@ -290,7 +290,8 @@ if ($is_non_interactive) {
 
 if (save_xml_file($filepath, $xml)) {
     echo "\nSuccess! Task file updated at: $filepath\n";
+    exit(0);
 } else {
-    echo "\nError! Could not save the updated task file.\n";
-    exit(1);
+    file_put_contents('php://stderr', "\nError! Could not save the updated task file.\n");
+    exit(20);
 }

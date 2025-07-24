@@ -48,12 +48,12 @@ function create_default_config(string $config_path): void
     // Create the configuration and tasks directories if they don't exist.
     if (!is_dir($config_dir)) {
         if (!mkdir($config_dir, 0775, true)) {
-            throw new Exception("Error: Could not create configuration directory at '$config_dir'.");
+            throw new Exception("Error: Could not create configuration directory at '$config_dir'.", 20);
         }
     }
     if (!is_dir($tasks_dir)) {
         if (!mkdir($tasks_dir, 0775, true)) {
-            throw new Exception("Error: Could not create tasks directory at '$tasks_dir'.");
+            throw new Exception("Error: Could not create tasks directory at '$tasks_dir'.", 20);
         }
     }
 
@@ -76,7 +76,7 @@ timezone = "$system_timezone"
 INI;
 
     if (file_put_contents($config_path, $config_content) === false) {
-        throw new Exception("Error: Could not write configuration file to '$config_path'.");
+        throw new Exception("Error: Could not write configuration file to '$config_path'.", 20);
     }
 
     echo "Notice: A new configuration file has been created at '$config_path'.\n";
@@ -126,13 +126,10 @@ function initialize_perennial_task_config(): void
 
                 $parsed_config = parse_ini_file($config_path);
                 if ($parsed_config === false) {
-                    throw new Exception("Error: Could not parse configuration file at '$config_path'.");
+                    throw new Exception("Error: Could not parse configuration file at '$config_path'.", 30);
                 }
                 $config = $parsed_config;
             }
-            // If config_dir is null, it means we couldn't find a home directory.
-            // In this case, we proceed, assuming all necessary config will be
-            // provided by environment variables or fall back to hardcoded defaults.
         }
 
         // Determine timezone, prioritizing environment variable.
@@ -142,7 +139,6 @@ function initialize_perennial_task_config(): void
         }
 
         // Define global constants, prioritizing environment variables.
-        // The default values for paths now need to be more robust in case config.ini was not loaded.
         $tasks_dir_default = ($config_dir !== null) ? $config_dir . '/tasks' : '';
         define('TASKS_DIR', get_config_value('PERENNIAL_TASKS_DIR', $config, 'tasks_dir', $tasks_dir_default));
 
@@ -153,26 +149,21 @@ function initialize_perennial_task_config(): void
         define('XSD_PATH', get_config_value('PERENNIAL_XSD_PATH', $config, 'xsd_path', $xsd_path_default));
 
         $tasks_per_page_raw = get_config_value('PERENNIAL_TASKS_PER_PAGE', $config, 'tasks_per_page', 10);
-        $tasks_per_page = 10;
-        if (ctype_digit((string)$tasks_per_page_raw) && $tasks_per_page_raw > 0) {
-            $tasks_per_page = (int)$tasks_per_page_raw;
-        }
+        $tasks_per_page = (ctype_digit((string)$tasks_per_page_raw) && $tasks_per_page_raw > 0) ? (int)$tasks_per_page_raw : 10;
         define('TASKS_PER_PAGE', $tasks_per_page);
 
         // Final sanity check for the most critical path
         if (empty(TASKS_DIR)) {
-            throw new Exception("Error: Tasks directory is not defined. Please set PERENNIAL_TASKS_DIR or configure it via config.ini.");
+            throw new Exception("Error: Tasks directory is not defined. Please set PERENNIAL_TASKS_DIR or configure it via config.ini.", 30);
         }
-
 
     } catch (Exception $e) {
         file_put_contents('php://stderr', $e->getMessage() . "\n");
-        exit(1);
+        exit($e->getCode() ?: 1); // Use the exception's code, or default to 1
     }
 }
 
 // Only run the configuration initializer if we are NOT in a testing environment.
-// The test environment will define its own constants.
 if (!defined('PERENNIAL_TASK_TESTING')) {
     initialize_perennial_task_config();
 }

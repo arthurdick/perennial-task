@@ -17,14 +17,14 @@ function run_preflight_checks(): void
     // Check for minimum PHP version.
     if (version_compare(PHP_VERSION, MIN_PHP_VERSION, '<')) {
         file_put_contents('php://stderr', "Error: Your PHP version is " . PHP_VERSION . ". Perennial Task requires PHP version " . MIN_PHP_VERSION . " or higher.\n");
-        exit(1);
+        exit(40);
     }
 
     // Check for required SimpleXML extension.
     if (!extension_loaded('SimpleXML')) {
         file_put_contents('php://stderr', "Error: The required PHP extension 'SimpleXML' is not enabled.\n");
         file_put_contents('php://stderr', "Please install or enable it to use Perennial Task (e.g., 'sudo apt-get install php-xml').\n");
-        exit(1);
+        exit(40);
     }
 }
 
@@ -172,7 +172,7 @@ function main(array $argv): void
 
             if (!file_exists($script_path)) {
                 file_put_contents('php://stderr', "Error: Command script '$script_name' not found.\n");
-                exit(1);
+                exit(20);
             }
 
             // Command as an array to bypass shell escaping issues.
@@ -205,7 +205,7 @@ function main(array $argv): void
         case '--version':
         case '-v':
             echo "Perennial Task version " . VERSION . "\n";
-            break;
+            exit(0);
 
         default:
             if (is_null($command)) {
@@ -214,7 +214,7 @@ function main(array $argv): void
                 file_put_contents('php://stderr', "Error: Unknown command '$command'.\n");
             }
             file_put_contents('php://stderr', "Use 'prn help' to see a list of available commands.\n");
-            exit(1);
+            exit(10);
     }
 }
 

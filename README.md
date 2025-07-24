@@ -146,6 +146,17 @@ You can use the following flags to bypass the interactive menus and manage tasks
 *Example:*
 `prn complete tasks/water_plants.xml --date 2025-07-20`
 
+### Exit Codes
+
+The application uses the following exit codes to indicate success or the type of error encountered:
+
+* **0**: Success.
+* **1**: A general or unknown error occurred.
+* **10**: Invalid command-line argument, option, or value.
+* **20**: A file system error occurred (e.g., file not found, permission denied).
+* **30**: An invalid file format or configuration error was found.
+* **40**: A prerequisite check failed (e.g., a required PHP extension is missing).
+
 ### Backward Compatibility & Migration
 
 This version of Perennial Task uses a new, more flexible format for scheduling. However, it is **fully backward compatible** with tasks created by older versions.

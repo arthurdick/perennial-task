@@ -93,8 +93,8 @@ if (isset($argv[1])) {
         $now = new DateTimeImmutable($argv[1]);
         echo "Generating report for date: " . $now->format('Y-m-d') . "\n";
     } catch (Exception $e) {
-        echo "Error: Invalid date format provided. Please use a format like 'YYYY-MM-DD'.\n";
-        exit(1);
+        file_put_contents('php://stderr', "Error: Invalid date format provided. Please use a format like 'YYYY-MM-DD'.\n");
+        exit(10);
     }
 }
 echo "-------------------\n";
@@ -156,3 +156,5 @@ if (!empty($invalid_files)) {
         echo "  - $invalid_file\n";
     }
 }
+
+exit(0);

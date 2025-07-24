@@ -36,7 +36,7 @@ if (isset($parsed_options['date'])) {
         $completion_date = $parsed_options['date'];
     } else {
         file_put_contents('php://stderr', "Error: Invalid format for --date. Use YYYY-MM-DD.\n");
-        exit(1);
+        exit(10);
     }
 }
 
@@ -75,17 +75,17 @@ if ($type === 'normal') {
             $xml->due = $new_due_date;
             echo "Task has been rescheduled to $new_due_date.\n";
         } catch (Exception $e) {
-            echo "Error: Could not calculate next due date from invalid interval '$interval'. Task not rescheduled.\n";
+            file_put_contents('php://stderr', "Error: Could not calculate next due date from invalid interval '$interval'. Task not rescheduled.\n");
         }
     }
 }
 
 if (save_xml_file($filepath, $xml)) {
     echo "Task file for '$task_name' updated successfully.\n";
+    $log_entry = date('c') . " | Completed: " . $task_name . " on " . $completion_date . "\n";
+    file_put_contents(COMPLETIONS_LOG, $log_entry, FILE_APPEND);
+    exit(0);
 } else {
-    echo "Error: Could not save the updated task file.\n";
-    exit(1);
+    file_put_contents('php://stderr', "Error: Could not save the updated task file.\n");
+    exit(20);
 }
-
-$log_entry = date('c') . " | Completed: " . $task_name . " on " . $completion_date . "\n";
-file_put_contents(COMPLETIONS_LOG, $log_entry, FILE_APPEND);
