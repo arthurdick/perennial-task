@@ -8,15 +8,16 @@ _prn_completions()
     # --- Command and Flag Definitions ---
     local commands="create edit complete describe history report help version"
     local file_commands="edit complete describe history"
-    local create_opts="--name --due --preview --reschedule-interval --reschedule-from"
-    local edit_opts="--set-name --set-due --set-preview --remove-preview --set-reschedule-interval --set-reschedule-from --remove-reschedule --rename-file"
+    local create_opts="--name --due --preview --reschedule-interval --reschedule-from --priority"
+    local edit_opts="--set-name --set-due --set-preview --remove-preview --set-reschedule-interval --set-reschedule-from --remove-reschedule --rename-file --set-priority"
     local complete_opts="--date"
     local all_opts="${create_opts} ${edit_opts} ${complete_opts}"
 
     # --- Main Completion Logic ---
 
     # 1. Complete non-interactive flags (e.g., --name, --due)
-    if [[ "$cur" == -* ]]; then
+    if [[ "$cur" == -* ]];
+    then
         local applicable_opts
         case "${words[1]}" in
             create)   applicable_opts=$create_opts ;;
@@ -29,17 +30,20 @@ _prn_completions()
     fi
 
     # 2. Complete the main command (e.g., create, edit)
-    if [[ "$prev" == "prn" ]]; then
+    if [[ "$prev" == "prn" ]];
+    then
         COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
         return 0
     fi
 
     # 3. Complete task file paths
-    if [[ " ${file_commands} " =~ " ${words[1]} " ]]; then
+    if [[ " ${file_commands} " =~ " ${words[1]} " ]];
+    then
         # --- Single Completion Check ---
         # If a .xml file is already on the command line, don't offer more file suggestions.
         for word in "${words[@]}"; do
-            if [[ "$word" == *.xml ]]; then
+            if [[ "$word" == *.xml ]];
+            then
                 return 0
             fi
         done
@@ -57,13 +61,15 @@ _prn_completions()
         config_file="$config_dir/config.ini"
 
         # Read tasks_dir from config.ini if it exists
-        if [[ -f "$config_file" ]]; then
+        if [[ -f "$config_file" ]];
+        then
             tasks_dir=$(grep -oP 'tasks_dir\s*=\s*"\K[^"]+' "$config_file")
             tasks_dir="${tasks_dir/#\~/$HOME}"
         fi
 
         # If we have a valid tasks directory, find the .xml files within it
-        if [[ -n "$tasks_dir" && -d "$tasks_dir" ]]; then
+        if [[ -n "$tasks_dir" && -d "$tasks_dir" ]];
+        then
             local task_files
             task_files=$(find "$tasks_dir" -maxdepth 1 -type f -name "*.xml")
             COMPREPLY=( $(compgen -W "${task_files}" -- "${cur}") )
