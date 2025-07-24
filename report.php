@@ -156,5 +156,3 @@ if (!empty($invalid_files)) {
         echo "  - $invalid_file\n";
     }
 }
-
-exit(0);

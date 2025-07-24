@@ -79,7 +79,7 @@ INI;
         throw new Exception("Error: Could not write configuration file to '$config_path'.", 20);
     }
 
-    echo "Notice: A new configuration file has been created at '$config_path'.\n";
+    file_put_contents('php://stderr', "Notice: A new configuration file has been created at '$config_path'.\n");
 }
 
 /**

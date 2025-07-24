@@ -290,7 +290,6 @@ if ($is_non_interactive) {
 
 if (save_xml_file($filepath, $xml)) {
     echo "\nSuccess! Task file updated at: $filepath\n";
-    exit(0);
 } else {
     file_put_contents('php://stderr', "\nError! Could not save the updated task file.\n");
     exit(20);

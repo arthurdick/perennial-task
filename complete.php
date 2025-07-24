@@ -84,7 +84,6 @@ if (save_xml_file($filepath, $xml)) {
     echo "Task file for '$task_name' updated successfully.\n";
     $log_entry = date('c') . " | Completed: " . $task_name . " on " . $completion_date . "\n";
     file_put_contents(COMPLETIONS_LOG, $log_entry, FILE_APPEND);
-    exit(0);
 } else {
     file_put_contents('php://stderr', "Error: Could not save the updated task file.\n");
     exit(20);

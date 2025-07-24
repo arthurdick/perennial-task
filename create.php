@@ -132,7 +132,6 @@ while (file_exists($filepath)) {
 
 if (save_xml_file($filepath, $xml)) {
     echo "\nSuccess! Task file created at: $filepath\n";
-    exit(0);
 } else {
     file_put_contents('php://stderr', "\nError! Could not save the task file.\n");
     exit(20);
