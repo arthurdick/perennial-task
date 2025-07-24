@@ -49,23 +49,10 @@ _prn_completions()
         done
         # --- End Single Completion Check ---
 
-        local config_dir tasks_dir config_file
-        
-        # Determine config directory based on XDG spec
-        if [[ -n "$XDG_CONFIG_HOME" && -d "$XDG_CONFIG_HOME" ]]; then
-            config_dir="$XDG_CONFIG_HOME/perennial-task"
-        else
-            config_dir="$HOME/.config/perennial-task"
-        fi
-        
-        config_file="$config_dir/config.ini"
+        local tasks_dir
 
-        # Read tasks_dir from config.ini if it exists
-        if [[ -f "$config_file" ]];
-        then
-            tasks_dir=$(grep -oP 'tasks_dir\s*=\s*"\K[^"]+' "$config_file")
-            tasks_dir="${tasks_dir/#\~/$HOME}"
-        fi
+        # Read tasks_dir if it exists
+        tasks_dir=$(prn --get-tasks-dir)
 
         # If we have a valid tasks directory, find the .xml files within it
         if [[ -n "$tasks_dir" && -d "$tasks_dir" ]];

@@ -207,6 +207,11 @@ function main(array $argv): void
             echo "Perennial Task version " . VERSION . "\n";
             exit(0);
 
+        case '--get-tasks-dir':
+            require_once 'config.php';
+            echo TASKS_DIR;
+            exit(0);
+
         default:
             if (is_null($command)) {
                 file_put_contents('php://stderr', "Error: No command provided.\n");
