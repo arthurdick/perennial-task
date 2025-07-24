@@ -114,7 +114,7 @@ if (!empty($options)) {
         }
     }
 
-    $priority = get_optional_integer_input("Enter priority (e.g., -1, 0, 1), press Enter for default (0): ");
+    $priority = get_optional_integer_input("Enter priority (e.g., -2, 0, 10), press Enter for default (0): ");
     if ($priority !== null) {
         $xml->addChild('priority', strval($priority));
     }

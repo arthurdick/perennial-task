@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.3.2
+# Perennial Task (`prn`) v1.4.0
 
 ![CI](https://github.com/arthurdick/perennial-task/actions/workflows/ci.yml/badge.svg)
 
@@ -10,6 +10,7 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
 
   * **Flexible Task Scheduling**: Perennial Task uses a simple but powerful system. A task is either **Normal** (a simple, one-off to-do) or **Scheduled** (a task with a due date).
   * **Powerful Rescheduling**: A scheduled task can be configured to automatically reschedule itself after completion. You have full control over the new due date, calculating it from either the previous **due date** (for fixed schedules like paying rent) or the **completion date** (for flexible timelines like watering the houseplants). Intervals can be set in days, weeks, months, or years.
+  * **Task Prioritization**: Assign a numerical **priority** to your tasks. The report view will sort tasks first by their status (overdue, due today, upcoming) and then by their priority, ensuring the most important items always appear first.
   * **Completion History**: Every completed task retains a full history of when it was completed, allowing you to track consistency and habits over time.
   * **Interactive and Non-Interactive Modes**: Create and edit tasks through a user-friendly interactive menu or automate your workflow with powerful command-line flags.
   * **Intelligent Filtering**: The task selection menu is filterable, allowing you to view all tasks, only active ones, or just the reportable (due or upcoming) ones.
@@ -115,18 +116,20 @@ You can use the following flags to bypass the interactive menus and manage tasks
 
   * `--name <name>`: The name of the task. **(Required for non-interactive use)**
   * `--due <YYYY-MM-DD>`: The date the task is due.
+  * `--priority <int>`: Set the task's priority (e.g., -2, 0, 10). Defaults to 0.
   * `--preview <days>`: The number of days in advance to show the task in reports.
   * `--reschedule-interval <interval>`: The interval to reschedule the task (e.g., '7 days', '1 month').
   * `--reschedule-from <basis>`: The basis for rescheduling ('due\_date' or 'completion\_date').
 
 *Example:*
-`prn create --name "Pay monthly internet bill" --due 2025-08-01 --reschedule-interval "1 month" --reschedule-from due_date`
+`prn create --name "Pay monthly internet bill" --due 2025-08-01 --priority 10 --reschedule-interval "1 month" --reschedule-from due_date`
 
 #### `edit`
 
   * `--set-name <name>`: Set a new name for the task.
   * `--rename-file`: Rename the task file to match the new name (can only be used with `--set-name`).
   * `--set-due <YYYY-MM-DD>`: Set a new due date for the task.
+  * `--set-priority <int>`: Set a new priority for the task.
   * `--set-preview <days>`: Set the number of preview days.
   * `--remove-preview`: Remove the preview setting from the task.
   * `--set-reschedule-interval <interval>`: Set the reschedule interval.
@@ -134,7 +137,7 @@ You can use the following flags to bypass the interactive menus and manage tasks
   * `--remove-reschedule`: Remove all reschedule settings from the task.
 
 *Example:*
-`prn edit tasks/my_task.xml --set-due 2025-09-15 --set-preview 7`
+`prn edit tasks/my_task.xml --set-due 2025-09-15 --set-priority 5`
 
 #### `complete`
 

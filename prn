@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
-const VERSION = '1.3.2';
+const VERSION = '1.4.0';
 const MIN_PHP_VERSION = '7.4';
 
 /**
@@ -55,7 +55,7 @@ function display_create_help(): void
     echo "Options for 'create':\n";
     echo "  --name <name>                  The name of the task (required for non-interactive use).\n";
     echo "  --due <YYYY-MM-DD>             The date the task is due.\n";
-    echo "  --priority <int>               Set the task's priority (e.g., -1, 0, 1). Defaults to 0.\n";
+    echo "  --priority <int>               Set the task's priority (e.g., -2, 0, 10). Defaults to 0.\n";
     echo "  --preview <days>               The number of days in advance to show the task in reports.\n";
     echo "  --reschedule-interval <interval> The interval to reschedule the task (e.g., '7 days', '1 month').\n";
     echo "  --reschedule-from <basis>      The basis for rescheduling ('due_date' or 'completion_date').\n";
