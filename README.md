@@ -6,6 +6,8 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
 
 ![Perennial Task Logo](/docs/prn_logo.png)
 
+![Perennial Task Demo](/docs/demo.svg)
+
 ## Features
 
   * **Flexible Task Scheduling**: Perennial Task uses a simple but powerful system. A task is either **Normal** (a simple, one-off to-do) or **Scheduled** (a task with a due date).
