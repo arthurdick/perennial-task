@@ -2,11 +2,20 @@
     "name": "arthurdick/perennial-task",
     "description": "A simple, command-line utility to help you cultivate recurring responsibilities.",
     "type": "project",
+    "keywords": [
+        "terminal",
+        "productivity",
+        "task-manager",
+        "task-management",
+        "cli"
+    ],
+    "homepage": "https://perennialtask.com/",
     "license": "MIT",
     "authors": [
         {
             "name": "Arthur Dick",
-            "email": "arthur@arthurdick.com"
+            "email": "arthur@arthurdick.com",
+            "role": "Developer"
         }
     ],
     "require": {
@@ -20,5 +29,9 @@
     },
     "bin": [
         "prn"
-    ]
+    ],
+    "scripts": {
+        "test": "phpunit",
+        "fix": "php-cs-fixer fix"
+    }
 }

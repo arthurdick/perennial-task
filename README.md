@@ -188,7 +188,7 @@ This project includes a comprehensive test suite built with PHPUnit.
 From the project's root directory, run:
 
 ```
-./vendor/bin/phpunit
+composer test
 ```
 
 ### Code Style
@@ -196,5 +196,5 @@ From the project's root directory, run:
 This project uses `php-cs-fixer`. To automatically format your code, run:
 
 ```
-./vendor/bin/php-cs-fixer fix .
+composer fix
 ```
