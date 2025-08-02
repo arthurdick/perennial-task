@@ -295,8 +295,9 @@ function get_filtered_tasks(string $filter): array
                 $task_is_visible = true;
                 break;
             case 'active':
-                // Active means it's a normal task that is not completed.
-                if (get_task_type($xml) === 'normal' && !isset($xml->history)) {
+                $type = get_task_type($xml);
+                // An active task is any scheduled task, or a normal task that has not been completed.
+                if ($type === 'scheduled' || ($type === 'normal' && !isset($xml->history))) {
                     $task_is_visible = true;
                 }
                 break;

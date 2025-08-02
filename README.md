@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.5.0
+# Perennial Task (`prn`) v1.6.0
 
 ![CI](https://github.com/arthurdick/perennial-task/actions/workflows/ci.yml/badge.svg)
 
