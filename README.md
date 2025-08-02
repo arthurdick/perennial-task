@@ -57,11 +57,6 @@ If you are a PHP developer, you can install Perennial Task globally using Compos
     export PATH="$PATH:$(composer global config bin-dir --absolute -q)"
     ```
 3.  **Apply the Changes:** Restart your terminal or run `source ~/.bashrc`.
-4.  **Set Up Bash Completions (Optional):**
-    ```
-    COMPLETIONS_PATH=$(composer global config home -q)/vendor/arthurdick/perennial-task/prn-completions.bash
-    sudo ln -s "$COMPLETIONS_PATH" /etc/bash_completion.d/prn
-    ```
 
 ### Method 3: Manual Installation from Source (Recommended for contributors)
 
@@ -78,6 +73,29 @@ This method is for developers who want to work on the source code.
     ```
     ./prn help
     ```
+
+### Enabling Bash Completions
+
+To make using `prn` even faster, you can enable tab completions, which will suggest commands, options, and task file paths automatically.
+
+1.  **Locate the `prn-completions.bash` file** in the root of the project directory.
+
+2.  **Create a symbolic link** to it from your system's bash completion directory. This command will vary based on how you installed the application.
+
+      * **For Composer Installations:**
+        ```bash
+        COMPLETIONS_PATH=$(composer global config home -q)/vendor/arthurdick/perennial-task/prn-completions.bash
+        sudo ln -s "$COMPLETIONS_PATH" /etc/bash_completion.d/prn
+        ```
+      * **For Manual/Source Installations:**
+        ```bash
+        # Replace /path/to/perennial-task with the actual path to the cloned repository
+        sudo ln -s /path/to/perennial-task/prn-completions.bash /etc/bash_completion.d/prn
+        ```
+
+3.  **Restart your terminal session** or source your `.bashrc` file (`source ~/.bashrc`) to apply the changes.
+
+Now, you can type `prn edi` and press `Tab`, and it should autocomplete to `prn edit`.
 
 ## Usage
 
@@ -161,12 +179,12 @@ You can use the following flags to bypass the interactive menus and manage tasks
 
 The application uses the following exit codes to indicate success or the type of error encountered:
 
-* **0**: Success.
-* **1**: A general or unknown error occurred.
-* **10**: Invalid command-line argument, option, or value.
-* **20**: A file system error occurred (e.g., file not found, permission denied).
-* **30**: An invalid file format or configuration error was found.
-* **40**: A prerequisite check failed (e.g., a required PHP extension is missing).
+  * **0**: Success.
+  * **1**: A general or unknown error occurred.
+  * **10**: Invalid command-line argument, option, or value.
+  * **20**: A file system error occurred (e.g., file not found, permission denied).
+  * **30**: An invalid file format or configuration error was found.
+  * **40**: A prerequisite check failed (e.g., a required PHP extension is missing).
 
 ### Backward Compatibility & Migration
 
