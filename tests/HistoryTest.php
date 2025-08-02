@@ -19,7 +19,7 @@ class HistoryTest extends TestCase
     private function runHistoryScript(string $task_filepath): string
     {
         global $argv;
-        $argv = ['history.php', $task_filepath];
+        $argv = ['history.php', 'history', $task_filepath];
 
         ob_start();
         include $this->script_path;

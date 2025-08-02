@@ -646,8 +646,8 @@ function parse_argv_manual(array $argv, array $long_options): array
         }
     }
 
-    // Start parsing from the first actual argument
-    for ($i = 1; $i < count($argv); $i++) {
+    // Start parsing from the first actual argument *after the command name*
+    for ($i = 2; $i < count($argv); $i++) {
         $arg = $argv[$i];
 
         if (str_starts_with($arg, '--')) {

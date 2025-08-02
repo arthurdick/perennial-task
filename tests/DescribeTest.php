@@ -19,7 +19,7 @@ class DescribeTest extends TestCase
     private function runDescribeScript(string $task_filepath): string
     {
         global $argv;
-        $argv = ['describe.php', $task_filepath];
+        $argv = ['describe.php', 'describe', $task_filepath];
 
         ob_start();
         // Use `include` instead of `require_once`. This ensures the script's main logic

@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
-const VERSION = '1.4.1';
+const VERSION = '1.5.0';
 const MIN_PHP_VERSION = '7.4';
 
 /**
@@ -125,7 +125,7 @@ function display_help_help(): void
 function main(array $argv): void
 {
     run_preflight_checks();
-    $app_dir = dirname(realpath(__FILE__));
+    $app_dir = Phar::running() ? 'phar://prn.phar' : dirname(realpath(__FILE__));
     $command = $argv[1] ?? null;
     $sub_command = $argv[2] ?? null;
     if ($command === 'help' || $command === '--help' || $command === '-h') {
@@ -170,41 +170,19 @@ function main(array $argv): void
             $script_name = "$command.php";
             $script_path = "{$app_dir}/{$script_name}";
 
-            if (!file_exists($script_path)) {
+            if (file_exists($script_path)) {
+                require_once $script_path;
+            } else {
                 file_put_contents('php://stderr', "Error: Command script '$script_name' not found.\n");
                 exit(20);
             }
-
-            // Command as an array to bypass shell escaping issues.
-            // The first element is the PHP executable itself (PHP_BINARY is a predefined constant).
-            // The second is the script to run.
-            // The rest are the arguments for that script, passed directly.
-            $command_as_array = array_merge(
-                [PHP_BINARY, $script_path],
-                array_slice($argv, 2)
-            );
-            // Define the file descriptors for the new process.
-            // This ensures the sub-script inherits the terminal I/O from the parent.
-            $descriptorspec = [
-                0 => STDIN,  // inherit stdin from parent
-                1 => STDOUT, // inherit stdout from parent
-                2 => STDERR, // inherit stderr from parent
-            ];
-            // Use proc_open to execute the command with our precise specifications.
-            $process = proc_open($command_as_array, $descriptorspec, $pipes);
-            // If the process was created successfully, wait for it to finish and exit with its code.
-            if (is_resource($process)) {
-                $return_value = proc_close($process);
-                exit($return_value);
-            }
-            // Exit with an error if proc_open failed for some reason.
-            file_put_contents('php://stderr', "Error: Could not execute command '$command'.\n");
-            exit(1);
+            exit(0);
 
         case 'version':
         case '--version':
         case '-v':
-            echo "Perennial Task version " . VERSION . "\n";
+            echo "Perennial Task version " .
+                VERSION . "\n";
             exit(0);
 
         case '--get-tasks-dir':

@@ -12,6 +12,9 @@
 /tests/temp/
 /tests/temp_config/
 
+# Build artifacts
+/prn.phar
+
 # Ignore cache files
 .phpunit.result.cache
 .php-cs-fixer.cache

@@ -25,18 +25,19 @@ class CompleteTest extends TestCase
      */
     private function runCompleteScript(string $task_filepath, array $options = []): string
     {
-        $script_args = [];
+        $prn_path = realpath(__DIR__ . '/../prn');
+        $script_args = ['complete'];
+
         foreach ($options as $key => $value) {
             $script_args[] = $key;
             if ($value !== null) {
                 $script_args[] = escapeshellarg($value);
             }
         }
-        // Add the filepath as the final, non-option argument.
         $script_args[] = escapeshellarg($task_filepath);
 
         $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
-        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args) . " 2>&1"; // Redirect stderr
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($prn_path) . " " . implode(' ', $script_args) . " 2>&1";
 
         return shell_exec($command);
     }

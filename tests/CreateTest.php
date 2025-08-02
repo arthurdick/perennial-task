@@ -20,8 +20,7 @@ class CreateTest extends TestCase
     {
         global $argv;
         // Mock the argv variable for the script being included.
-        // The first element is always the script name itself.
-        $argv = ['create.php'];
+        $argv = ['create.php', 'create'];
 
         $input_stream = fopen('php://memory', 'r+');
         foreach ($inputs as $input) {
@@ -35,7 +34,11 @@ class CreateTest extends TestCase
         };
 
         ob_start();
-        include $this->script_path;
+        try {
+            include $this->script_path;
+        } catch (Exception $e) {
+            // Catches app_exit
+        }
         $output = ob_get_clean();
 
         unset($GLOBALS['__MOCK_PROMPT_USER_FUNC']);
@@ -52,7 +55,8 @@ class CreateTest extends TestCase
      */
     private function runCreateScript_nonInteractive(array $options): array
     {
-        $script_args = [];
+        $prn_path = realpath(__DIR__ . '/../prn');
+        $script_args = ['create'];
         foreach ($options as $key => $value) {
             $script_args[] = $key;
             if ($value !== null) {
@@ -61,7 +65,7 @@ class CreateTest extends TestCase
         }
 
         $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
-        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args) . " 2>&1"; // Redirect stderr to stdout
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($prn_path) . " " . implode(' ', $script_args) . " 2>&1";
 
         $output = shell_exec($command);
 

@@ -88,9 +88,12 @@ if (!function_exists('get_normal_task_report')) {
 echo "--- Task Report ---\n";
 
 $now = new DateTimeImmutable('today');
-if (isset($argv[1])) {
+// When called from `prn`, the command is at $argv[1], so the optional date is at $argv[2]
+$date_arg = $argv[2] ?? null;
+
+if ($date_arg) {
     try {
-        $now = new DateTimeImmutable($argv[1]);
+        $now = new DateTimeImmutable($date_arg);
         echo "Generating report for date: " . $now->format('Y-m-d') . "\n";
     } catch (Exception $e) {
         file_put_contents('php://stderr', "Error: Invalid date format provided. Please use a format like 'YYYY-MM-DD'.\n");
@@ -149,7 +152,7 @@ if (!$output_generated) {
     echo "No tasks to report on at this time.\n";
 }
 
-// Display warnings for any invalid files that were skipped.
+// Display warnings for any any invalid files that were skipped.
 if (!empty($invalid_files)) {
     echo "\n" . COLOR_YELLOW . "Warning:" . COLOR_RESET . " The following task files are invalid or corrupt and were skipped:\n";
     foreach ($invalid_files as $invalid_file) {

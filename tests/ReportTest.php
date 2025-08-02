@@ -22,7 +22,7 @@ class ReportTest extends TestCase
     private function runReportScript(string $date): string
     {
         global $argv;
-        $argv = ['report.php', $date];
+        $argv = ['report.php', 'report', $date];
 
         ob_start();
         include $this->script_path;

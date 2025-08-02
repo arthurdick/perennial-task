@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.4.1
+# Perennial Task (`prn`) v1.5.0
 
 ![CI](https://github.com/arthurdick/perennial-task/actions/workflows/ci.yml/badge.svg)
 
@@ -18,56 +18,65 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
   * **Intelligent Filtering**: The task selection menu is filterable, allowing you to view all tasks, only active ones, or just the reportable (due or upcoming) ones.
   * **Command-Line Driven**: Designed for efficient use within a terminal environment.
 
-## Installation
+## Installation and Usage
 
-You can install Perennial Task using one of the two methods below.
+Perennial Task can be used in three different ways, depending on your needs.
 
-### Method 1: Manual Installation
+### Method 1: PHAR Release (Recommended for most users)
 
-1.  **Platform & Dependencies:** This utility is designed for Linux environments. Ensure you have PHP version 7.4 or higher installed, with the `SimpleXML` and `DOM` extensions enabled (these are usually included by default). You can check this by running `php -v` and `php -m`.
-2.  **Gather Files:** Place all the packaged files (`prn`, `install.sh`, `uninstall.sh`, `prn-completions.bash`, `task.xsd`, and all `*.php` scripts) into a single directory.
-3.  **Run the Installer:** From within that directory, make the installation script executable and run it with `sudo`:
+This method uses a single, executable `.phar` file that contains the entire application. It is the easiest way to get started.
+
+1.  **Download the `prn.phar`** file from the latest release on GitHub.
+2.  **Make it executable:**
     ```
-    chmod +x install.sh
-    sudo ./install.sh
+    chmod +x prn.phar
     ```
-    The installer will copy the application files to `/usr/local/lib/perennial-task`, create a symbolic link at `/usr/local/bin/prn`, and set up your user configuration directory.
+3.  **(Optional) Move it into your PATH** to make it accessible from anywhere:
+    ```
+    sudo mv prn.phar /usr/local/bin/prn
+    ```
+4.  **Run it:**
+    ```
+    # If you moved it into your PATH
+    prn help
 
-#### Uninstallation
+    # If you did not
+    ./prn.phar help
+    ```
 
-To completely remove the application, run the `uninstall.sh` script from the directory where you originally placed the package files:
+### Method 2: Composer (Recommended for PHP developers)
 
-```
-chmod +x uninstall.sh
-sudo ./uninstall.sh
-```
+If you are a PHP developer, you can install Perennial Task globally using Composer.
 
-### Method 2: Composer Installation
-
-1.  **Install the Package:** Run the following command to install the package globally:
-
+1.  **Install the Package:**
     ```
     composer global require arthurdick/perennial-task
     ```
-
-2.  **Update Your PATH:** You must ensure Composer's global bin directory is in your system's `PATH`. Add the following line to your `~/.bashrc`:
-
+2.  **Update Your PATH:** Ensure Composer's global bin directory is in your system's `PATH`. Add the following line to your `~/.bashrc` or `~/.zshrc`:
     ```
     export PATH="$PATH:$(composer global config bin-dir --absolute -q)"
     ```
-
-3.  **Apply the Changes:** Restart your terminal or run `source ~/.bashrc` to apply the changes.
-
-4.  **Set Up Bash Completions (Optional):** The Composer installation does not run the setup script, so bash completions must be linked manually. First, find your system's completion directory (e.g., `/etc/bash_completion.d/` or `/usr/share/bash-completion/completions/`). Then, create a symbolic link to the `prn-completions.bash` file from the package.
-
-    *Example command:*
-
+3.  **Apply the Changes:** Restart your terminal or run `source ~/.bashrc`.
+4.  **Set Up Bash Completions (Optional):**
     ```
-    # Get the full path to the completions script
     COMPLETIONS_PATH=$(composer global config home -q)/vendor/arthurdick/perennial-task/prn-completions.bash
-
-    # Link it to your system's completion directory (use the correct destination for your system)
     sudo ln -s "$COMPLETIONS_PATH" /etc/bash_completion.d/prn
+    ```
+
+### Method 3: Manual Installation from Source (Recommended for contributors)
+
+This method is for developers who want to work on the source code.
+
+1.  **Platform & Dependencies:** This utility is designed for Linux environments. Ensure you have PHP version 7.4 or higher installed, with the `SimpleXML` and `DOM` extensions enabled.
+2.  **Clone the repository and install dependencies:**
+    ```
+    git clone https://github.com/arthurdick/perennial-task.git
+    cd perennial-task
+    composer install
+    ```
+3.  **Run the application** using the `prn` executable in the project root:
+    ```
+    ./prn help
     ```
 
 ## Usage

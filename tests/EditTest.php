@@ -19,7 +19,7 @@ class EditTest extends TestCase
     private function runEditScript(string $task_filepath, array $inputs): string
     {
         global $argv;
-        $argv = ['edit.php', $task_filepath];
+        $argv = ['edit.php', 'edit', $task_filepath];
 
         $input_stream = fopen('php://memory', 'r+');
         foreach ($inputs as $input) {
@@ -33,8 +33,11 @@ class EditTest extends TestCase
         };
 
         ob_start();
-        // Use `include` so the script is re-evaluated for each test run.
-        include $this->script_path;
+        try {
+            include $this->script_path;
+        } catch (Exception $e) {
+            // Catches app_exit
+        }
         $output = ob_get_clean();
 
         unset($GLOBALS['__MOCK_PROMPT_USER_FUNC']);
@@ -52,7 +55,8 @@ class EditTest extends TestCase
      */
     private function runEditScript_nonInteractive(string $task_filepath, array $options): array
     {
-        $script_args = [];
+        $prn_path = realpath(__DIR__ . '/../prn');
+        $script_args = ['edit'];
         foreach ($options as $key => $value) {
             $script_args[] = $key;
             if ($value !== null) {
@@ -62,15 +66,14 @@ class EditTest extends TestCase
         $script_args[] = escapeshellarg($task_filepath);
 
         $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
-        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($this->script_path) . " " . implode(' ', $script_args) . " 2>&1"; // Redirect stderr
+        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($prn_path) . " " . implode(' ', $script_args) . " 2>&1";
 
         $output = shell_exec($command);
 
-        // After running the script, the filepath might have changed. We need to find it.
-        $new_filepath = $task_filepath; // Assume it hasn't changed
+        // After running the script, the filepath might have changed.
+        $new_filepath = $task_filepath;
         if (array_key_exists('--rename-file', $options) && array_key_exists('--set-name', $options)) {
             $sanitized_name = sanitize_filename($options['--set-name']);
-            // This logic has to account for the _1, _2 etc. uniqueness suffix
             $files = glob(TASKS_DIR . '/' . $sanitized_name . '*.xml');
             if (!empty($files)) {
                 $new_filepath = $files[0];
