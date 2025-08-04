@@ -118,6 +118,7 @@ if (!function_exists('process_edit_choice')) {
 $long_options = [
     "set-name:",
     "set-due:",
+    "remove-due",
     "set-preview:",
     "remove-preview",
     "set-reschedule-interval:",
@@ -179,6 +180,12 @@ if ($is_non_interactive) {
         $xml->due = $parsed_options['set-due'];
         echo "Due date set to: " . $parsed_options['set-due'] . "\n";
     }
+    if (isset($parsed_options['remove-due'])) {
+        unset($xml->due);
+        unset($xml->reschedule);
+        unset($xml->preview);
+        echo "Due date and all scheduling information removed.\n";
+    }
     if (isset($parsed_options['set-preview'])) {
         if (!ctype_digit($parsed_options['set-preview']) || $parsed_options['set-preview'] < 0) {
             file_put_contents('php://stderr', "Error: --set-preview must be a non-negative integer.\n");
@@ -191,6 +198,7 @@ if ($is_non_interactive) {
         unset($xml->preview);
         echo "Preview removed.\n";
     }
+    // FIXME: This logic is getting complex. It might be better to validate these inter-dependencies at the end.
     if (isset($parsed_options['set-reschedule-interval']) || isset($parsed_options['set-reschedule-from'])) {
         if (!isset($xml->reschedule)) {
             $xml->addChild('reschedule');

@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
-const VERSION = '1.6.0';
+const VERSION = '1.7.0';
 const MIN_PHP_VERSION = '7.4';
 
 /**
@@ -68,6 +68,7 @@ function display_edit_help(): void
     echo "  --set-name <name>              Set a new name for the task.\n";
     echo "  --rename-file                  Rename the task file to match the new name (only with --set-name).\n";
     echo "  --set-due <YYYY-MM-DD>         Set a new due date for the task.\n";
+    echo "  --remove-due                   Remove the due date and all scheduling settings from a task.\n";
     echo "  --set-priority <int>           Set a new priority for the task.\n";
     echo "  --set-preview <days>           Set the number of preview days.\n";
     echo "  --remove-preview               Remove the preview setting from the task.\n";

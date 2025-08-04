@@ -337,6 +337,31 @@ class EditTest extends TestCase
         $this->assertFalse(isset($xml->reschedule));
     }
 
+    public function testRemoveDue_NonInteractive()
+    {
+        $xml_content = '<task>
+            <name>Convert to Normal</name>
+            <due>2025-10-10</due>
+            <preview>5</preview>
+            <reschedule><interval>1 month</interval><from>due_date</from></reschedule>
+        </task>';
+        $filepath = TASKS_DIR . '/remove_due_task.xml';
+        save_xml_file($filepath, new SimpleXMLElement($xml_content));
+
+        $options = [
+            '--remove-due' => null,
+        ];
+        $result = $this->runEditScript_nonInteractive($filepath, $options);
+
+        $this->assertStringContainsString('Due date and all scheduling information removed.', $result['output']);
+
+        $xml = simplexml_load_file($result['new_filepath']);
+        $this->assertFalse(isset($xml->due));
+        $this->assertFalse(isset($xml->preview));
+        $this->assertFalse(isset($xml->reschedule));
+        $this->assertEquals('normal', get_task_type($xml));
+    }
+
     public function testEditTaskNameAndRenameFile_NonInteractive()
     {
         $original_filepath = TASKS_DIR . '/original_interactive.xml';

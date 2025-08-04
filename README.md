@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.6.0
+# Perennial Task (`prn`) v1.7.0
 
 ![CI](https://github.com/arthurdick/perennial-task/actions/workflows/ci.yml/badge.svg)
 
@@ -158,6 +158,7 @@ You can use the following flags to bypass the interactive menus and manage tasks
   * `--set-name <name>`: Set a new name for the task.
   * `--rename-file`: Rename the task file to match the new name (can only be used with `--set-name`).
   * `--set-due <YYYY-MM-DD>`: Set a new due date for the task.
+  * `--remove-due`: Remove the due date and all scheduling settings from a task.
   * `--set-priority <int>`: Set a new priority for the task.
   * `--set-preview <days>`: Set the number of preview days.
   * `--remove-preview`: Remove the preview setting from the task.
