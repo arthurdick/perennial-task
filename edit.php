@@ -198,8 +198,16 @@ if ($is_non_interactive) {
         unset($xml->preview);
         echo "Preview removed.\n";
     }
-    // FIXME: This logic is getting complex. It might be better to validate these inter-dependencies at the end.
+
     if (isset($parsed_options['set-reschedule-interval']) || isset($parsed_options['set-reschedule-from'])) {
+        $final_interval = $parsed_options['set-reschedule-interval'] ?? (string)($xml->reschedule->interval ?? '');
+        $final_from = $parsed_options['set-reschedule-from'] ?? (string)($xml->reschedule->from ?? '');
+
+        if (empty($final_interval) || empty($final_from)) {
+            file_put_contents('php://stderr', "Error: When setting a reschedule rule, both interval and basis are required. One is missing.\n");
+            exit(10);
+        }
+
         if (!isset($xml->reschedule)) {
             $xml->addChild('reschedule');
         }
@@ -216,6 +224,7 @@ if ($is_non_interactive) {
             echo "Reschedule basis set to: " . $parsed_options['set-reschedule-from'] . "\n";
         }
     }
+
     if (isset($parsed_options['remove-reschedule'])) {
         unset($xml->reschedule);
         echo "Reschedule settings removed.\n";

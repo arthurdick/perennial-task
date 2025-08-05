@@ -443,8 +443,33 @@ class EditTest extends TestCase
         $filepath = TASKS_DIR . '/fail_reschedule.xml';
         save_xml_file($filepath, new SimpleXMLElement('<task><name>Fail Reschedule</name></task>'));
 
-        $result = $this->runEditScript_nonInteractive($filepath, ['--set-reschedule-from' => 'bad_value']);
+        $options = [
+            '--set-reschedule-interval' => '1 week',
+            '--set-reschedule-from' => 'bad_value'
+        ];
+        $result = $this->runEditScript_nonInteractive($filepath, $options);
 
         $this->assertStringContainsString("Error: --set-reschedule-from must be 'due_date' or 'completion_date'.", $result['output']);
+    }
+
+    /**
+     * @test
+     */
+    public function testEditFailsWithIncompleteRescheduleRule_SetIntervalOnly()
+    {
+        $filepath = TASKS_DIR . '/fail_incomplete.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Incomplete Rule</name></task>'));
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-reschedule-interval' => '1 week']);
+        $this->assertStringContainsString('Error: When setting a reschedule rule, both interval and basis are required.', $result['output']);
+    }
+    /**
+     * @test
+     */
+    public function testEditFailsWithIncompleteRescheduleRule_SetFromOnly()
+    {
+        $filepath = TASKS_DIR . '/fail_incomplete_2.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Incomplete Rule 2</name></task>'));
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-reschedule-from' => 'due_date']);
+        $this->assertStringContainsString('Error: When setting a reschedule rule, both interval and basis are required.', $result['output']);
     }
 }
