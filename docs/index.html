@@ -668,26 +668,51 @@
             <div class="container">
                 <div class="section-header">
                     <h2>Flexible Installation</h2>
-                    <p>Install globally with Composer or use the manual installer script.</p>
+                    <p>Install the application using one of three methods depending on your needs.</p>
                 </div>
                 <div class="max-w-4xl">
                     <div class="tabs-container">
-                        <button data-tab="manual" class="tab-button active">Manual</button>
+                        <button data-tab="phar" class="tab-button active">PHAR Release</button>
                         <button data-tab="composer" class="tab-button">Composer</button>
+                        <button data-tab="manual" class="tab-button">Manual Installation</button>
                     </div>
                     <div class="tab-panel-container">
+                        <div id="phar-panel" class="tab-panel active">
+                             <h3>Method 1: PHAR Release (Recommended for most users)</h3>
+                             <p>This method uses a single, executable <code>.phar</code> file that contains the entire application. It is the easiest way to get started.</p>
+                             <div class="code-listing">
+                                 <div>
+                                     <p class="comment"># 1. Download the prn.phar file from the latest release on GitHub.</p>
+                                     <p class="prompt"><span class="dollar">$</span> Download <code>prn.phar</code></p>
+                                 </div>
+                                 <div>
+                                     <p class="comment"># 2. Make it executable.</p>
+                                     <p class="prompt"><span class="dollar">$</span> chmod +x prn.phar</p>
+                                 </div>
+                                 <div>
+                                     <p class="comment"># 3. (Optional) Move it into your PATH to make it accessible from anywhere.</p>
+                                     <p class="prompt"><span class="dollar">$</span> sudo mv prn.phar /usr/local/bin/prn</p>
+                                 </div>
+                                 <div>
+                                     <p class="comment"># 4. Run it.</p>
+                                     <p class="prompt"><span class="dollar">$</span> prn help</p>
+                                 </div>
+                             </div>
+                        </div>
                         <div id="composer-panel" class="tab-panel">
+                             <h3>Method 2: Composer (Recommended for PHP developers)</h3>
+                             <p>If you are a PHP developer, you can install Perennial Task globally using Composer.</p>
                             <div class="code-listing">
                                 <div>
                                     <p class="comment"># 1. Install the package globally.</p>
                                     <p class="prompt"><span class="dollar">$</span> composer global require arthurdick/perennial-task</p>
                                 </div>
                                 <div>
-                                    <p class="comment"># 2. Ensure Composer's bin directory is in your PATH.</p>
-                                    <p class="prompt"><span class="dollar">$</span> echo 'export PATH="$PATH:$(composer global config bin-dir --absolute -q)"' >> ~/.bashrc</p>
+                                    <p class="comment"># 2. Update Your PATH: Ensure Composer's global bin directory is in your system's PATH. Add the following line to your <code>~/.bashrc</code> or <code>~/.zshrc</code>:</p>
+                                    <p class="prompt"><span class="dollar">$</span> export PATH="$PATH:$(composer global config bin-dir --absolute -q)"</p>
                                 </div>
                                 <div>
-                                    <p class="comment"># 3. Apply the changes.</p>
+                                    <p class="comment"># 3. Apply the Changes.</p>
                                     <p class="prompt"><span class="dollar">$</span> source ~/.bashrc</p>
                                 </div>
                                 <div>
@@ -696,24 +721,27 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="manual-panel" class="tab-panel active">
-                             <h3>System Requirements</h3>
+                        <div id="manual-panel" class="tab-panel">
+                             <h3>Method 3: Manual Installation from Source (Recommended for contributors)</h3>
+                             <p>This method is for developers who want to work on the source code.</p>
                              <ul>
                                  <li>Linux Environment</li>
-                                 <li>PHP 7.4+ with `SimpleXML` and `DOM` extensions</li>
+                                 <li>PHP 7.4+ with <code>SimpleXML</code> and <code>DOM</code> extensions</li>
                              </ul>
                              <div class="code-listing">
                                  <div>
-                                     <p class="comment"># 1. Download the package files into a directory.</p>
-                                     <p class="prompt"><span class="dollar">$</span> cd /path/to/downloaded/files</p>
+                                     <p class="comment"># 1. Clone the repository and install dependencies.</p>
+                                     <p class="prompt"><span class="dollar">$</span> git clone https://github.com/arthurdick/perennial-task.git</p>
                                  </div>
                                  <div>
-                                     <p class="comment"># 2. Make the installer executable.</p>
-                                     <p class="prompt"><span class="dollar">$</span> chmod +x install.sh</p>
+                                     <p class="prompt"><span class="dollar">$</span> cd perennial-task</p>
                                  </div>
                                  <div>
-                                     <p class="comment"># 3. Run the installer with sudo.</p>
-                                     <p class="prompt"><span class="dollar">$</span> sudo ./install.sh</p>
+                                     <p class="prompt"><span class="dollar">$</span> composer install</p>
+                                 </div>
+                                 <div>
+                                     <p class="comment"># 2. Run the application using the prn executable in the project root.</p>
+                                     <p class="prompt"><span class="dollar">$</span> ./prn help</p>
                                  </div>
                              </div>
                         </div>
@@ -747,6 +775,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanels = {
+                phar: document.getElementById('phar-panel'),
                 composer: document.getElementById('composer-panel'),
                 manual: document.getElementById('manual-panel')
             };
