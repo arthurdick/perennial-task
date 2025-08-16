@@ -12,4 +12,21 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage-html"/>
+            <clover outputFile="coverage.clover"/>
+        </report>
+    </coverage>
+    <source>
+        <include>
+            <directory suffix=".php">.</directory>
+        </include>
+        <exclude>
+            <file>.php-cs-fixer.dist.php</file>
+            <file>build.php</file>
+            <directory>tests</directory>
+            <directory>vendor</directory>
+        </exclude>
+    </source>
 </phpunit>

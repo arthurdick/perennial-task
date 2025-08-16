@@ -20,3 +20,6 @@
 .php-cs-fixer.cache
 
 composer.lock
+
+coverage.clover
+/coverage-html/
