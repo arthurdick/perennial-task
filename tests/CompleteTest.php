@@ -21,9 +21,10 @@ class CompleteTest extends TestCase
      *
      * @param string $task_filepath The path to the task file.
      * @param array $options An associative array of options, e.g., ['--date' => 'YYYY-MM-DD'].
+     * @param array $env An associative array of environment variables to set for the command.
      * @return string The script's combined stdout and stderr.
      */
-    private function runCompleteScript(string $task_filepath, array $options = []): string
+    private function runCompleteScript(string $task_filepath, array $options = [], array $env = []): string
     {
         $prn_path = realpath(__DIR__ . '/../prn');
         $script_args = ['complete'];
@@ -36,8 +37,13 @@ class CompleteTest extends TestCase
         }
         $script_args[] = escapeshellarg($task_filepath);
 
+        $env_prefix = '';
+        foreach ($env as $key => $value) {
+            $env_prefix .= "$key=" . escapeshellarg($value) . ' ';
+        }
+
         $bootstrap_path = realpath(__DIR__ . '/bootstrap.php');
-        $command = "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($prn_path) . " " . implode(' ', $script_args) . " 2>&1";
+        $command = $env_prefix . "php -d auto_prepend_file=$bootstrap_path " . escapeshellarg($prn_path) . " " . implode(' ', $script_args) . " 2>&1";
 
         return shell_exec($command);
     }
@@ -150,5 +156,18 @@ class CompleteTest extends TestCase
         // Verify the original file was not modified
         $original_xml = simplexml_load_file($filepath);
         $this->assertFalse(isset($original_xml->history));
+    }
+
+    public function testCompleteTaskWithSaveHistoryDisabled()
+    {
+        $xml = new SimpleXMLElement('<task><name>No History Task</name></task>');
+        $filepath = TASKS_DIR . '/no_history_task.xml';
+        save_xml_file($filepath, $xml);
+
+        $env = ['PERENNIAL_SAVE_HISTORY' => 'false'];
+        $this->runCompleteScript($filepath, ['--date' => '2025-10-10'], $env);
+
+        $updated_xml = simplexml_load_file($filepath);
+        $this->assertFalse(isset($updated_xml->history));
     }
 }

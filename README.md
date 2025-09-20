@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.7.1
+# Perennial Task (`prn`) v1.8.0
 
 ![CI](https://github.com/arthurdick/perennial-task/actions/workflows/ci.yml/badge.svg)
 
@@ -17,6 +17,8 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
   * **Interactive and Non-Interactive Modes**: Create and edit tasks through a user-friendly interactive menu or automate your workflow with powerful command-line flags.
   * **Intelligent Filtering**: The task selection menu is filterable, allowing you to view all tasks, only active ones, or just the reportable (due or upcoming) ones.
   * **Command-Line Driven**: Designed for efficient use within a terminal environment.
+
+-----
 
 ## Installation and Usage
 
@@ -96,6 +98,8 @@ To make using `prn` even faster, you can enable tab completions, which will sugg
 3.  **Restart your terminal session** or source your `.bashrc` file (`source ~/.bashrc`) to apply the changes.
 
 Now, you can type `prn edi` and press `Tab`, and it should autocomplete to `prn edit`.
+
+-----
 
 ## Usage
 
@@ -204,9 +208,22 @@ This version of Perennial Task uses a new, more flexible format for scheduling. 
 
 When you complete or edit a task that uses a legacy format, it will be **automatically and silently migrated** to the new system. Your data is safe, and your tasks will continue to work as expected.
 
+-----
+
 ## Configuration
 
 Perennial Task stores its configuration in a file named `config.ini`, which is automatically created on first run. It allows you to customize paths for your tasks, logs, and other settings. The file is located in `$XDG_CONFIG_HOME/perennial-task/` (defaulting to `~/.config/perennial-task/`).
+
+You can customize the following settings:
+
+  * `tasks_dir`: The directory where your task files are stored.
+  * `completions_log`: The file where task completions are logged.
+  * `xsd_path`: The path to the task schema file.
+  * `tasks_per_page`: The number of tasks to display per page in the interactive selector.
+  * `timezone`: The timezone to use for date calculations.
+  * `save_history`: Whether to save the completion history of tasks. Set to `false` to disable history.
+
+-----
 
 ## Development and Testing
 

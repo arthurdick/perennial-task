@@ -31,7 +31,7 @@
         "prn"
     ],
     "scripts": {
-        "test": "phpunit",
+        "test": "XDEBUG_MODE=coverage phpunit",
         "fix": "php-cs-fixer fix",
         "build": [
             "echo 'Temporarily moving dev dependencies...'",

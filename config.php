@@ -73,6 +73,7 @@ completions_log = "$completions_log"
 xsd_path = "$xsd_path"
 tasks_per_page = 10
 timezone = "$system_timezone"
+save_history = true
 INI;
 
     if (file_put_contents($config_path, $config_content) === false) {
@@ -151,6 +152,10 @@ function initialize_perennial_task_config(): void
         $tasks_per_page = (ctype_digit((string)$tasks_per_page_raw) && $tasks_per_page_raw > 0) ? (int)$tasks_per_page_raw : 10;
         define('TASKS_PER_PAGE', $tasks_per_page);
 
+        $save_history_raw = get_config_value('PERENNIAL_SAVE_HISTORY', $config, 'save_history', true);
+        define('SAVE_HISTORY', filter_var($save_history_raw, FILTER_VALIDATE_BOOLEAN));
+
+
         // Final sanity check for the most critical path
         if (empty(TASKS_DIR)) {
             throw new Exception("Error: Tasks directory is not defined. Please set PERENNIAL_TASKS_DIR or configure it via config.ini.", 30);
@@ -162,7 +167,7 @@ function initialize_perennial_task_config(): void
     }
 }
 
-// Only run the configuration initializer if we are NOT in a testing environment.
-if (!defined('PERENNIAL_TASK_TESTING')) {
-    initialize_perennial_task_config();
-}
+// The config should be initialized whenever this file is included,
+// both for the application and for tests. The environment variables
+// set in bootstrap.php will guide the configuration for the test suite.
+initialize_perennial_task_config();

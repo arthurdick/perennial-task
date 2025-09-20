@@ -40,11 +40,12 @@ if (isset($parsed_options['date'])) {
     }
 }
 
-
-if (!isset($xml->history)) {
-    $xml->addChild('history');
+if (SAVE_HISTORY) {
+    if (!isset($xml->history)) {
+        $xml->addChild('history');
+    }
+    $xml->history->addChild('entry', $completion_date);
 }
-$xml->history->addChild('entry', $completion_date);
 
 $type = get_task_type($xml);
 
