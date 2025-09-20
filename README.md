@@ -125,6 +125,10 @@ Once installed, you can use the `prn` command from any directory.
 
   * Shows the full, detailed completion history for a single task.
 
+**`prn purge [task_file]`**
+
+  * Remove the history from a specified task, or all tasks.
+
 **`prn report [date]`**
 
   * Generates a report of all due, overdue, and upcoming tasks. Optionally run for a specific `[date]`.
@@ -175,6 +179,13 @@ You can use the following flags to bypass the interactive menus and manage tasks
 
 *Example:*
 `prn complete tasks/water_plants.xml --date 2025-07-20`
+
+#### `purge`
+
+  * `--force`: Skip the confirmation prompt when purging all tasks.
+
+*Example:*
+`prn purge --force`
 
 ### Exit Codes
 

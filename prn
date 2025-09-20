@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 // Perennial Task - Main Controller Script
 // This script validates dependencies and dispatches commands to the appropriate PHP scripts.
-const VERSION = '1.7.1';
+const VERSION = '1.8.0-dev';
 const MIN_PHP_VERSION = '7.4';
 
 /**
@@ -44,6 +44,7 @@ function display_help(): void
     echo "  complete [task_file] Mark a task as complete.\n";
     echo "  describe [task_file] Show a detailed description of a task.\n";
     echo "  history [task_file]  Show the full completion history of a single task.\n";
+    echo "  purge [task_file]  Remove the history from a specified task, or all tasks.\n";
     echo "  report [date]      Show a report of all due and upcoming tasks.\n";
     echo "  help [command]     Show this help message, or help for a specific command.\n";
     echo "  version            Display the application version.\n";
@@ -107,6 +108,16 @@ function display_history_help(): void
     echo "                   If not provided, a list of tasks will be shown to choose from.\n";
 }
 
+function display_purge_help(): void
+{
+    echo "Usage: prn purge [task_file] [--force]\n\n";
+    echo "Arguments for 'purge':\n";
+    echo "  [task_file]      The path to the task file to purge the history of.\n";
+    echo "                   If not provided, the history of all tasks will be purged.\n";
+    echo "Options for 'purge':\n";
+    echo "  --force          Skip the confirmation when purging all tasks.\n";
+}
+
 function display_version_help(): void
 {
     echo "Usage: prn version\n\n";
@@ -149,6 +160,9 @@ function main(array $argv): void
             case 'history':
                 display_history_help();
                 break;
+            case 'purge':
+                display_purge_help();
+                break;
             case 'version':
                 display_version_help();
                 break;
@@ -168,6 +182,7 @@ function main(array $argv): void
         case 'describe':
         case 'history':
         case 'report':
+        case 'purge':
             $script_name = "$command.php";
             $script_path = "{$app_dir}/{$script_name}";
 
@@ -178,12 +193,10 @@ function main(array $argv): void
                 exit(20);
             }
             exit(0);
-
         case 'version':
         case '--version':
         case '-v':
-            echo "Perennial Task version " .
-                VERSION . "\n";
+            echo "Perennial Task version " . VERSION . "\n";
             exit(0);
 
         case '--get-tasks-dir':

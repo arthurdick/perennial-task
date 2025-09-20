@@ -24,6 +24,7 @@ $root_files = [
     'edit.php',
     'complete.php',
     'history.php',
+    'purge.php',
     'report.php',
     'task.xsd',
     'LICENSE'
