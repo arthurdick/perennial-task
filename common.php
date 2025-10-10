@@ -449,21 +449,6 @@ function get_next_due_date(SimpleXMLElement $task, DateTimeImmutable $now): ?Dat
         return null;
     }
 
-    if (isset($task->reschedule)) {
-        if ($task->reschedule->from == 'completion_date') {
-            if (isset($task->history->entry)) {
-                $latest_completion = '1800-01-01';
-                foreach ($task->history->entry as $entry) {
-                    if ((string)$entry > $latest_completion) {
-                        $latest_completion = (string)$entry;
-                    }
-                }
-                return (new DateTimeImmutable($latest_completion))->modify('+' . (string)$task->reschedule->interval);
-            }
-        }
-        return new DateTimeImmutable((string)$task->due);
-    }
-
     if (isset($task->recurring)) {
         $completed_date = new DateTimeImmutable((string)$task->recurring->completed);
         $duration = (int)$task->recurring->duration;

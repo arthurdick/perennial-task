@@ -31,7 +31,7 @@ class CommonTest extends TestCase
         $this->assertEquals('2025-08-01', $next_due->format('Y-m-d'));
     }
 
-    public function testGetNextDueDate_NewFormat_FromCompletionDate()
+    public function testGetNextDueDate_NewFormat_WithCompletionDate()
     {
         $now = new DateTimeImmutable('today');
         $xml = new SimpleXMLElement('<task>
@@ -45,8 +45,7 @@ class CommonTest extends TestCase
         </task>');
 
         $next_due = get_next_due_date($xml, $now);
-        // 2025-07-15 + 5 days = 2025-07-20
-        $this->assertEquals('2025-07-20', $next_due->format('Y-m-d'));
+        $this->assertEquals('2025-07-10', $next_due->format('Y-m-d'));
     }
 
     public function testGetNextDueDate_LegacyRecurring()
