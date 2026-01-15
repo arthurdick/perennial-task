@@ -298,6 +298,18 @@ class EditTest extends TestCase
         $this->assertEquals('2099-12-31', (string)$xml->due);
     }
 
+    public function testEditSingleField_NonInteractive_FlexibleDate()
+    {
+        $filepath = TASKS_DIR . '/edit_flexible.xml';
+        save_xml_file($filepath, new SimpleXMLElement('<task><name>Edit Me</name><due>2020-01-01</due></task>'));
+
+        $result = $this->runEditScript_nonInteractive($filepath, ['--set-due' => '+1 month']);
+
+        $xml = simplexml_load_file($result['new_filepath']);
+        $expected = (new DateTime('+1 month'))->format('Y-m-d');
+        $this->assertEquals($expected, (string)$xml->due);
+    }
+
     public function testEditMultipleFields_NonInteractive()
     {
         $filepath = TASKS_DIR . '/edit_multiple.xml';
@@ -405,7 +417,7 @@ class EditTest extends TestCase
 
         $result = $this->runEditScript_nonInteractive($filepath, ['--set-due' => '2025-99-99']);
 
-        $this->assertStringContainsString('Error: Invalid format for --set-due. Use YYYY-MM-DD.', $result['output']);
+        $this->assertStringContainsString('Error: Invalid date format for --set-due. Please use a valid date string.', $result['output']);
     }
 
     /**

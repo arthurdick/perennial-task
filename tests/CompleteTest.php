@@ -119,6 +119,19 @@ class CompleteTest extends TestCase
         $this->assertEquals('2025-07-20', (string)$updated_xml->history->entry);
     }
 
+    public function testCompleteTask_FlexibleDate()
+    {
+        $xml = new SimpleXMLElement('<task><name>Flexible Completion</name></task>');
+        $filepath = TASKS_DIR . '/flexible_complete.xml';
+        save_xml_file($filepath, $xml);
+
+        $this->runCompleteScript($filepath, ['--date' => 'yesterday']);
+
+        $updated_xml = simplexml_load_file($filepath);
+        $expected = (new DateTime('yesterday'))->format('Y-m-d');
+        $this->assertEquals($expected, (string)$updated_xml->history->entry);
+    }
+
     public function testMigrationOfLegacyRecurringTask()
     {
         $xml = new SimpleXMLElement('<task>
@@ -151,7 +164,7 @@ class CompleteTest extends TestCase
 
         $output = $this->runCompleteScript($filepath, ['--date' => 'this-is-not-a-date']);
 
-        $this->assertStringContainsString('Error: Invalid format for --date. Use YYYY-MM-DD.', $output);
+        $this->assertStringContainsString('Error: Invalid format for --date. Please use a valid date string.', $output);
 
         // Verify the original file was not modified
         $original_xml = simplexml_load_file($filepath);

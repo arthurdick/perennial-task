@@ -32,10 +32,11 @@ $task_name = (string)$xml->name;
 // Determine completion date
 $completion_date = date('Y-m-d'); // Default to today
 if (isset($parsed_options['date'])) {
-    if (validate_date($parsed_options['date'])) {
-        $completion_date = $parsed_options['date'];
+    $normalized_date = normalize_to_ymd($parsed_options['date']);
+    if ($normalized_date) {
+        $completion_date = $normalized_date;
     } else {
-        file_put_contents('php://stderr', "Error: Invalid format for --date. Use YYYY-MM-DD.\n");
+        file_put_contents('php://stderr', "Error: Invalid format for --date. Please use a valid date string.\n");
         exit(10);
     }
 }

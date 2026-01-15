@@ -148,10 +148,13 @@ function get_validated_date_input(string $prompt, bool $allow_empty = false): st
         if ($allow_empty && empty($input)) {
             return date('Y-m-d');
         }
-        if (validate_date($input)) {
-            return $input;
+
+        $normalized = normalize_to_ymd($input);
+        if ($normalized) {
+            return $normalized;
         }
-        echo "Invalid date format. Please use YYYY-MM-DD.\n";
+
+        echo "Invalid date format. Please use a valid date string (e.g., YYYY-MM-DD, 'tomorrow', '+1 week').\n";
     }
 }
 
@@ -200,7 +203,7 @@ function get_reschedule_input(SimpleXMLElement $xml): void
 
 function collect_scheduled_task_details(SimpleXMLElement $xml): void
 {
-    $dueDate = get_validated_date_input("Enter due date (YYYY-MM-DD): ");
+    $dueDate = get_validated_date_input("Enter due date (e.g., YYYY-MM-DD, tomorrow): ");
     $xml->addChild('due', $dueDate);
     get_reschedule_input($xml);
 }
@@ -530,10 +533,20 @@ function get_task_type(SimpleXMLElement $xml): string
     return 'normal';
 }
 
-function validate_date(string $date, string $format = 'Y-m-d'): bool
+/**
+ * Tries to parse a date string and normalize it to YYYY-MM-DD.
+ *
+ * @param string $input The date string to parse (e.g., '2023-01-01', 'tomorrow', '+1 week').
+ * @return string|null The date in YYYY-MM-DD format, or null if parsing failed.
+ */
+function normalize_to_ymd(string $input): ?string
 {
-    $d = DateTime::createFromFormat($format, $date);
-    return $d && $d->format($format) === $date;
+    try {
+        $dt = new DateTime($input);
+        return $dt->format('Y-m-d');
+    } catch (Exception $e) {
+        return null;
+    }
 }
 
 /**

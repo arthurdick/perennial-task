@@ -180,6 +180,23 @@ class CreateTest extends TestCase
         $this->assertEquals('completion_date', (string)$xml->reschedule->from);
     }
 
+    public function testCreateScheduledTask_NonInteractive_FlexibleDate()
+    {
+        $options = [
+            '--name' => 'Flexible Date Task',
+            '--due' => 'next friday',
+            '--preview' => '2'
+        ];
+        $result = $this->runCreateScript_nonInteractive($options);
+
+        $this->assertStringContainsString('Success! Task file created', $result['output']);
+        $this->assertCount(1, $result['files']);
+
+        $xml = simplexml_load_file($result['files'][0]);
+        $expected_due = (new DateTime('next friday'))->format('Y-m-d');
+        $this->assertEquals($expected_due, (string)$xml->due);
+    }
+
     public function testCreateTaskWithPriority_NonInteractive()
     {
         $options = [
@@ -217,7 +234,7 @@ class CreateTest extends TestCase
         $options = ['--name' => 'Invalid Date Task', '--due' => 'not-a-real-date'];
         $result = $this->runCreateScript_nonInteractive($options);
 
-        $this->assertStringContainsString('Error: Invalid format for --due. Use YYYY-MM-DD.', $result['output']);
+        $this->assertStringContainsString('Error: Invalid date format for --due. Please use a valid date string.', $result['output']);
         $this->assertCount(0, $result['files']);
     }
 

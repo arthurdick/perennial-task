@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.8.0
+# Perennial Task (`prn`) v1.9.0
 
 ![CI](https://github.com/arthurdick/perennial-task/actions/workflows/ci.yml/badge.svg)
 
@@ -152,20 +152,20 @@ You can use the following flags to bypass the interactive menus and manage tasks
 #### `create`
 
   * `--name <name>`: The name of the task. **(Required for non-interactive use)**
-  * `--due <YYYY-MM-DD>`: The date the task is due.
+  * `--due <date>`: The date the task is due. Accepts `YYYY-MM-DD` or flexible strings like "tomorrow" or "+2 weeks".
   * `--priority <int>`: Set the task's priority (e.g., -2, 0, 10). Defaults to 0.
   * `--preview <days>`: The number of days in advance to show the task in reports.
   * `--reschedule-interval <interval>`: The interval to reschedule the task (e.g., '7 days', '1 month').
   * `--reschedule-from <basis>`: The basis for rescheduling ('due\_date' or 'completion\_date').
 
 *Example:*
-`prn create --name "Pay monthly internet bill" --due 2025-08-01 --priority 10 --reschedule-interval "1 month" --reschedule-from due_date`
+`prn create --name "Pay monthly internet bill" --due "next friday" --priority 10 --reschedule-interval "1 month" --reschedule-from due_date`
 
 #### `edit`
 
   * `--set-name <name>`: Set a new name for the task.
   * `--rename-file`: Rename the task file to match the new name (can only be used with `--set-name`).
-  * `--set-due <YYYY-MM-DD>`: Set a new due date for the task.
+  * `--set-due <date>`: Set a new due date for the task. Accepts `YYYY-MM-DD` or flexible strings like "tomorrow".
   * `--remove-due`: Remove the due date and all scheduling settings from a task.
   * `--set-priority <int>`: Set a new priority for the task.
   * `--set-preview <days>`: Set the number of preview days.
@@ -175,14 +175,14 @@ You can use the following flags to bypass the interactive menus and manage tasks
   * `--remove-reschedule`: Remove all reschedule settings from the task.
 
 *Example:*
-`prn edit tasks/my_task.xml --set-due 2025-09-15 --set-priority 5`
+`prn edit tasks/my_task.xml --set-due "+3 days" --set-priority 5`
 
 #### `complete`
 
-  * `--date <YYYY-MM-DD>`: The date the task was completed (defaults to today).
+  * `--date <date>`: The date the task was completed. Accepts `YYYY-MM-DD` or flexible strings like "yesterday" (defaults to today).
 
 *Example:*
-`prn complete tasks/water_plants.xml --date 2025-07-20`
+`prn complete tasks/water_plants.xml --date "yesterday"`
 
 #### `purge`
 

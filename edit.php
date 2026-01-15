@@ -173,12 +173,13 @@ if ($is_non_interactive) {
         echo "Priority set to: " . $parsed_options['set-priority'] . "\n";
     }
     if (isset($parsed_options['set-due'])) {
-        if (!validate_date($parsed_options['set-due'])) {
-            file_put_contents('php://stderr', "Error: Invalid format for --set-due. Use YYYY-MM-DD.\n");
+        $normalized_due = normalize_to_ymd($parsed_options['set-due']);
+        if (!$normalized_due) {
+            file_put_contents('php://stderr', "Error: Invalid date format for --set-due. Please use a valid date string.\n");
             exit(10);
         }
-        $xml->due = $parsed_options['set-due'];
-        echo "Due date set to: " . $parsed_options['set-due'] . "\n";
+        $xml->due = $normalized_due;
+        echo "Due date set to: " . $normalized_due . "\n";
     }
     if (isset($parsed_options['remove-due'])) {
         unset($xml->due);

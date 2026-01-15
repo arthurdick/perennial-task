@@ -34,11 +34,12 @@ if (!empty($options)) {
 
     // Check if task should be scheduled
     if (isset($options['due'])) {
-        if (!validate_date($options['due'])) {
-            file_put_contents('php://stderr', "Error: Invalid format for --due. Use YYYY-MM-DD.\n");
+        $normalized_due = normalize_to_ymd($options['due']);
+        if (!$normalized_due) {
+            file_put_contents('php://stderr', "Error: Invalid date format for --due. Please use a valid date string.\n");
             exit(10);
         }
-        $xml->addChild('due', $options['due']);
+        $xml->addChild('due', $normalized_due);
 
         // Add reschedule logic if specified
         if (isset($options['reschedule-interval']) || isset($options['reschedule-from'])) {

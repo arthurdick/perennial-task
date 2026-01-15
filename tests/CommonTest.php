@@ -115,12 +115,21 @@ class CommonTest extends TestCase
         $this->assertFalse(is_task_reportable($xml_due_future, $now));
     }
 
-    public function testValidateDate()
+    public function testNormalizeToYmd()
     {
-        $this->assertTrue(validate_date('2025-07-09'));
-        $this->assertFalse(validate_date('2025-13-01'));
-        $this->assertFalse(validate_date('not-a-date'));
-        $this->assertFalse(validate_date('2025-02-30'));
+        // Standard strict format
+        $this->assertEquals('2023-01-01', normalize_to_ymd('2023-01-01'));
+
+        // Relative dates
+        $tomorrow = (new DateTime('tomorrow'))->format('Y-m-d');
+        $this->assertEquals($tomorrow, normalize_to_ymd('tomorrow'));
+
+        $next_week = (new DateTime('+1 week'))->format('Y-m-d');
+        $this->assertEquals($next_week, normalize_to_ymd('+1 week'));
+
+        // Invalid dates
+        $this->assertNull(normalize_to_ymd('not-a-date'));
+        $this->assertNull(normalize_to_ymd('2023-13-45'));
     }
 
     public function testPluralize()
