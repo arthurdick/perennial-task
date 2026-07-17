@@ -100,40 +100,36 @@ class ReportTest extends TestCase
         $this->assertStringNotContainsString('Malformed Task', $output);
     }
 
-    public function testReportSortingByStatusThenPriority()
+    public function testReportSortingByStatusThenDaysThenPriority()
     {
         // Overdue tasks
-        save_xml_file(TASKS_DIR . '/overdue_low.xml', new SimpleXMLElement('<task><name>Overdue Low Prio</name><due>' . $this->now->modify('-3 days')->format('Y-m-d') . '</due><priority>-1</priority></task>'));
-        save_xml_file(TASKS_DIR . '/overdue_high.xml', new SimpleXMLElement('<task><name>Overdue High Prio</name><due>' . $this->now->modify('-1 day')->format('Y-m-d') . '</due><priority>5</priority></task>'));
+        save_xml_file(TASKS_DIR . '/overdue_3days.xml', new SimpleXMLElement('<task><name>Overdue 3 Days</name><due>' . $this->now->modify('-3 days')->format('Y-m-d') . '</due><priority>-1</priority></task>'));
+        save_xml_file(TASKS_DIR . '/overdue_1day_high.xml', new SimpleXMLElement('<task><name>Overdue 1 Day High Prio</name><due>' . $this->now->modify('-1 day')->format('Y-m-d') . '</due><priority>5</priority></task>'));
+        save_xml_file(TASKS_DIR . '/overdue_1day_low.xml', new SimpleXMLElement('<task><name>Overdue 1 Day Low Prio</name><due>' . $this->now->modify('-1 day')->format('Y-m-d') . '</due><priority>2</priority></task>'));
 
         // Due today tasks
         save_xml_file(TASKS_DIR . '/today_high.xml', new SimpleXMLElement('<task><name>Today High Prio</name><due>' . $this->now->format('Y-m-d') . '</due><priority>10</priority></task>'));
         save_xml_file(TASKS_DIR . '/today_normal.xml', new SimpleXMLElement('<task><name>Today Normal Prio</name><due>' . $this->now->format('Y-m-d') . '</due></task>')); // Default priority 0
 
         // Upcoming tasks
-        save_xml_file(TASKS_DIR . '/upcoming_medium.xml', new SimpleXMLElement('<task><name>Upcoming Medium Prio</name><due>' . $this->now->modify('+2 days')->format('Y-m-d') . '</due><preview>3</preview><priority>2</priority></task>'));
-        save_xml_file(TASKS_DIR . '/upcoming_low.xml', new SimpleXMLElement('<task><name>Upcoming Low Prio</name><due>' . $this->now->modify('+1 day')->format('Y-m-d') . '</due><preview>3</preview><priority>-5</priority></task>'));
-
+        save_xml_file(TASKS_DIR . '/upcoming_2days.xml', new SimpleXMLElement('<task><name>Upcoming 2 Days</name><due>' . $this->now->modify('+2 days')->format('Y-m-d') . '</due><preview>3</preview><priority>2</priority></task>'));
+        save_xml_file(TASKS_DIR . '/upcoming_1day_high.xml', new SimpleXMLElement('<task><name>Upcoming 1 Day High Prio</name><due>' . $this->now->modify('+1 day')->format('Y-m-d') . '</due><preview>3</preview><priority>5</priority></task>'));
+        save_xml_file(TASKS_DIR . '/upcoming_1day_low.xml', new SimpleXMLElement('<task><name>Upcoming 1 Day Low Prio</name><due>' . $this->now->modify('+1 day')->format('Y-m-d') . '</due><preview>3</preview><priority>-5</priority></task>'));
 
         $output = $this->runReportScript($this->now->format('Y-m-d'));
 
         // Remove color codes for easier comparison
         $output_no_color = preg_replace('/\e\[[0-9;]*m/', '', $output);
 
-        // Expected order:
-        // 1. Overdue High Prio (prio 5)
-        // 2. Overdue Low Prio (prio -1)
-        // 3. Today High Prio (prio 10)
-        // 4. Today Normal Prio (prio 0)
-        // 5. Upcoming Medium Prio (prio 2)
-        // 6. Upcoming Low Prio (prio -5)
         $expected_order = [
-            'OVERDUE: Overdue High Prio',
-            'OVERDUE: Overdue Low Prio',
+            'OVERDUE: Overdue 3 Days',
+            'OVERDUE: Overdue 1 Day High Prio',
+            'OVERDUE: Overdue 1 Day Low Prio',
             'DUE TODAY: Today High Prio',
             'DUE TODAY: Today Normal Prio',
-            'UPCOMING: Upcoming Medium Prio',
-            'UPCOMING: Upcoming Low Prio'
+            'UPCOMING: Upcoming 1 Day High Prio',
+            'UPCOMING: Upcoming 1 Day Low Prio',
+            'UPCOMING: Upcoming 2 Days'
         ];
 
         // Create a regex that looks for the task names in the specified order, ignoring the details in parentheses
@@ -142,6 +138,6 @@ class ReportTest extends TestCase
         }, $expected_order);
         $pattern = '/' . implode('.*?', $pattern_parts) . '/s';
 
-        $this->assertMatchesRegularExpression($pattern, $output_no_color, "Report output is not sorted correctly by status and then priority.");
+        $this->assertMatchesRegularExpression($pattern, $output_no_color, "Report output is not sorted correctly by status, days, and then priority.");
     }
 }

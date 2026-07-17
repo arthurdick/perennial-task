@@ -42,6 +42,7 @@ if (!function_exists('get_scheduled_task_report')) {
             return [
                 'status' => 'overdue',
                 'priority' => $priority,
+                'days_diff' => $days_diff,
                 'message' => COLOR_RED . "OVERDUE" . COLOR_RESET . ": " . (string)$task->name . " (was due $days_diff " . pluralize($days_diff, 'day', 'days') . " ago)\n"
             ];
         } elseif ($days_diff === 0) {
@@ -49,6 +50,7 @@ if (!function_exists('get_scheduled_task_report')) {
             return [
                 'status' => 'due_today',
                 'priority' => $priority,
+                'days_diff' => 0,
                 'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": " . (string)$task->name . "\n"
             ];
         } elseif ($days_diff <= $preview_duration) {
@@ -56,6 +58,7 @@ if (!function_exists('get_scheduled_task_report')) {
             return [
                 'status' => 'upcoming',
                 'priority' => $priority,
+                'days_diff' => $days_diff,
                 'message' => COLOR_BLUE . "UPCOMING" . COLOR_RESET . ": " . (string)$task->name . " (due in $days_diff " . pluralize($days_diff, 'day', 'days') . ")\n"
             ];
         }
@@ -78,6 +81,7 @@ if (!function_exists('get_normal_task_report')) {
         return [
             'status' => 'due_today',
             'priority' => $priority,
+            'days_diff' => 0,
             'message' => COLOR_YELLOW . "DUE TODAY" . COLOR_RESET . ": " . (string)$task->name . "\n"
         ];
     }
@@ -136,9 +140,20 @@ $output_generated = false;
 
 foreach ($status_order as $status) {
     if (!empty($report_lines[$status])) {
-        // Sort the tasks within this status group by priority (descending)
-        usort($report_lines[$status], function ($a, $b) {
-            return $b['priority'] <=> $a['priority'];
+        // Sort the tasks within this status group by days diff, then priority
+        usort($report_lines[$status], function ($a, $b) use ($status) {
+            $cmp = 0;
+            if ($status === 'overdue') {
+                $cmp = $b['days_diff'] <=> $a['days_diff']; // Most overdue first
+            } elseif ($status === 'upcoming') {
+                $cmp = $a['days_diff'] <=> $b['days_diff']; // Soonest first
+            }
+
+            // Fallback to priority if days are the same
+            if ($cmp === 0) {
+                return $b['priority'] <=> $a['priority'];
+            }
+            return $cmp;
         });
 
         foreach ($report_lines[$status] as $line) {

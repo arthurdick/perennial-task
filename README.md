@@ -1,4 +1,4 @@
-# Perennial Task (`prn`) v1.9.0
+# Perennial Task (`prn`) v1.10.0
 
 ![CI](https://github.com/arthurdick/perennial-task/actions/workflows/ci.yml/badge.svg)
 
@@ -12,7 +12,7 @@ Like the wood lily that graces the prairies each summer, some tasks are perennia
 
   * **Flexible Task Scheduling**: Perennial Task uses a simple but powerful system. A task is either **Normal** (a simple, one-off to-do) or **Scheduled** (a task with a due date).
   * **Powerful Rescheduling**: A scheduled task can be configured to automatically reschedule itself after completion. You have full control over the new due date, calculating it from either the previous **due date** (for fixed schedules like paying rent) or the **completion date** (for flexible timelines like watering the houseplants). Intervals can be set in days, weeks, months, or years.
-  * **Task Prioritization**: Assign a numerical **priority** to your tasks. The report view will sort tasks first by their status (overdue, due today, upcoming) and then by their priority, ensuring the most important items always appear first.
+  * **Task Prioritization**: Assign a numerical **priority** to your tasks. The report view will sort tasks first by their status (overdue, due today, upcoming), then by the number of days until due (or days past due), and finally by their assigned priority, ensuring the most urgent and important items always appear first.
   * **Completion History**: Every completed task retains a full history of when it was completed, allowing you to track consistency and habits over time.
   * **Interactive and Non-Interactive Modes**: Create and edit tasks through a user-friendly interactive menu or automate your workflow with powerful command-line flags.
   * **Intelligent Filtering**: The task selection menu is filterable, allowing you to view all tasks, only active ones, or just the reportable (due or upcoming) ones.
